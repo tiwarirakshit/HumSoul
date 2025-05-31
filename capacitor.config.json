@@ -1,0 +1,14 @@
+{
+  "appId": "com.humsoul.app",
+  "appName": "HumSoul",
+  "webDir": "dist/public",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
