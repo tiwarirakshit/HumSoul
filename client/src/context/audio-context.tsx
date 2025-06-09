@@ -46,7 +46,7 @@ export interface AudioContextType {
   backgroundMusicVolume: number;
   currentAffirmation: Affirmation | null;
   backgroundMusic: BackgroundMusic | null;
-  playPlaylist: (playlist: Playlist, affirmations: Affirmation[]) => void;
+  playPlaylist: (playlist: Playlist, affirmations: Affirmation[], startIndex?: number) => void;
   togglePlay: () => void;
   seek: (time: number) => void;
   next: () => void;
@@ -54,6 +54,7 @@ export interface AudioContextType {
   setVolume: (volume: number) => void;
   setBackgroundMusicVolume: (volume: number) => void;
   setBackgroundMusic: (music: BackgroundMusic | null) => void;
+  skipToAffirmation: (index: number) => void;
 }
 
 // Create the audio context with an initial undefined value that will be set by the provider
@@ -72,14 +73,14 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const [volume, setVolume] = useState(0.7);
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.3);
   const [backgroundMusic, setBackgroundMusic] = useState<BackgroundMusic | null>(null);
-  
+
   const affirmationSoundRef = useRef<Howl | null>(null);
   const backgroundSoundRef = useRef<Howl | null>(null);
   const timerRef = useRef<number | null>(null);
 
   // Get current affirmation
-  const currentAffirmation = currentTrack 
-    ? currentTrack.affirmations[currentTrack.currentAffirmationIndex] 
+  const currentAffirmation = currentTrack
+    ? currentTrack.affirmations[currentTrack.currentAffirmationIndex]
     : null;
 
   // Create a function to update the time and progress
@@ -91,6 +92,27 @@ export function AudioProvider({ children }: AudioProviderProps) {
         setProgress((currentSoundTime / duration) * 100);
       }
       timerRef.current = window.setTimeout(updateTimeProgress, 100);
+    }
+  };
+
+  const skipToAffirmation = (index: number) => {
+    if (!currentTrack || index < 0 || index >= currentTrack.affirmations.length) {
+      return;
+    }
+
+    // Update the current affirmation index
+    setCurrentTrack({
+      ...currentTrack,
+      currentAffirmationIndex: index
+    });
+
+    // Load the selected affirmation
+    loadAffirmation(currentTrack.affirmations[index]);
+
+    // If we were playing, continue playing the new affirmation
+    if (isPlaying) {
+      // The loadAffirmation function will handle starting playback
+      // since isPlaying is true
     }
   };
 
@@ -113,59 +135,71 @@ export function AudioProvider({ children }: AudioProviderProps) {
   }, [isPlaying]);
 
   // Play a playlist
-  const playPlaylist = (playlist: Playlist, affirmations: Affirmation[]) => {
-    // Stop any existing sounds
-    if (affirmationSoundRef.current) {
-      affirmationSoundRef.current.stop();
-    }
+ // In audio-context.tsx, modify playPlaylist:
+const playPlaylist = (playlist: Playlist, affirmations: Affirmation[], startIndex: number = 0) => {
+  // Stop any existing sounds
+  if (affirmationSoundRef.current) {
+    affirmationSoundRef.current.stop();
+  }
 
-    // Create a new track with the playlist and affirmations
-    const newTrack: AudioTrack = {
-      playlist,
-      affirmations,
-      currentAffirmationIndex: 0
-    };
-
-    setCurrentTrack(newTrack);
-    
-    // Load and play the first affirmation
-    if (affirmations.length > 0) {
-      loadAffirmation(affirmations[0]);
-    }
+  // Create a new track with the specified starting index
+  const newTrack: AudioTrack = {
+    playlist,
+    affirmations,
+    currentAffirmationIndex: startIndex
   };
 
-  // Load an affirmation into the Howl instance
-  const loadAffirmation = (affirmation: Affirmation) => {
-    if (affirmationSoundRef.current) {
-      affirmationSoundRef.current.stop();
-      affirmationSoundRef.current.unload();
-    }
+  setCurrentTrack(newTrack);
+  setIsPlaying(true); // Set playing state immediately
+  
+  // Load and play the affirmation at the specified index
+  if (affirmations.length > startIndex) {
+    loadAffirmation(affirmations[startIndex]);
+  }
+};
 
-    // In a real app, we'd use the actual audio URL
-    // For this prototype, we're using a mock sound
-    affirmationSoundRef.current = new Howl({
-      src: [affirmation.audioUrl],
-      html5: true,
-      volume: volume,
-      onend: handleAffirmationEnd,
-      onload: () => {
-        if (affirmationSoundRef.current) {
-          const soundDuration = affirmationSoundRef.current.duration();
-          setDuration(soundDuration);
-          setCurrentTime(0);
-          setProgress(0);
-          
-          // Start playing if isPlaying is true
-          if (isPlaying) {
-            affirmationSoundRef.current.play();
+  // Load an affirmation into the Howl instance
+// In loadAffirmation function, make sure it respects the isPlaying state:
+const loadAffirmation = (affirmation: Affirmation) => {
+  if (affirmationSoundRef.current) {
+    affirmationSoundRef.current.stop();
+    affirmationSoundRef.current.unload();
+  }
+
+  affirmationSoundRef.current = new Howl({
+    src: [affirmation.audioUrl],
+    html5: true,
+    volume: volume,
+    onend: handleAffirmationEnd,
+    onload: () => {
+      if (affirmationSoundRef.current) {
+        const soundDuration = affirmationSoundRef.current.duration();
+        setDuration(soundDuration);
+        setCurrentTime(0);
+        setProgress(0);
+        
+        // Only start playing if isPlaying is true
+        if (isPlaying) {
+          affirmationSoundRef.current.play();
+          // Start background music if available
+          if (backgroundSoundRef.current && backgroundMusic) {
+            backgroundSoundRef.current.play();
           }
         }
       }
-    });
+    },
+    onloaderror: (id, error) => {
+      console.error('Failed to load audio:', error);
+      console.error('Audio URL:', affirmation.audioUrl);
+    },
+    onplayerror: (id, error) => {
+      console.error('Failed to play audio:', error);
+    }
+  });
 
-    // Load the sound but don't play yet
-    affirmationSoundRef.current.load();
-  };
+  // Load the sound
+  affirmationSoundRef.current.load();
+};
 
   // Handle affirmation end
   const handleAffirmationEnd = () => {
@@ -178,7 +212,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
           ...currentTrack,
           currentAffirmationIndex: nextIndex
         });
-        
+
         // Load and play the next affirmation
         loadAffirmation(currentTrack.affirmations[nextIndex]);
       } else {
@@ -193,6 +227,8 @@ export function AudioProvider({ children }: AudioProviderProps) {
     if (!currentTrack || !affirmationSoundRef.current) {
       return;
     }
+
+    console.debug("currentTrack", currentTrack);
 
     if (isPlaying) {
       affirmationSoundRef.current.pause();
@@ -212,11 +248,11 @@ export function AudioProvider({ children }: AudioProviderProps) {
   // Seek to a specific time
   const seek = (time: number) => {
     if (!affirmationSoundRef.current) return;
-    
+
     affirmationSoundRef.current.seek(time);
     setCurrentTime(time);
     setProgress((time / duration) * 100);
-    
+
     // If not playing, start the timer for a moment to update UI
     if (!isPlaying) {
       updateTimeProgress();
@@ -226,14 +262,14 @@ export function AudioProvider({ children }: AudioProviderProps) {
   // Go to next affirmation
   const next = () => {
     if (!currentTrack) return;
-    
+
     if (currentTrack.currentAffirmationIndex < currentTrack.affirmations.length - 1) {
       const nextIndex = currentTrack.currentAffirmationIndex + 1;
       setCurrentTrack({
         ...currentTrack,
         currentAffirmationIndex: nextIndex
       });
-      
+
       loadAffirmation(currentTrack.affirmations[nextIndex]);
     }
   };
@@ -241,20 +277,20 @@ export function AudioProvider({ children }: AudioProviderProps) {
   // Go to previous affirmation
   const previous = () => {
     if (!currentTrack) return;
-    
+
     // If current time is more than 3 seconds, restart current affirmation
     if (currentTime > 3) {
       seek(0);
       return;
     }
-    
+
     if (currentTrack.currentAffirmationIndex > 0) {
       const prevIndex = currentTrack.currentAffirmationIndex - 1;
       setCurrentTrack({
         ...currentTrack,
         currentAffirmationIndex: prevIndex
       });
-      
+
       loadAffirmation(currentTrack.affirmations[prevIndex]);
     }
   };
@@ -315,6 +351,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
     backgroundMusicVolume,
     currentAffirmation,
     backgroundMusic,
+    skipToAffirmation,
     playPlaylist,
     togglePlay,
     seek,

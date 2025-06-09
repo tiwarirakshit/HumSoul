@@ -1,0 +1,156 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Users\khare\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js
+
+PATH: 
+  C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\libnvvp;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Git\cmd;C:\php-8.2.6;C:\ProgramData\ComposerSetup\bin;C:\ProgramData\chocolatey\bin;C:\Users\khare\anaconda3;C:\Users\khare\anaconda3\Library\mingw-w64\bin;C:\Users\khare\anaconda3\Library\usr\bin;C:\Users\khare\anaconda3\Library\bin;C:\Users\khare\anaconda3\Scripts;C:\Users\khare\AppData\Local\Programs\Python\Python310\Scripts\;C:\Users\khare\AppData\Local\Programs\Python\Python310\;C:\Users\khare\AppData\Local\Microsoft\Wi;C:\Program Files\dotnet\;C:\apktool;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Users\khare\AppData\Local\Android\Sdk\platform-tools;;C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR;C:\Program Files\nodejs\;C:\Users\khare\.cargo\bin;E:\anaconda3;E:\anaconda3\Library\mingw-w64\bin;E:\anaconda3\Library\usr\bin;E:\anaconda3\Library\bin;E:\anaconda3\Scripts;C:\Users\khare\AppData\Local\Programs\Python\Python310\Scripts\;C:\Users\khare\AppData\Local\Programs\Python\Python310\;C:\Users\khare\AppData\Local\Microsoft\WindowsApps;C:\Users\khare\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files\JetBrains\PyCharm Community Edition 2022.3.2\bin;C:\Users\khare\AppData\Local\Programs\Python\Python310;C:\Users\khare\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\khare\AppData\Roaming\Composer\vendor\bin;C:\Users\khare\AppData\Local\Programs\mongosh\;C:\Users\khare\AppData\Local\Programs\mongosh\mongosh.exe;C:\Program Files\MongoDB\Tools\100\bin;C:\Users\khare\.deno\bin;C:\Users\khare\AppData\Local\Flutter\bin;C:\Users\khare\AppData\Roaming\npm;c:\Users\khare\AppData\Roaming\Code\User\globalStorage\github.copilot-chat\debugCommand
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  22.15.0
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: https://registry.yarnpkg.com/drizzle-orm/-/drizzle-orm-0.39.3.tgz: ESOCKETTIMEDOUT
+      at ClientRequest.<anonymous> (C:\Users\khare\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:141517:19)
+      at Object.onceWrapper (node:events:632:28)
+      at ClientRequest.emit (node:events:518:28)
+      at TLSSocket.emitRequestTimeout (node:_http_client:863:9)
+      at Object.onceWrapper (node:events:632:28)
+      at TLSSocket.emit (node:events:530:35)
+      at Socket._onTimeout (node:net:609:8)
+      at listOnTimeout (node:internal/timers:588:17)
+      at process.processTimers (node:internal/timers:523:7)
+
+npm manifest: 
+  {
+    "name": "rest-express",
+    "version": "1.0.0",
+    "type": "module",
+    "license": "MIT",
+    "scripts": {
+      "dev": "tsx server/index.ts",
+      "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+      "start": "NODE_ENV=production node dist/index.js",
+      "check": "tsc",
+      "db:push": "drizzle-kit push",
+      "db:clear-users": "tsx scripts/clear-users.ts",
+      "db:seed": "tsx scripts/seed.ts",
+      "generate:audio": "tsx scripts/generate-audio.ts",
+      "cap:init": "npx cap init",
+      "cap:add:ios": "npx cap add ios",
+      "cap:add:android": "npx cap add android",
+      "cap:sync": "npx cap sync",
+      "cap:open:ios": "npx cap open ios",
+      "cap:open:android": "npx cap open android"
+    },
+    "dependencies": {
+      "@capacitor/android": "^7.2.0",
+      "@capacitor/cli": "^7.2.0",
+      "@capacitor/core": "^7.2.0",
+      "@capacitor/ios": "^7.2.0",
+      "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
+      "@hookform/resolvers": "^3.9.1",
+      "@jridgewell/trace-mapping": "^0.3.25",
+      "@neondatabase/serverless": "^0.10.4",
+      "@radix-ui/react-accordion": "^1.2.1",
+      "@radix-ui/react-alert-dialog": "^1.1.2",
+      "@radix-ui/react-aspect-ratio": "^1.1.0",
+      "@radix-ui/react-avatar": "^1.1.1",
+      "@radix-ui/react-checkbox": "^1.1.2",
+      "@radix-ui/react-collapsible": "^1.1.1",
+      "@radix-ui/react-context-menu": "^2.2.2",
+      "@radix-ui/react-dialog": "^1.1.2",
+      "@radix-ui/react-dropdown-menu": "^2.1.2",
+      "@radix-ui/react-hover-card": "^1.1.2",
+      "@radix-ui/react-label": "^2.1.0",
+      "@radix-ui/react-menubar": "^1.1.2",
+      "@radix-ui/react-navigation-menu": "^1.2.1",
+      "@radix-ui/react-popover": "^1.1.2",
+      "@radix-ui/react-progress": "^1.1.0",
+      "@radix-ui/react-radio-group": "^1.2.1",
+      "@radix-ui/react-scroll-area": "^1.2.0",
+      "@radix-ui/react-select": "^2.1.2",
+      "@radix-ui/react-separator": "^1.1.0",
+      "@radix-ui/react-slider": "^1.2.1",
+      "@radix-ui/react-slot": "^1.1.0",
+      "@radix-ui/react-switch": "^1.1.1",
+      "@radix-ui/react-tabs": "^1.1.1",
+      "@radix-ui/react-toast": "^1.2.2",
+      "@radix-ui/react-toggle": "^1.1.0",
+      "@radix-ui/react-toggle-group": "^1.1.0",
+      "@radix-ui/react-tooltip": "^1.1.3",
+      "@replit/vite-plugin-shadcn-theme-json": "^0.0.4",
+      "@tanstack/react-query": "^5.60.5",
+      "@types/howler": "^2.2.12",
+      "class-variance-authority": "^0.7.0",
+      "clsx": "^2.1.1",
+      "cmdk": "^1.0.0",
+      "connect-pg-simple": "^10.0.0",
+      "cors": "^2.8.5",
+      "date-fns": "^3.6.0",
+      "dotenv": "^16.5.0",
+      "drizzle-orm": "^0.39.1",
+      "drizzle-zod": "^0.7.0",
+      "embla-carousel-react": "^8.3.0",
+      "express": "^4.21.2",
+      "express-session": "^1.18.1",
+      "firebase": "^11.6.0",
+      "framer-motion": "^11.13.1",
+      "howler": "^2.2.4",
+      "input-otp": "^1.2.4",
+      "lucide-react": "^0.453.0",
+      "memorystore": "^1.6.7",
+      "passport": "^0.7.0",
+      "passport-local": "^1.0.0",
+      "react": "^18.3.1",
+      "react-day-picker": "^8.10.1",
+      "react-dom": "^18.3.1",
+      "react-hook-form": "^7.53.1",
+      "react-icons": "^5.4.0",
+      "react-resizable-panels": "^2.1.4",
+      "recharts": "^2.13.0",
+      "tailwind-merge": "^2.5.4",
+      "tailwindcss-animate": "^1.0.7",
+      "vaul": "^1.1.0",
+      "wouter": "^3.3.5",
+      "ws": "^8.18.0",
+      "zod": "^3.23.8",
+      "zod-validation-error": "^3.4.0"
+    },
+    "devDependencies": {
+      "@replit/vite-plugin-cartographer": "^0.0.11",
+      "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
+      "@tailwindcss/typography": "^0.5.15",
+      "@types/connect-pg-simple": "^7.0.3",
+      "@types/express": "4.17.21",
+      "@types/express-session": "^1.18.0",
+      "@types/node": "20.16.11",
+      "@types/passport": "^1.0.16",
+      "@types/passport-local": "^1.0.38",
+      "@types/react": "^18.3.11",
+      "@types/react-dom": "^18.3.1",
+      "@types/ws": "^8.5.13",
+      "@vitejs/plugin-react": "^4.3.2",
+      "autoprefixer": "^10.4.20",
+      "drizzle-kit": "^0.30.4",
+      "esbuild": "^0.25.0",
+      "postcss": "^8.4.47",
+      "tailwindcss": "^3.4.14",
+      "tsx": "^4.19.1",
+      "typescript": "5.6.3",
+      "vite": "^5.4.14"
+    },
+    "optionalDependencies": {
+      "bufferutil": "^4.0.8"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

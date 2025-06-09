@@ -10,11 +10,11 @@ async function throwIfResNotOk(res: Response) {
 export async function apiRequest(
   method: string,
   url: string,
-  data?: unknown | undefined,
+  data?: unknown | undefined
 ): Promise<Response> {
-  const baseUrl = import.meta.env.VITE_BACKEND_URL;
-  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
-  
+  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const fullUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
+
   const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -27,16 +27,30 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
+
+interface QueryOptions {
   on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
+  method?: string;
+  data?: unknown;
+  headers?: Record<string, string>;
+}
+
+export const getQueryFn: <T>(options: QueryOptions) => QueryFunction<T> =
+  ({ on401: unauthorizedBehavior, method = "GET", data, headers = {} }) =>
   async ({ queryKey }) => {
-    const baseUrl = "http://147.93.19.165";
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     const url = queryKey[0] as string;
-    const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
-    
+    const fullUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
+
+    const requestHeaders: Record<string, string> = {
+      ...headers,
+      ...(data ? { "Content-Type": "application/json" } : {}),
+    };
+
     const res = await fetch(fullUrl, {
+      method,
+      headers: requestHeaders,
+      body: data ? JSON.stringify(data) : undefined,
       credentials: "include",
     });
 

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAudio } from "@/hooks/use-audio";
-import { Play, Heart } from "lucide-react";
+import { Play, Heart, Pause } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { Playlist } from "@/context/audio-context";
@@ -10,17 +10,17 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 
 export default function FeaturedSection() {
-  const { playPlaylist } = useAudio();
+  const { playPlaylist, isPlaying } = useAudio();
   const [isFavorited, setIsFavorited] = useState(false);
-  
+
   // Query featured playlists
-  const { data: featuredPlaylists, isLoading } = useQuery({
+  const { data: featuredPlaylists, isLoading } = useQuery<Playlist[]>({
     queryKey: ['/api/playlists/featured'],
   });
-  
+
   // Get the first featured playlist
-  const featuredPlaylist = featuredPlaylists?.[0] as Playlist | undefined;
-  
+  const featuredPlaylist = (featuredPlaylists as Playlist[])?.[0];
+
   // Query to check if the first featured playlist is favorited
   const checkFavorite = async () => {
     if (featuredPlaylist) {
@@ -33,63 +33,63 @@ export default function FeaturedSection() {
       }
     }
   };
-  
+
   // Check favorite status when featured playlist is loaded
   if (featuredPlaylist && !isLoading) {
     checkFavorite();
   }
-  
+
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!featuredPlaylist) return;
-    
+
     try {
       if (isFavorited) {
         await apiRequest(
-          'DELETE', 
+          'DELETE',
           `/api/favorites?userId=1&playlistId=${featuredPlaylist.id}`
         );
       } else {
         await apiRequest(
-          'POST', 
-          '/api/favorites', 
+          'POST',
+          '/api/favorites',
           { userId: 1, playlistId: featuredPlaylist.id }
         );
       }
-      
+
       setIsFavorited(!isFavorited);
       queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
     } catch (error) {
       console.error('Error toggling favorite:', error);
     }
   };
-  
+
   const handlePlayFeatured = async (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     if (!featuredPlaylist) return;
-    
+
     try {
       // Fetch the affirmations for the playlist
       const res = await fetch(`/api/affirmations?playlistId=${featuredPlaylist.id}`);
       const affirmations = await res.json();
-      
+
       // Add to recent plays
       await apiRequest(
         'POST',
         '/api/recent-plays',
         { userId: 1, playlistId: featuredPlaylist.id }
       );
-      
+
       // Play the playlist
       playPlaylist(featuredPlaylist, affirmations);
     } catch (error) {
       console.error('Error playing featured playlist:', error);
     }
   };
-  
+
   if (isLoading) {
     return (
       <section className="py-4">
@@ -97,12 +97,12 @@ export default function FeaturedSection() {
           <h2 className="text-xl font-medium">Featured Today</h2>
           <span className="text-primary dark:text-primary-light text-sm font-medium">See All</span>
         </div>
-        
+
         <Skeleton className="h-[180px] w-full rounded-xl" />
       </section>
     );
   }
-  
+
   if (!featuredPlaylist) {
     return (
       <section className="py-4">
@@ -110,14 +110,14 @@ export default function FeaturedSection() {
           <h2 className="text-xl font-medium">Featured Today</h2>
           <span className="text-primary dark:text-primary-light text-sm font-medium">See All</span>
         </div>
-        
+
         <div className="rounded-xl bg-gray-100 dark:bg-dark-light p-6 text-center">
           <p>No featured playlist available</p>
         </div>
       </section>
     );
   }
-  
+
   return (
     <section className="py-4">
       <div className="flex items-center justify-between mb-4">
@@ -126,9 +126,9 @@ export default function FeaturedSection() {
           See All
         </Link>
       </div>
-      
+
       <Link href={`/playlist/${featuredPlaylist.id}`}>
-        <div 
+        <div
           className="relative overflow-hidden rounded-xl p-6 text-white shadow-lg cursor-pointer"
           style={{
             background: `linear-gradient(to right, ${featuredPlaylist.coverGradientStart}, ${featuredPlaylist.coverGradientEnd})`
@@ -140,20 +140,33 @@ export default function FeaturedSection() {
             </span>
             <h3 className="text-2xl font-semibold mt-3">{featuredPlaylist.title}</h3>
             <p className="text-white text-opacity-90 mt-1">{featuredPlaylist.description}</p>
-            
+
             <div className="flex items-center mt-4 space-x-3">
-              <Button 
-                variant="default" 
-                className="bg-white text-primary hover:bg-primary-light hover:text-white transition font-medium"
+              <Button
+                variant="default"
+                className={`font-medium transition-all duration-200 ${isPlaying
+                  ? "bg-primary text-white hover:bg-primary/90"
+                  : "bg-white text-primary hover:bg-primary hover:text-white"
+                  }`}
+                disabled={isPlaying}
                 onClick={handlePlayFeatured}
               >
-                <Play className="h-4 w-4 mr-2" />
-                <span>Play Now</span>
+                {isPlaying ? (
+                  <>
+                    {/* <Pause className="h-4 w-4 mr-2" /> */}
+                    <span>Playing</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    <span>Play</span>
+                  </>
+                )}
               </Button>
-              
-              <Button 
-                variant="outline" 
-                size="icon" 
+
+              <Button
+                variant="outline"
+                size="icon"
                 className="bg-white bg-opacity-25 border-none text-white hover:bg-white hover:bg-opacity-40"
                 onClick={toggleFavorite}
               >
@@ -161,7 +174,7 @@ export default function FeaturedSection() {
               </Button>
             </div>
           </div>
-          
+
           {/* Decorative elements */}
           <div className="absolute top-1/2 right-4 w-32 h-32 rounded-full bg-white opacity-10"></div>
           <div className="absolute bottom-0 right-24 w-20 h-20 rounded-full bg-white opacity-10"></div>

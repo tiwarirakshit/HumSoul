@@ -46,7 +46,7 @@ interface ProtectedRouteProps {
 function ProtectedRoute({ component: Component, ...rest }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
-  
+
   useEffect(() => {
     if (!loading && !user) {
       setLocation('/login');
@@ -77,7 +77,7 @@ function ProtectedRoute({ component: Component, ...rest }: ProtectedRouteProps) 
 function AdminRoute({ component: Component, ...rest }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
-  
+
   useEffect(() => {
     if (!loading && (!user || !user.isAdmin)) {
       setLocation('/');
@@ -126,7 +126,7 @@ function Router() {
           return <Login />;
         }}
       </Route>
-      
+
       {/* Admin routes */}
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminDashboard} />}
@@ -143,7 +143,7 @@ function Router() {
       <Route path="/admin/settings">
         {() => <ProtectedRoute component={AdminSettings} />}
       </Route>
-      
+
       {/* Auth required routes */}
       <Route path="/onboarding">
         {() => <ProtectedRoute component={Onboarding} />}
@@ -213,7 +213,7 @@ function AppContent() {
   if (showSplash) {
     return <SplashScreen />;
   }
-  
+
   // Show only the router content for auth pages
   if (!user || window.location.pathname === '/onboarding') {
     return (
@@ -222,7 +222,7 @@ function AppContent() {
       </main>
     );
   }
-  
+
   // Show full app layout for authenticated users
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden relative font-sans">
@@ -231,7 +231,7 @@ function AppContent() {
         <Router />
       </main>
       <BottomNavigation />
-      
+
       {/* Background Music Toggle */}
       <Button
         variant="ghost"
@@ -243,9 +243,9 @@ function AppContent() {
       </Button>
 
       {/* Subscription Popup */}
-      <SubscriptionPopup 
-        isOpen={showSubscriptionPopup} 
-        onClose={() => setShowSubscriptionPopup(false)} 
+      <SubscriptionPopup
+        isOpen={showSubscriptionPopup}
+        onClose={() => setShowSubscriptionPopup(false)}
       />
     </div>
   );
