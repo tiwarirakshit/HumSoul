@@ -112,7 +112,7 @@ const createReviewSchema = z.object({
   contentId: z.number().int().positive(),
   rating: z.number().int().min(1).max(5),
   review: z.string().min(1, "Review text is required").max(1000),
-  title: z.string().optional().max(200),
+  title: z.string().optional(),
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -550,3 +550,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(404).json({ message: "Audio file not found" });
     }
   });
+
+  // Mount the API routes
+  app.use('/api', api);
+
+  // Create and return the HTTP server
+  const server = createServer(app);
+  return server;
+}
