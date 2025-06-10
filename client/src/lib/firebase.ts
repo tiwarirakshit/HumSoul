@@ -6,7 +6,7 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBnWgEXuqyRUEmcVNk5IiEpTLyaJpyt7VQ",
-  authDomain: "mpforestvillage.in",
+  authDomain: "humsoul-27d0f.firebaseapp.com",
   projectId: "humsoul-27d0f",
   storageBucket: "humsoul-27d0f.appspot.com", // fix this (you had wrong domain earlier)
   messagingSenderId: "367237349555",
