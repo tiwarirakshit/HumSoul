@@ -5,13 +5,13 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBnWgEXuqyRUEmcVNk5IiEpTLyaJpyt7VQ",
-  authDomain: "humsoul-27d0f.firebaseapp.com",
-  projectId: "humsoul-27d0f",
-  storageBucket: "humsoul-27d0f.firebasestorage.app",
-  messagingSenderId: "367237349555",
-  appId: "1:367237349555:web:0a8a1643ef90a1a391f0c6",
-  measurementId: "G-H5N3K457WF"
+  apiKey: "AIzaSyCNz34Vyr-kU2tiTKQDZi70MYDQqk4SEBY",
+  authDomain: "humsoul-8ac3c.firebaseapp.com",
+  projectId: "humsoul-8ac3c",
+  storageBucket: "humsoul-8ac3c.firebasestorage.app",
+  messagingSenderId: "676589244801",
+  appId: "1:676589244801:web:54f2cdff0c9da945add880",
+  measurementId: "G-KGYP02QBVR"
 };
 
 // Initialize Firebase
