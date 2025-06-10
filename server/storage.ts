@@ -32,6 +32,8 @@ export interface IStorage {
   getCategories(): Promise<Category[]>;
   getCategory(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category>;
+  deleteCategory(id: number): Promise<void>;
 
   // Playlist methods
   getPlaylists(): Promise<Playlist[]>;
@@ -39,6 +41,8 @@ export interface IStorage {
   getFeaturedPlaylists(): Promise<Playlist[]>;
   getPlaylist(id: number): Promise<Playlist | undefined>;
   createPlaylist(playlist: InsertPlaylist): Promise<Playlist>;
+  updatePlaylist(id: number, playlist: Partial<InsertPlaylist>): Promise<Playlist>;
+  deletePlaylist(id: number): Promise<void>;
 
   // Affirmation methods
   getAffirmationsByPlaylist(playlistId: number): Promise<Affirmation[]>;
@@ -49,7 +53,12 @@ export interface IStorage {
   getBackgroundMusics(): Promise<BackgroundMusic[]>;
   getBackgroundMusicsByCategory(category: string): Promise<BackgroundMusic[]>;
   getBackgroundMusic(id: number): Promise<BackgroundMusic | undefined>;
-  createBackgroundMusic(music: InsertBackgroundMusic): Promise<BackgroundMusic>;
+  createBackgroundMusic(music: InsertBackgroundMusic & {
+    fileName?: string;
+    filePath?: string;
+    fileSize?: number;
+    mimeType?: string;
+  }): Promise<BackgroundMusic>;
 
   // User Favorites methods
   getUserFavorites(userId: number): Promise<Playlist[]>;
@@ -135,9 +144,71 @@ export class MemStorage implements IStorage {
     return newCategory;
   }
 
+  async updateCategory(id: number, categoryUpdate: Partial<InsertCategory>): Promise<Category> {
+    const existingCategory = this.categories.get(id);
+    if (!existingCategory) {
+      throw new Error(`Category not found: ${id}`);
+    }
+    
+    const updatedCategory: Category = { ...existingCategory, ...categoryUpdate };
+    this.categories.set(id, updatedCategory);
+    return updatedCategory;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    if (!this.categories.has(id)) {
+      throw new Error(`Category not found: ${id}`);
+    }
+    this.categories.delete(id);
+  }
+
   // Playlist methods
   async getPlaylists(): Promise<Playlist[]> {
     return Array.from(this.playlists.values());
+  }
+
+  async updatePlaylist(id: number, playlistUpdate: Partial<InsertPlaylist>): Promise<Playlist> {
+    const existingPlaylist = this.playlists.get(id);
+    if (!existingPlaylist) {
+      throw new Error(`Playlist not found: ${id}`);
+    }
+    
+    const updatedPlaylist: Playlist = { 
+      ...existingPlaylist, 
+      ...playlistUpdate,
+      // Ensure nullable fields are handled properly
+      description: playlistUpdate.description !== undefined ? playlistUpdate.description : existingPlaylist.description,
+      isFeatured: playlistUpdate.isFeatured !== undefined ? playlistUpdate.isFeatured : existingPlaylist.isFeatured
+    };
+    this.playlists.set(id, updatedPlaylist);
+    return updatedPlaylist;
+  }
+
+  async deletePlaylist(id: number): Promise<void> {
+    if (!this.playlists.has(id)) {
+      throw new Error(`Playlist not found: ${id}`);
+    }
+    
+    // Also remove related affirmations, favorites, and recent plays
+    Array.from(this.affirmations.entries()).forEach(([affirmationId, affirmation]) => {
+      if (affirmation.playlistId === id) {
+        this.affirmations.delete(affirmationId);
+      }
+    });
+    
+    Array.from(this.userFavorites.entries()).forEach(([favoriteId, favorite]) => {
+      if (favorite.playlistId === id) {
+        this.userFavorites.delete(favoriteId);
+      }
+    });
+    
+    Array.from(this.recentPlays.entries()).forEach(([recentPlayId, recentPlay]) => {
+      if (recentPlay.playlistId === id) {
+        this.recentPlays.delete(recentPlayId);
+      }
+    });
+    
+    this.playlists.delete(id);
   }
 
   async getPlaylistsByCategory(categoryId: number): Promise<Playlist[]> {
@@ -536,6 +607,15 @@ export class DatabaseStorage implements IStorage {
     return newCategory;
   }
 
+  async updateCategory(id: number, category: UpdateCategory): Promise<Category> {
+    const [updatedCategory] = await db.update(categories).set(category).where(eq(categories.id, id)).returning();
+    return updatedCategory;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    await db.delete(categories).where(eq(categories.id, id));
+  }
+
   // Playlist methods
   async getPlaylists(): Promise<Playlist[]> {
     return db.select().from(playlists);
@@ -564,6 +644,15 @@ export class DatabaseStorage implements IStorage {
     
     const [newPlaylist] = await db.insert(playlists).values(playlistToInsert).returning();
     return newPlaylist;
+  }
+
+  async updatePlaylist(id: number, playlist: UpdatePlaylist): Promise<Playlist> {
+    const [updatedPlaylist] = await db.update(playlists).set(playlist).where(eq(playlists.id, id)).returning();
+    return updatedPlaylist;
+  }
+
+  async deletePlaylist(id: number): Promise<void> {
+    await db.delete(playlists).where(eq(playlists.id, id));
   }
 
   // Affirmation methods

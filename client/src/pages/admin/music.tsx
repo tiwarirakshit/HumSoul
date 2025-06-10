@@ -58,208 +58,292 @@ interface BackgroundMusic {
   createdAt: string;
 }
 
+// Form interfaces
+interface CategoryForm {
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
+interface PlaylistForm {
+  title: string;
+  description: string;
+  categoryId: string;
+  isFeatured: boolean;
+}
+
+interface AffirmationForm {
+  title: string;
+  description: string;
+  file: File | null;
+}
+
+interface MusicForm {
+  title: string;
+  category: string;
+  description: string;
+  file: File | null;
+}
+
 export default function AdminMusic() {
-  const [activeTab, setActiveTab] = useState("playlists");
+
+  // State management
+  const [activeTab, setActiveTab] = useState("categories");
   const [isPlaying, setIsPlaying] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // State for data
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+
+  // Data state
   const [categories, setCategories] = useState<Category[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [affirmations, setAffirmations] = useState<Affirmation[]>([]);
   const [backgroundMusic, setBackgroundMusic] = useState<BackgroundMusic[]>([]);
-  
-  // Form states
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<number | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
 
-  // Fetch data on component mount
+  // Form state
+  const [categoryForm, setCategoryForm] = useState<CategoryForm>({
+    name: '', description: '', icon: '', color: '#000000'
+  });
+  const [playlistForm, setPlaylistForm] = useState<PlaylistForm>({
+    title: '', description: '', categoryId: '', isFeatured: false
+  });
+  const [affirmationForm, setAffirmationForm] = useState<AffirmationForm>({
+    title: '', description: '', file: null
+  });
+  const [musicForm, setMusicForm] = useState<MusicForm>({
+    title: '', category: '', description: '', file: null
+  });
+
+  // Initialize data
   useEffect(() => {
-    fetchCategories();
-    fetchPlaylists();
-    fetchBackgroundMusic();
+    Promise.all([
+      fetchCategories(),
+      fetchPlaylists(),
+      fetchBackgroundMusic()
+    ]);
   }, []);
 
-  // API calls
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories');
-      const data = await response.json();
-      setCategories(data);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
+  // API functions
+  const api = {
+    async request(url: string, options: RequestInit = {}) {
+      try {
+        const response = await fetch(url, {
+          headers: { 'Content-Type': 'application/json', ...options.headers },
+          ...options
+        });
 
-  const fetchPlaylists = async () => {
-    try {
-      const response = await fetch('/api/playlists');
-      const data = await response.json();
-      setPlaylists(data);
-    } catch (error) {
-      console.error('Error fetching playlists:', error);
-    }
-  };
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ message: 'Request failed' }));
+          throw new Error(error.message);
+        }
 
-  const fetchAffirmations = async (playlistId: number) => {
-    try {
-      const response = await fetch(`/api/affirmations?playlistId=${playlistId}`);
-      const data = await response.json();
-      setAffirmations(data);
-    } catch (error) {
-      console.error('Error fetching affirmations:', error);
-    }
-  };
-
-  const fetchBackgroundMusic = async () => {
-    try {
-      const response = await fetch('/api/background-music');
-      const data = await response.json();
-      setBackgroundMusic(data);
-    } catch (error) {
-      console.error('Error fetching background music:', error);
-    }
-  };
-
-  // Category Management
-  const handleCreateCategory = async (formData: {name: string, description: string, icon: string, color: string}) => {
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      
-      if (response.ok) {
-        await fetchCategories();
-        setIsDialogOpen(false);
-        // Clear form
-        (document.getElementById('name') as HTMLInputElement).value = '';
-        (document.getElementById('description') as HTMLTextAreaElement).value = '';
-        (document.getElementById('icon') as HTMLInputElement).value = '';
-        (document.getElementById('color') as HTMLInputElement).value = '';
+        return response.status === 204 ? null : await response.json();
+      } catch (error) {
+        alert({
+          title: "Error",
+          description: error instanceof Error ? error.message : "An error occurred",
+          variant: "destructive"
+        });
+        throw error;
       }
-    } catch (error) {
-      console.error('Error creating category:', error);
+    },
+
+    async upload(url: string, formData: FormData) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+          throw new Error(error.message);
+        }
+
+        return await response.json();
+      } catch (error) {
+        alert({
+          title: "Upload Error",
+          description: error instanceof Error ? error.message : "Upload failed",
+          variant: "destructive"
+        });
+        throw error;
+      }
+    }
+  };
+
+  // Fetch functions
+  const fetchCategories = () => api.request('/api/categories').then(setCategories);
+  const fetchPlaylists = () => api.request('/api/playlists').then(setPlaylists);
+  const fetchBackgroundMusic = () => api.request('/api/background-music').then(setBackgroundMusic);
+  const fetchAffirmations = (playlistId: number) =>
+    api.request(`/api/affirmations?playlistId=${playlistId}`).then(setAffirmations);
+
+  // Form helpers
+  const resetForms = () => {
+    setCategoryForm({ name: '', description: '', icon: '', color: '#000000' });
+    setPlaylistForm({ title: '', description: '', categoryId: '', isFeatured: false });
+    setAffirmationForm({ title: '', description: '', file: null });
+    setMusicForm({ title: '', category: '', description: '', file: null });
+    setEditingItem(null);
+  };
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    resetForms();
+  };
+
+  const showSuccess = (message: string) => {
+    alert({ title: "Success", description: message });
+    closeDialog();
+  };
+
+  // Category operations
+  const handleCategorySubmit = async () => {
+    setIsLoading(true);
+    try {
+      if (editingItem) {
+        await api.request(`/api/categories/${editingItem.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(categoryForm)
+        });
+        showSuccess('Category updated successfully');
+      } else {
+        await api.request('/api/categories', {
+          method: 'POST',
+          body: JSON.stringify(categoryForm)
+        });
+        showSuccess('Category created successfully');
+      }
+      await fetchCategories();
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Playlist Management
-  const handleCreatePlaylist = async (formData: {title: string, description: string, categoryId: string, isFeatured: boolean}) => {
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch('/api/playlists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          categoryId: parseInt(formData.categoryId),
-          isFeatured: formData.isFeatured,
-          userId: 1, // Replace with actual admin user ID
-        }),
-      });
-      
-      if (response.ok) {
-        await fetchPlaylists();
-        setIsDialogOpen(false);
-      }
-    } catch (error) {
-      console.error('Error creating playlist:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // File Upload handlers
-  const handleUploadAffirmation = async (files: FileList | null, formData: {title: string, description: string}) => {
-    if (!files || !files[0] || !selectedPlaylist) return;
-    
-    setIsLoading(true);
-    const uploadFormData = new FormData();
-    uploadFormData.append('audio', files[0]);
-    uploadFormData.append('title', formData.title);
-    uploadFormData.append('description', formData.description);
-    uploadFormData.append('playlistId', selectedPlaylist.toString());
-    
-    try {
-      const response = await fetch('/api/affirmations/upload', {
-        method: 'POST',
-        body: uploadFormData,
-      });
-      
-      if (response.ok) {
-        await fetchAffirmations(selectedPlaylist);
-        setIsDialogOpen(false);
-      }
-    } catch (error) {
-      console.error('Error uploading affirmation:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUploadBackgroundMusic = async (files: FileList | null, formData: {title: string, category: string, description: string}) => {
-    if (!files || !files[0]) return;
-    
-    setIsLoading(true);
-    const uploadFormData = new FormData();
-    uploadFormData.append('audio', files[0]);
-    uploadFormData.append('title', formData.title);
-    uploadFormData.append('category', formData.category);
-    uploadFormData.append('description', formData.description);
-    
-    try {
-      const response = await fetch('/api/background-music/upload', {
-        method: 'POST',
-        body: uploadFormData,
-      });
-      
-      if (response.ok) {
-        await fetchBackgroundMusic();
-        setIsDialogOpen(false);
-      }
-    } catch (error) {
-      console.error('Error uploading background music:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Delete functions
-  const handleDeletePlaylist = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this playlist?')) return;
-    
-    try {
-      const response = await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
-      if (response.ok) {
-        await fetchPlaylists();
-      }
-    } catch (error) {
-      console.error('Error deleting playlist:', error);
-    }
+  const handleEditCategory = (category: Category) => {
+    setEditingItem(category);
+    setCategoryForm({
+      name: category.name,
+      description: category.description || '',
+      icon: category.icon || '',
+      color: category.color || '#000000'
+    });
+    setIsDialogOpen(true);
   };
 
   const handleDeleteCategory = async (id: number) => {
     if (!confirm('Are you sure you want to delete this category?')) return;
-    
+
     try {
-      const response = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
-      if (response.ok) {
-        await fetchCategories();
-      }
+      await api.request(`/api/categories/${id}`, { method: 'DELETE' });
+      alert({ title: "Success", description: "Category deleted successfully" });
+      await fetchCategories();
     } catch (error) {
-      console.error('Error deleting category:', error);
+      // Error is already handled in api.request
     }
   };
 
+  // Playlist operations
+  const handlePlaylistSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const data = {
+        ...playlistForm,
+        categoryId: parseInt(playlistForm.categoryId),
+        userId: 1 // Replace with actual admin user ID
+      };
+
+      if (editingItem) {
+        await api.request(`/api/playlists/${editingItem.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data)
+        });
+        showSuccess('Playlist updated successfully');
+      } else {
+        await api.request('/api/playlists', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        showSuccess('Playlist created successfully');
+      }
+      await fetchPlaylists();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditPlaylist = (playlist: Playlist) => {
+    setEditingItem(playlist);
+    setPlaylistForm({
+      title: playlist.title,
+      description: playlist.description || '',
+      categoryId: playlist.categoryId.toString(),
+      isFeatured: playlist.isFeatured
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDeletePlaylist = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this playlist?')) return;
+
+    try {
+      await api.request(`/api/playlists/${id}`, { method: 'DELETE' });
+      alert({ title: "Success", description: "Playlist deleted successfully" });
+      await fetchPlaylists();
+    } catch (error) {
+      // Error is already handled in api.request
+    }
+  };
+
+  // Affirmation operations
+  const handleAffirmationUpload = async () => {
+    if (!affirmationForm.file || !selectedPlaylist) return;
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('audio', affirmationForm.file);
+      formData.append('title', affirmationForm.title);
+      formData.append('description', affirmationForm.description);
+      formData.append('playlistId', selectedPlaylist.toString());
+      formData.append('path', affirmationForm.file.name);
+      const audio = new Audio(URL.createObjectURL(affirmationForm.file));
+      await new Promise(resolve => audio.addEventListener('loadedmetadata', resolve));
+      formData.append('duration', String(audio.duration));
+      URL.revokeObjectURL(audio.src);
+
+      await api.upload('/api/affirmations/upload', formData);
+      showSuccess('Affirmation uploaded successfully');
+      await fetchAffirmations(selectedPlaylist);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Background music operations
+  const handleMusicUpload = async () => {
+    if (!musicForm.file) return;
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('audio', musicForm.file);
+      formData.append('title', musicForm.title);
+      formData.append('category', musicForm.category);
+      formData.append('description', musicForm.description);
+
+      await api.upload('/api/background-music/upload', formData);
+      showSuccess('Background music uploaded successfully');
+      await fetchBackgroundMusic();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // UI helpers
   const togglePlay = (id: string) => {
     setIsPlaying(isPlaying === id ? null : id);
   };
@@ -269,6 +353,18 @@ export default function AdminMusic() {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handlePlaylistSelect = (playlistId: string) => {
+    const id = parseInt(playlistId);
+    setSelectedPlaylist(id);
+    fetchAffirmations(id);
+  };
+
+  const openCreateDialog = (type: string) => {
+    resetForms();
+    setActiveTab(type);
+    setIsDialogOpen(true);
   };
 
   return (
@@ -301,48 +397,10 @@ export default function AdminMusic() {
         <TabsContent value="categories" className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold">Categories</h3>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Category
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Category</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" placeholder="Category name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" placeholder="Category description" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="icon">Icon</Label>
-                    <Input id="icon" placeholder="Icon name or URL" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="color">Color</Label>
-                    <Input id="color" type="color" />
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={() => {
-                      const name = (document.getElementById('name') as HTMLInputElement)?.value || '';
-                      const description = (document.getElementById('description') as HTMLTextAreaElement)?.value || '';
-                      const icon = (document.getElementById('icon') as HTMLInputElement)?.value || '';
-                      const color = (document.getElementById('color') as HTMLInputElement)?.value || '';
-                      handleCreateCategory({name, description, icon, color});
-                    }} disabled={isLoading}>
-                      {isLoading ? 'Creating...' : 'Create Category'}
-                    </Button>
-                  </DialogFooter>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => openCreateDialog('categories')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Category
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -352,7 +410,7 @@ export default function AdminMusic() {
                   <CardTitle className="flex items-center justify-between">
                     <span>{category.name}</span>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditCategory(category)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteCategory(category.id)}>
@@ -373,63 +431,10 @@ export default function AdminMusic() {
         <TabsContent value="playlists" className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold">Playlists</h3>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Playlist
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Playlist</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="playlist-title">Title</Label>
-                    <Input id="playlist-title" placeholder="Playlist title" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="playlist-description">Description</Label>
-                    <Textarea id="playlist-description" placeholder="Playlist description" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="playlist-category">Category</Label>
-                    <Select>
-                      <SelectTrigger id="playlist-category">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="playlist-featured" />
-                    <Label htmlFor="playlist-featured">Featured Playlist</Label>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={() => {
-                      const title = (document.getElementById('playlist-title') as HTMLInputElement)?.value || '';
-                      const description = (document.getElementById('playlist-description') as HTMLTextAreaElement)?.value || '';
-                      const categorySelect = document.getElementById('playlist-category') as HTMLSelectElement;
-                      const categoryId = categorySelect?.value || '';
-                      const isFeatured = (document.getElementById('playlist-featured') as HTMLInputElement)?.checked || false;
-                      
-                      if (title && categoryId) {
-                        handleCreatePlaylist({title, description, categoryId, isFeatured});
-                      }
-                    }} disabled={isLoading}>
-                      {isLoading ? 'Creating...' : 'Create Playlist'}
-                    </Button>
-                  </DialogFooter>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => openCreateDialog('playlists')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Playlist
+            </Button>
           </div>
 
           <div className="space-y-4">
@@ -447,7 +452,7 @@ export default function AdminMusic() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditPlaylist(playlist)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDeletePlaylist(playlist.id)}>
@@ -472,11 +477,7 @@ export default function AdminMusic() {
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold">Affirmations</h3>
             <div className="flex gap-4">
-              <Select value={selectedPlaylist?.toString() || ""} onValueChange={(value) => {
-                const playlistId = parseInt(value);
-                setSelectedPlaylist(playlistId);
-                fetchAffirmations(playlistId);
-              }}>
+              <Select value={selectedPlaylist?.toString() || ""} onValueChange={handlePlaylistSelect}>
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Select playlist to view affirmations" />
                 </SelectTrigger>
@@ -488,47 +489,11 @@ export default function AdminMusic() {
                   ))}
                 </SelectContent>
               </Select>
-              
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button disabled={!selectedPlaylist}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Affirmation
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Upload Affirmation Audio</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="affirmation-title">Title</Label>
-                      <Input id="affirmation-title" placeholder="Affirmation title" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="affirmation-description">Description</Label>
-                      <Textarea id="affirmation-description" placeholder="Affirmation description" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="affirmation-audio">Audio File</Label>
-                      <Input id="affirmation-audio" type="file" accept="audio/*" />
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={() => {
-                        const title = (document.getElementById('affirmation-title') as HTMLInputElement)?.value || '';
-                        const description = (document.getElementById('affirmation-description') as HTMLTextAreaElement)?.value || '';
-                        const fileInput = document.getElementById('affirmation-audio') as HTMLInputElement;
-                        
-                        if (title && fileInput?.files) {
-                          handleUploadAffirmation(fileInput.files, {title, description});
-                        }
-                      }} disabled={isLoading}>
-                        {isLoading ? 'Uploading...' : 'Upload Affirmation'}
-                      </Button>
-                    </DialogFooter>
-                  </div>
-                </DialogContent>
-              </Dialog>
+
+              <Button disabled={!selectedPlaylist} onClick={() => openCreateDialog('affirmations')}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Affirmation
+              </Button>
             </div>
           </div>
 
@@ -581,51 +546,10 @@ export default function AdminMusic() {
         <TabsContent value="background-music" className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold">Background Music</h3>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Music
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Upload Background Music</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="music-title">Title</Label>
-                    <Input id="music-title" placeholder="Music title" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="music-category">Category</Label>
-                    <Input id="music-category" placeholder="Music category" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="music-description">Description</Label>
-                    <Textarea id="music-description" placeholder="Music description" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="music-audio">Audio File</Label>
-                    <Input id="music-audio" type="file" accept="audio/*" />
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={() => {
-                      const title = (document.getElementById('music-title') as HTMLInputElement)?.value || '';
-                      const category = (document.getElementById('music-category') as HTMLInputElement)?.value || '';
-                      const description = (document.getElementById('music-description') as HTMLTextAreaElement)?.value || '';
-                      const fileInput = document.getElementById('music-audio') as HTMLInputElement;
-                      
-                      if (title && category && fileInput?.files) {
-                        handleUploadBackgroundMusic(fileInput.files, {title, category, description});
-                      }
-                    }} disabled={isLoading}>
-                      {isLoading ? 'Uploading...' : 'Upload Music'}
-                    </Button>
-                  </DialogFooter>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => openCreateDialog('background-music')}>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Music
+            </Button>
           </div>
 
           <div className="space-y-4">
@@ -672,6 +596,205 @@ export default function AdminMusic() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Universal Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem ? 'Edit' : 'Create'}{' '}
+              {activeTab === 'categories' && 'Category'}
+              {activeTab === 'playlists' && 'Playlist'}
+              {activeTab === 'affirmations' && 'Affirmation'}
+              {activeTab === 'background-music' && 'Background Music'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Category Form */}
+            {activeTab === 'categories' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="category-name">Name</Label>
+                  <Input
+                    id="category-name"
+                    value={categoryForm.name}
+                    onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Category name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category-description">Description</Label>
+                  <Textarea
+                    id="category-description"
+                    value={categoryForm.description}
+                    onChange={(e) => setCategoryForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Category description"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category-icon">Icon</Label>
+                  <Input
+                    id="category-icon"
+                    value={categoryForm.icon}
+                    onChange={(e) => setCategoryForm(prev => ({ ...prev, icon: e.target.value }))}
+                    placeholder="Icon name or URL"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category-color">Color</Label>
+                  <Input
+                    id="category-color"
+                    type="color"
+                    value={categoryForm.color}
+                    onChange={(e) => setCategoryForm(prev => ({ ...prev, color: e.target.value }))}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Playlist Form */}
+            {activeTab === 'playlists' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="playlist-title">Title</Label>
+                  <Input
+                    id="playlist-title"
+                    value={playlistForm.title}
+                    onChange={(e) => setPlaylistForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Playlist title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="playlist-description">Description</Label>
+                  <Textarea
+                    id="playlist-description"
+                    value={playlistForm.description}
+                    onChange={(e) => setPlaylistForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Playlist description"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="playlist-category">Category</Label>
+                  <Select value={playlistForm.categoryId} onValueChange={(value) => setPlaylistForm(prev => ({ ...prev, categoryId: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="playlist-featured"
+                    checked={playlistForm.isFeatured}
+                    onChange={(e) => setPlaylistForm(prev => ({ ...prev, isFeatured: e.target.checked }))}
+                  />
+                  <Label htmlFor="playlist-featured">Featured Playlist</Label>
+                </div>
+              </>
+            )}
+
+            {/* Affirmation Form */}
+            {activeTab === 'affirmations' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="affirmation-title">Title</Label>
+                  <Input
+                    id="affirmation-title"
+                    value={affirmationForm.title}
+                    onChange={(e) => setAffirmationForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Affirmation title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="affirmation-description">Description</Label>
+                  <Textarea
+                    id="affirmation-description"
+                    value={affirmationForm.description}
+                    onChange={(e) => setAffirmationForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Affirmation description"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="affirmation-file">Audio File</Label>
+                  <Input
+                    id="affirmation-file"
+                    type="file"
+                    accept="audio/*"
+                    onChange={(e) => setAffirmationForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Background Music Form */}
+            {activeTab === 'background-music' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="music-title">Title</Label>
+                  <Input
+                    id="music-title"
+                    value={musicForm.title}
+                    onChange={(e) => setMusicForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Music title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="music-category">Category</Label>
+                  <Input
+                    id="music-category"
+                    value={musicForm.category}
+                    onChange={(e) => setMusicForm(prev => ({ ...prev, category: e.target.value }))}
+                    placeholder="Music category"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="music-description">Description</Label>
+                  <Textarea
+                    id="music-description"
+                    value={musicForm.description}
+                    onChange={(e) => setMusicForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Music description"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="music-file">Audio File</Label>
+                  <Input
+                    id="music-file"
+                    type="file"
+                    accept="audio/*"
+                    onChange={(e) => setMusicForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDialog}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (activeTab === 'categories') handleCategorySubmit();
+                else if (activeTab === 'playlists') handlePlaylistSubmit();
+                else if (activeTab === 'affirmations') handleAffirmationUpload();
+                else if (activeTab === 'background-music') handleMusicUpload();
+              }}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Processing...' : (editingItem ? 'Update' : 'Create')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

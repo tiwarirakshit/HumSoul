@@ -367,7 +367,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const affirmationData = uploadAffirmationSchema.parse({
         ...req.body,
         playlistId: parseInt(req.body.playlistId),
-        duration: req.body.duration ? parseFloat(req.body.duration) : undefined,
+        duration: req.body.duration ? parseInt(req.body.duration) : undefined,
+        title: req.body.title ? req.body.title : req.file.originalname.split('.')[0],
+        audioUrl: req.file.path
       });
 
       // Verify playlist exists
@@ -381,10 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create affirmation record with file path
       const affirmation = await storage.createAffirmation({
         ...affirmationData,
-        fileName: req.file.filename,
-        filePath: req.file.path,
-        fileSize: req.file.size,
-        mimeType: req.file.mimetype,
+        audioUrl: req.file.path
       });
 
       res.status(201).json(affirmation);
