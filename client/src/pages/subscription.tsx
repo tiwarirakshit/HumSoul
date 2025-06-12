@@ -35,15 +35,56 @@ const plans = [
   }
 ];
 
+// Load Razorpay script
+function loadRazorpayScript(src: string) {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
+
 export default function Subscription() {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<number>(1); // Default to yearly plan
 
-  const handleSubscribe = () => {
-    // Here you would integrate with your payment processor
-    console.log("Subscribing to plan:", plans[selectedPlan].name);
-    // After successful payment, you would update the user's subscription status
-  };
+  const handleSubscribe = async () => {
+  const res = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
+
+  if (!res) {
+    alert("Razorpay SDK failed to load. Are you online?");
+    return;
+  }
+
+  const plan = plans[selectedPlan];
+
+  const razorpay = new (window as any).Razorpay({
+    key: "rzp_test_o8ZBYNkHRr83ul", // Replace with your test key
+    amount: selectedPlan === 0 ? 99900 : 899900, // in paise (₹9.99 or ₹89.99)
+    currency: "INR",
+    name: "Humsoul",
+    description: `${plan.name} Subscription`,
+    image: "/your-logo.png", // Optional: replace with your logo path
+    handler: function (response: any) {
+      // Handle payment success here (e.g., call backend to confirm subscription)
+      alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+      setLocation("/thank-you"); // Redirect after payment
+    },
+    prefill: {
+      name: "Test User",
+      email: "test@example.com",
+    },
+    theme: {
+      color: "#6366F1", // Tailwind primary color (adjust as needed)
+    },
+  });
+
+  razorpay.open();
+};
+
 
   return (
     <div className="container max-w-4xl py-8">
@@ -140,4 +181,4 @@ export default function Subscription() {
       </div>
     </div>
   );
-} 
+}
