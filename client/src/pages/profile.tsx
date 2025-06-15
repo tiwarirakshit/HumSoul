@@ -126,7 +126,7 @@ export default function Profile() {
       </div>
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      {/* <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-3 shadow-sm text-center">
           <div className="flex justify-center mb-1">
             <Headphones className="text-primary h-6 w-6" />
@@ -150,7 +150,7 @@ export default function Profile() {
           <p className="text-xl font-semibold">0</p>
           <p className="text-xs text-gray-500">Hours</p>
         </div>
-      </div>
+      </div> */}
       
       {/* Settings */}
       <div className="bg-white rounded-xl p-4 shadow-sm mb-6">

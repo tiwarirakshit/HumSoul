@@ -36,7 +36,7 @@ export const playlists = pgTable("playlists", {
 
 export const affirmations = pgTable("affirmations", {
   id: serial("id").primaryKey(),
-  title: text("text").notNull(),
+  text: text("text").notNull(),
   audioUrl: text("audio_url").notNull(),
   duration: integer("duration").notNull(), // in seconds
   playlistId: integer("playlist_id").notNull().references(() => playlists.id),

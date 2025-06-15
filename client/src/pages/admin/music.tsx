@@ -306,7 +306,7 @@ export default function AdminMusic() {
     try {
       const formData = new FormData();
       formData.append('audio', affirmationForm.file);
-      formData.append('title', affirmationForm.title);
+      formData.append('text', affirmationForm.title);
       formData.append('description', affirmationForm.description);
       formData.append('playlistId', selectedPlaylist.toString());
       formData.append('path', affirmationForm.file.name);
@@ -374,28 +374,42 @@ export default function AdminMusic() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="categories" className="flex items-center gap-2">
-            <FolderOpen className="h-4 w-4" />
-            Categories
-          </TabsTrigger>
-          <TabsTrigger value="playlists" className="flex items-center gap-2">
-            <Music className="h-4 w-4" />
-            Playlists
-          </TabsTrigger>
-          <TabsTrigger value="affirmations" className="flex items-center gap-2">
-            <FileAudio className="h-4 w-4" />
-            Affirmations
-          </TabsTrigger>
-          <TabsTrigger value="background-music" className="flex items-center gap-2">
-            <Music className="h-4 w-4" />
-            Background Music
-          </TabsTrigger>
+        {/* Tabs List */}
+        <TabsList className="w-full">
+          <div className="flex overflow-x-auto no-scrollbar gap-2 px-2 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0">
+            <TabsTrigger
+              value="categories"
+              className="flex-shrink-0 min-w-fit flex items-center gap-2 whitespace-nowrap"
+            >
+              <FolderOpen className="h-4 w-4" />
+              Categories
+            </TabsTrigger>
+            <TabsTrigger
+              value="playlists"
+              className="flex-shrink-0 min-w-fit flex items-center gap-2 whitespace-nowrap"
+            >
+              <Music className="h-4 w-4" />
+              Playlists
+            </TabsTrigger>
+            <TabsTrigger
+              value="affirmations"
+              className="flex-shrink-0 min-w-fit flex items-center gap-2 whitespace-nowrap"
+            >
+              <FileAudio className="h-4 w-4" />
+              Affirmations
+            </TabsTrigger>
+            <TabsTrigger
+              value="background-music"
+              className="flex-shrink-0 min-w-fit flex items-center gap-2 whitespace-nowrap"
+            >
+              <Music className="h-4 w-4" />
+              Background Music
+            </TabsTrigger>
+          </div>
         </TabsList>
-
         {/* Categories Tab */}
         <TabsContent value="categories" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <h3 className="text-xl font-semibold">Categories</h3>
             <Button onClick={() => openCreateDialog('categories')}>
               <Plus className="mr-2 h-4 w-4" />
@@ -403,7 +417,7 @@ export default function AdminMusic() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map((category) => (
               <Card key={category.id}>
                 <CardHeader className="pb-3">
@@ -429,7 +443,7 @@ export default function AdminMusic() {
 
         {/* Playlists Tab */}
         <TabsContent value="playlists" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <h3 className="text-xl font-semibold">Playlists</h3>
             <Button onClick={() => openCreateDialog('playlists')}>
               <Plus className="mr-2 h-4 w-4" />
@@ -441,11 +455,15 @@ export default function AdminMusic() {
             {playlists.map((playlist) => (
               <Card key={playlist.id}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         {playlist.title}
-                        {playlist.isFeatured && <Badge variant="secondary"><Star className="h-3 w-3 mr-1" />Featured</Badge>}
+                        {playlist.isFeatured && (
+                          <Badge variant="secondary">
+                            <Star className="h-3 w-3 mr-1" /> Featured
+                          </Badge>
+                        )}
                       </CardTitle>
                       {playlist.description && (
                         <p className="text-sm text-muted-foreground mt-1">{playlist.description}</p>
@@ -462,7 +480,7 @@ export default function AdminMusic() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground gap-2">
                     <span>Category: {playlist.categoryName || 'Unknown'}</span>
                     <span>Created: {new Date(playlist.createdAt).toLocaleDateString()}</span>
                   </div>
@@ -474,11 +492,11 @@ export default function AdminMusic() {
 
         {/* Affirmations Tab */}
         <TabsContent value="affirmations" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h3 className="text-xl font-semibold">Affirmations</h3>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <Select value={selectedPlaylist?.toString() || ""} onValueChange={handlePlaylistSelect}>
-                <SelectTrigger className="w-64">
+                <SelectTrigger className="w-full sm:w-64">
                   <SelectValue placeholder="Select playlist to view affirmations" />
                 </SelectTrigger>
                 <SelectContent>
@@ -502,37 +520,16 @@ export default function AdminMusic() {
               {affirmations.map((affirmation) => (
                 <Card key={affirmation.id}>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => togglePlay(affirmation.id.toString())}
-                        >
-                          {isPlaying === affirmation.id.toString() ? (
-                            <Pause className="h-4 w-4" />
-                          ) : (
-                            <Play className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <div>
-                          <h4 className="font-medium">{affirmation.title}</h4>
-                          {affirmation.description && (
-                            <p className="text-sm text-muted-foreground">{affirmation.description}</p>
-                          )}
-                          <div className="flex gap-4 text-xs text-muted-foreground mt-1">
-                            <span>Duration: {formatDuration(affirmation.duration)}</span>
-                            <span>Uploaded: {new Date(affirmation.createdAt).toLocaleDateString()}</span>
-                          </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div>
+                        <h4 className="font-medium">{affirmation.title}</h4>
+                        {affirmation.description && (
+                          <p className="text-sm text-muted-foreground">{affirmation.description}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
+                          <span className="text-black font-bold">{affirmation.text || 'Unknown'}</span>
+                          <span>Duration: {formatDuration(affirmation.duration)}</span>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -544,7 +541,7 @@ export default function AdminMusic() {
 
         {/* Background Music Tab */}
         <TabsContent value="background-music" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <h3 className="text-xl font-semibold">Background Music</h3>
             <Button onClick={() => openCreateDialog('background-music')}>
               <Upload className="mr-2 h-4 w-4" />
@@ -556,13 +553,9 @@ export default function AdminMusic() {
             {backgroundMusic.map((music) => (
               <Card key={music.id}>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => togglePlay(music.id.toString())}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => togglePlay(music.id.toString())}>
                         {isPlaying === music.id.toString() ? (
                           <Pause className="h-4 w-4" />
                         ) : (
@@ -574,7 +567,7 @@ export default function AdminMusic() {
                         {music.description && (
                           <p className="text-sm text-muted-foreground">{music.description}</p>
                         )}
-                        <div className="flex gap-4 text-xs text-muted-foreground mt-1">
+                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
                           <span>Category: {music.category}</span>
                           <span>Duration: {formatDuration(music.duration)}</span>
                           <span>Uploaded: {new Date(music.createdAt).toLocaleDateString()}</span>
@@ -596,6 +589,7 @@ export default function AdminMusic() {
           </div>
         </TabsContent>
       </Tabs>
+
 
       {/* Universal Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

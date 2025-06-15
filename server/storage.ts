@@ -22,6 +22,52 @@ import {
   type InsertRecentPlay,
 } from "@shared/schema";
 
+export interface AdminUser {
+  id: number;
+  name: string | null;  
+  email: string | null;
+  username: string;
+  status: "active" | "suspended";
+  subscriptionStatus: "free" | "premium";
+  joinedAt: Date;
+  lastLogin: Date | null;
+  avatarUrl: string | null;
+}
+
+export interface AdminUserFilters {
+  search?: string;
+  status?: "active" | "suspended";
+  subscriptionStatus?: "free" | "premium";
+}
+
+export interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  status?: "active" | "suspended";
+  subscriptionStatus?: "free" | "premium";
+}
+
+export interface CreateUserRequest {
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+}
+
+export interface DashboardStats {
+  totalUsers: number;
+  totalTracks: number;
+  totalSubscribers: number;
+  totalPlays: number;
+  userGrowthPercent: number;
+  newTracksThisWeek: number;
+  conversionRate: number;
+  playsGrowthPercent: number;
+  userGrowth: Array<{ name: string; users: number }>;
+  listeningData: Array<{ name: string; minutes: number }>;
+  subscriptionData: Array<{ name: string; value: number }>;
+  categoryData: Array<{ name: string; value: number }>;
+}
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -34,7 +80,13 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category>;
   deleteCategory(id: number): Promise<void>;
-
+getDashboardStats(): Promise<DashboardStats>;
+getAdminUsers(filters?: AdminUserFilters): Promise<AdminUser[]>;
+  getAdminUser(id: number): Promise<AdminUser | undefined>;
+  updateAdminUser(id: number, updates: UpdateUserRequest): Promise<AdminUser>;
+  createAdminUser(user: CreateUserRequest): Promise<AdminUser>;
+  deleteAdminUser(id: number): Promise<void>;
+  getUsersCount(): Promise<number>;
   // Playlist methods
   getPlaylists(): Promise<Playlist[]>;
   getPlaylistsByCategory(categoryId: number): Promise<Playlist[]>;
@@ -60,6 +112,8 @@ export interface IStorage {
     mimeType?: string;
   }): Promise<BackgroundMusic>;
 
+  
+
   // User Favorites methods
   getUserFavorites(userId: number): Promise<Playlist[]>;
   addUserFavorite(favorite: InsertUserFavorite): Promise<UserFavorite>;
@@ -70,6 +124,8 @@ export interface IStorage {
   getRecentPlays(userId: number): Promise<{ playlist: Playlist; playedAt: Date }[]>;
   addRecentPlay(recentPlay: InsertRecentPlay): Promise<RecentPlay>;
 }
+
+
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
@@ -99,6 +155,194 @@ export class MemStorage implements IStorage {
     
     // Seed with initial data
     this.seedData();
+  }
+
+  async getAdminUsers(filters?: AdminUserFilters): Promise<AdminUser[]> {
+    let userList = Array.from(this.users.values());
+
+    // Apply filters
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      userList = userList.filter(user => 
+        user.name?.toLowerCase().includes(searchLower) ||
+        user.email?.toLowerCase().includes(searchLower) ||
+        user.username.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (filters?.status) {
+      userList = userList.filter(user => {
+        // Assuming you add a status field to User type, or default to "active"
+        const status = (user as any).status || "active";
+        return status === filters.status;
+      });
+    }
+
+    if (filters?.subscriptionStatus) {
+      userList = userList.filter(user => {
+        // Mock subscription status based on some logic
+        const subscriptionStatus = user.id === 1 ? "premium" : "free";
+        return subscriptionStatus === filters.subscriptionStatus;
+      });
+    }
+
+    return userList.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      status: (user as any).status || "active",
+      subscriptionStatus: user.id === 1 ? "premium" : "free", // Mock data
+      joinedAt: user.createdAt,
+      lastLogin: user.createdAt, // Mock - you'd track this separately
+      avatarUrl: user.avatarUrl
+    }));
+  }
+
+  async getAdminUser(id: number): Promise<AdminUser | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      status: (user as any).status || "active",
+      subscriptionStatus: user.id === 1 ? "premium" : "free",
+      joinedAt: user.createdAt,
+      lastLogin: user.createdAt,
+      avatarUrl: user.avatarUrl
+    };
+  }
+
+  async updateAdminUser(id: number, updates: UpdateUserRequest): Promise<AdminUser> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error(`User not found: ${id}`);
+    }
+
+    const updatedUser = {
+      ...user,
+      ...updates,
+      name: updates.name !== undefined ? updates.name : user.name,
+      email: updates.email !== undefined ? updates.email : user.email
+    };
+
+    this.users.set(id, updatedUser);
+    return this.getAdminUser(id) as Promise<AdminUser>;
+  }
+
+  async createAdminUser(userReq: CreateUserRequest): Promise<AdminUser> {
+    const newUser = await this.createUser({
+      username: userReq.username,
+      password: userReq.password,
+      name: userReq.name,
+      email: userReq.email
+    });
+
+    return {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      username: newUser.username,
+      status: "active",
+      subscriptionStatus: "free",
+      joinedAt: newUser.createdAt,
+      lastLogin: null,
+      avatarUrl: newUser.avatarUrl
+    };
+  }
+
+  async deleteAdminUser(id: number): Promise<void> {
+    if (!this.users.has(id)) {
+      throw new Error(`User not found: ${id}`);
+    }
+
+    // Remove user and related data
+    this.users.delete(id);
+    
+    // Remove user favorites
+    Array.from(this.userFavorites.entries()).forEach(([favoriteId, favorite]) => {
+      if (favorite.userId === id) {
+        this.userFavorites.delete(favoriteId);
+      }
+    });
+
+    // Remove user recent plays
+    Array.from(this.recentPlays.entries()).forEach(([playId, play]) => {
+      if (play.userId === id) {
+        this.recentPlays.delete(playId);
+      }
+    });
+  }
+
+  async getUsersCount(): Promise<number> {
+    return this.users.size;
+  }
+
+   async getDashboardStats(): Promise<DashboardStats> {
+    const totalUsers = this.users.size;
+    const totalTracks = this.affirmations.size;
+    const totalPlaylists = this.playlists.size;
+    const totalPlays = this.recentPlays.size;
+    
+    // Calculate subscribers (assuming premium users - you might want to add a subscription field)
+    const totalSubscribers = Math.floor(totalUsers * 0.15); // 15% conversion rate example
+    
+    // Mock growth data - in real implementation, you'd query historical data
+    const now = new Date();
+    const userGrowth = Array.from({ length: 6 }, (_, i) => {
+      const monthsAgo = 5 - i;
+      const date = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+      const users = Math.floor(totalUsers * (0.5 + (i * 0.1))); // Simulated growth
+      return { name: monthName, users };
+    });
+
+    // Mock listening data for the past week
+    const listeningData = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const minutes = Math.floor(Math.random() * 500) + 200; // Random listening time
+      return { name: dayName, minutes };
+    });
+
+    // Mock subscription distribution
+    const subscriptionData = [
+      { name: 'Free', value: totalUsers - totalSubscribers },
+      { name: 'Premium', value: totalSubscribers }
+    ];
+
+    // Calculate category popularity based on playlists
+    const categoryStats = new Map<string, number>();
+    this.playlists.forEach(playlist => {
+      const category = this.categories.get(playlist.categoryId);
+      if (category) {
+        categoryStats.set(category.name, (categoryStats.get(category.name) || 0) + 1);
+      }
+    });
+
+    const categoryData = Array.from(categoryStats.entries()).map(([name, value]) => ({
+      name,
+      value
+    }));
+
+    return {
+      totalUsers,
+      totalTracks,
+      totalSubscribers,
+      totalPlays,
+      userGrowthPercent: 12.5, // Mock growth percentage
+      newTracksThisWeek: 3, // Mock new tracks
+      conversionRate: Math.round((totalSubscribers / totalUsers) * 100),
+      playsGrowthPercent: 8.3, // Mock plays growth
+      userGrowth,
+      listeningData,
+      subscriptionData,
+      categoryData
+    };
   }
 
   // User methods
@@ -572,6 +816,186 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+   async getAdminUsers(filters?: AdminUserFilters): Promise<AdminUser[]> {
+    let query = db.select().from(users);
+
+    // Apply search filter
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`;
+      query = query.where(
+        or(
+          like(users.name, searchTerm),
+          like(users.email, searchTerm),
+          like(users.username, searchTerm)
+        )
+      );
+    }
+
+    const userList = await query;
+
+    return userList.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      status: (user as any).status || "active", // Add status field to your schema
+      subscriptionStatus: user.id === 1 ? "premium" : "free", // Mock - implement subscription table
+      joinedAt: user.createdAt,
+      lastLogin: user.createdAt, // Mock - implement last login tracking
+      avatarUrl: user.avatarUrl
+    }));
+  }
+
+  async getAdminUser(id: number): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    if (!user) return undefined;
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      status: (user as any).status || "active",
+      subscriptionStatus: user.id === 1 ? "premium" : "free",
+      joinedAt: user.createdAt,
+      lastLogin: user.createdAt,
+      avatarUrl: user.avatarUrl
+    };
+  }
+
+  async updateAdminUser(id: number, updates: UpdateUserRequest): Promise<AdminUser> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        name: updates.name,
+        email: updates.email,
+        // Add status field to your schema: status: updates.status
+      })
+      .where(eq(users.id, id))
+      .returning();
+
+    if (!updatedUser) {
+      throw new Error(`User not found: ${id}`);
+    }
+
+    return this.getAdminUser(id) as Promise<AdminUser>;
+  }
+
+  async createAdminUser(userReq: CreateUserRequest): Promise<AdminUser> {
+    const newUser = await this.createUser({
+      username: userReq.username,
+      password: userReq.password,
+      name: userReq.name,
+      email: userReq.email
+    });
+
+    return {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      username: newUser.username,
+      status: "active",
+      subscriptionStatus: "free",
+      joinedAt: newUser.createdAt,
+      lastLogin: null,
+      avatarUrl: newUser.avatarUrl
+    };
+  }
+
+  async deleteAdminUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
+  async getUsersCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(users);
+    return result.count;
+  }
+
+   async getDashboardStats(): Promise<DashboardStats> {
+    try {
+      // Get basic counts
+      const [
+        userCount,
+        trackCount,
+        playlistCount,
+        playCount
+      ] = await Promise.all([
+        db.select({ count: count() }).from(users),
+        db.select({ count: count() }).from(affirmations),
+        db.select({ count: count() }).from(playlists),
+        db.select({ count: count() }).from(recentPlays)
+      ]);
+
+      const totalUsers = userCount[0].count;
+      const totalTracks = trackCount[0].count;
+      const totalPlaylists = playlistCount[0].count;
+      const totalPlays = playCount[0].count;
+
+      // Mock subscribers calculation (you might want to add a subscription table)
+      const totalSubscribers = Math.floor(totalUsers * 0.15);
+
+      // Get user growth data (last 6 months)
+      // Note: This is a simplified version. In production, you'd want to store user registration dates
+      // and query actual historical data
+      const now = new Date();
+      const userGrowth = Array.from({ length: 6 }, (_, i) => {
+        const monthsAgo = 5 - i;
+        const date = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        const users = Math.floor(totalUsers * (0.5 + (i * 0.1)));
+        return { name: monthName, users };
+      });
+
+      // Mock listening data for the past week
+      const listeningData = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const minutes = Math.floor(Math.random() * 500) + 200;
+        return { name: dayName, minutes };
+      });
+
+      // Subscription distribution
+      const subscriptionData = [
+        { name: 'Free', value: totalUsers - totalSubscribers },
+        { name: 'Premium', value: totalSubscribers }
+      ];
+
+      // Get category popularity
+      const categoryPlaylistCounts = await db
+        .select({
+          categoryName: categories.name,
+          playlistCount: count(playlists.id)
+        })
+        .from(categories)
+        .leftJoin(playlists, eq(categories.id, playlists.categoryId))
+        .groupBy(categories.id, categories.name);
+
+      const categoryData = categoryPlaylistCounts.map(item => ({
+        name: item.categoryName,
+        value: item.playlistCount
+      }));
+
+      return {
+        totalUsers,
+        totalTracks,
+        totalSubscribers,
+        totalPlays,
+        userGrowthPercent: 12.5, // You'd calculate this from actual historical data
+        newTracksThisWeek: 3, // You'd query tracks created in the last week
+        conversionRate: totalUsers > 0 ? Math.round((totalSubscribers / totalUsers) * 100) : 0,
+        playsGrowthPercent: 8.3, // You'd calculate this from historical play data
+        userGrowth,
+        listeningData,
+        subscriptionData,
+        categoryData
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {

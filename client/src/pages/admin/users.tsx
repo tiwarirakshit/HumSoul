@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -17,44 +17,249 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Ban, CheckCircle, UserPlus, Pencil, Crown } from "lucide-react";
+import { 
+  Ban, 
+  CheckCircle, 
+  UserPlus, 
+  Pencil, 
+  Crown, 
+  Loader2, 
+  Search,
+  Trash2 
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 import AdminLayout from "./layout";
 
-interface User {
-  id: string;
+interface AdminUser {
+  id: number;
+  name: string | null;
+  email: string | null;
+  username: string;
+  status: "active" | "suspended";
+  subscriptionStatus: "free" | "premium";
+  joinedAt: string;
+  lastLogin: string | null;
+  avatarUrl: string | null;
+}
+
+interface CreateUserForm {
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+}
+
+interface EditUserForm {
   name: string;
   email: string;
   status: "active" | "suspended";
   subscriptionStatus: "free" | "premium";
-  joinedAt: string;
-  lastLogin: string;
 }
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@example.com",
-      status: "active",
-      subscriptionStatus: "premium",
-      joinedAt: "2024-01-15",
-      lastLogin: "2024-03-10"
-    },
-    // Add more sample users as needed
-  ]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<AdminUser | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleStatusToggle = (id: string) => {
-    setUsers(users.map(user => {
-      if (user.id === id) {
-        return {
-          ...user,
-          status: user.status === "active" ? "suspended" : "active"
-        };
-      }
-      return user;
-    }));
+  const [createForm, setCreateForm] = useState<CreateUserForm>({
+    name: "",
+    email: "",
+    username: "",
+    password: ""
+  });
+
+  const [editForm, setEditForm] = useState<EditUserForm>({
+    name: "",
+    email: "",
+    status: "active",
+    subscriptionStatus: "free"
+  });
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const delayedSearch = setTimeout(() => {
+      fetchUsers();
+    }, 300);
+
+    return () => clearTimeout(delayedSearch);
+  }, [searchTerm]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+
+      const response = await fetch(`/api/admin/users?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch users');
+      
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      console.error('Failed to fetch users');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createForm.name || !createForm.email || !createForm.username || !createForm.password) {
+      console.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createForm)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create user');
+      }
+
+      console.success('User created successfully');
+      setCreateDialogOpen(false);
+      setCreateForm({ name: "", email: "", username: "", password: "" });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error creating user:', error);
+      console.error(error.message || 'Failed to create user');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    try {
+      setSubmitting(true);
+      const response = await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update user');
+      }
+
+      console.success('User updated successfully');
+      setEditDialogOpen(false);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      console.error(error.message || 'Failed to update user');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleStatusToggle = async (user: AdminUser) => {
+    try {
+      const newStatus = user.status === "active" ? "suspended" : "active";
+      const response = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: user.name,
+          email: user.email,
+          status: newStatus,
+          subscriptionStatus: user.subscriptionStatus
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update user status');
+
+      console.success(`User ${newStatus === 'active' ? 'activated' : 'suspended'}`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      console.error('Failed to update user status');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deletingUser) return;
+
+    try {
+      setSubmitting(true);
+      const response = await fetch(`/api/admin/users/${deletingUser.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete user');
+
+      console.success('User deleted successfully');
+      setDeleteDialogOpen(false);
+      setDeletingUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      console.error('Failed to delete user');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEditDialog = (user: AdminUser) => {
+    setEditingUser(user);
+    setEditForm({
+      name: user.name || "",
+      email: user.email || "",
+      status: user.status,
+      subscriptionStatus: user.subscriptionStatus
+    });
+    setEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (user: AdminUser) => {
+    setDeletingUser(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading users...</span>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -62,7 +267,7 @@ export default function AdminUsers() {
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
           
-          <Dialog>
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="mr-2 h-4 w-4" />
@@ -73,28 +278,70 @@ export default function AdminUsers() {
               <DialogHeader>
                 <DialogTitle>Add New User</DialogTitle>
               </DialogHeader>
-              <form className="space-y-4">
+              <form onSubmit={handleCreateUser} className="space-y-4">
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <label htmlFor="name">Name</label>
-                    <Input id="name" placeholder="Enter name" />
+                    <Label htmlFor="create-name">Name</Label>
+                    <Input 
+                      id="create-name" 
+                      placeholder="Enter full name"
+                      value={createForm.name}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="email">Email</label>
-                    <Input id="email" type="email" placeholder="Enter email" />
+                    <Label htmlFor="create-email">Email</Label>
+                    <Input 
+                      id="create-email" 
+                      type="email" 
+                      placeholder="Enter email address"
+                      value={createForm.email}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="create-username">Username</Label>
+                    <Input 
+                      id="create-username" 
+                      placeholder="Enter username"
+                      value={createForm.username}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, username: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="create-password">Password</Label>
+                    <Input 
+                      id="create-password" 
+                      type="password" 
+                      placeholder="Enter password"
+                      value={createForm.password}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                    />
                   </div>
                 </div>
-                <Button type="submit" className="w-full">Add User</Button>
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Add User
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
         </div>
 
         <div className="flex gap-4 mb-6">
-          <Input
-            placeholder="Search users..."
-            className="max-w-sm"
-          />
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search users..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="rounded-md border">
@@ -103,59 +350,171 @@ export default function AdminUsers() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Username</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Subscription</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead>Last Login</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
+                <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={user.status === "active" ? "default" : "destructive"}
-                    >
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={user.subscriptionStatus === "premium" ? "default" : "secondary"}
-                    >
-                      <Crown className="mr-1 h-3 w-3" />
-                      {user.subscriptionStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.joinedAt}</TableCell>
-                  <TableCell>{user.lastLogin}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleStatusToggle(user.id)}
-                      >
-                        {user.status === "active" ? (
-                          <Ban className="h-4 w-4" />
-                        ) : (
-                          <CheckCircle className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    No users found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.name || 'No name'}
+                    </TableCell>
+                    <TableCell>{user.email || 'No email'}</TableCell>
+                    <TableCell>{user.username}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={user.status === "active" ? "default" : "destructive"}
+                      >
+                        {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={user.subscriptionStatus === "premium" ? "default" : "secondary"}
+                      >
+                        <Crown className="mr-1 h-3 w-3" />
+                        {user.subscriptionStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(user.joinedAt)}</TableCell>
+                    <TableCell>
+                      {user.lastLogin ? formatDate(user.lastLogin) : 'Never'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleStatusToggle(user)}
+                          title={user.status === "active" ? "Suspend user" : "Activate user"}
+                        >
+                          {user.status === "active" ? (
+                            <Ban className="h-4 w-4" />
+                          ) : (
+                            <CheckCircle className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => openEditDialog(user)}
+                          title="Edit user"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => openDeleteDialog(user)}
+                          title="Delete user"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
+
+        {/* Edit User Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditUser} className="space-y-4">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Name</Label>
+                  <Input 
+                    id="edit-name" 
+                    placeholder="Enter full name"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">Email</Label>
+                  <Input 
+                    id="edit-email" 
+                    type="email" 
+                    placeholder="Enter email address"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <select 
+                    id="edit-status"
+                    className="w-full p-2 border rounded"
+                    value={editForm.status}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value as "active" | "suspended" }))}
+                  >
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-subscription">Subscription</Label>
+                  <select 
+                    id="edit-subscription"
+                    className="w-full p-2 border rounded"
+                    value={editForm.subscriptionStatus}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, subscriptionStatus: e.target.value as "free" | "premium" }))}
+                  >
+                    <option value="free">Free</option>
+                    <option value="premium">Premium</option>
+                  </select>
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Update User
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the user "{deletingUser?.name || deletingUser?.username}" 
+                and remove all of their data. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteUser}
+                disabled={submitting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Delete User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
-} 
+}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   LineChart, 
@@ -14,45 +14,78 @@ import {
   Pie,
   Cell
 } from "recharts";
-import { Users, Music, Crown, Play } from "lucide-react";
+import { Users, Music, Crown, Play, Loader2 } from "lucide-react";
 import AdminLayout from "./layout";
-
-// Sample data
-const userStats = [
-  { name: "Jan", users: 400 },
-  { name: "Feb", users: 600 },
-  { name: "Mar", users: 800 },
-  { name: "Apr", users: 1200 },
-  { name: "May", users: 1800 },
-  { name: "Jun", users: 2400 },
-];
-
-const listeningData = [
-  { name: "Mon", minutes: 120 },
-  { name: "Tue", minutes: 140 },
-  { name: "Wed", minutes: 190 },
-  { name: "Thu", minutes: 210 },
-  { name: "Fri", minutes: 250 },
-  { name: "Sat", minutes: 320 },
-  { name: "Sun", minutes: 280 },
-];
-
-const subscriptionData = [
-  { name: "Free", value: 65 },
-  { name: "Premium", value: 35 },
-];
-
-const categoryData = [
-  { name: "Confidence", value: 30 },
-  { name: "Calm", value: 25 },
-  { name: "Focus", value: 20 },
-  { name: "Sleep", value: 15 },
-  { name: "Morning", value: 10 },
-];
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalTracks: 0,
+    totalSubscribers: 0,
+    totalPlays: 0,
+    userGrowth: [],
+    listeningData: [],
+    subscriptionData: [],
+    categoryData: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/dashboard-stats');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard stats');
+      }
+      
+      const data = await response.json();
+      setStats(data);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching dashboard stats:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading dashboard...</span>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-500 mb-2">Error loading dashboard</p>
+            <p className="text-sm text-gray-600">{error}</p>
+            <button 
+              onClick={fetchDashboardStats}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -66,9 +99,9 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2,451</div>
+              <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                +16% from last month
+                {stats.userGrowthPercent > 0 ? '+' : ''}{stats.userGrowthPercent}% from last month
               </p>
             </CardContent>
           </Card>
@@ -79,9 +112,9 @@ export default function AdminDashboard() {
               <Music className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">124</div>
+              <div className="text-2xl font-bold">{stats.totalTracks}</div>
               <p className="text-xs text-muted-foreground">
-                +8 new this week
+                +{stats.newTracksThisWeek} new this week
               </p>
             </CardContent>
           </Card>
@@ -92,9 +125,9 @@ export default function AdminDashboard() {
               <Crown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">857</div>
+              <div className="text-2xl font-bold">{stats.totalSubscribers.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                35% conversion rate
+                {stats.conversionRate}% conversion rate
               </p>
             </CardContent>
           </Card>
@@ -105,9 +138,9 @@ export default function AdminDashboard() {
               <Play className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24,389</div>
+              <div className="text-2xl font-bold">{stats.totalPlays.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                +32% from last month
+                {stats.playsGrowthPercent > 0 ? '+' : ''}{stats.playsGrowthPercent}% from last month
               </p>
             </CardContent>
           </Card>
@@ -122,7 +155,7 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={userStats}>
+                  <LineChart data={stats.userGrowth}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -146,7 +179,7 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={listeningData}>
+                  <BarChart data={stats.listeningData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -167,7 +200,7 @@ export default function AdminDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={subscriptionData}
+                      data={stats.subscriptionData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -176,7 +209,7 @@ export default function AdminDashboard() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {subscriptionData.map((entry, index) => (
+                      {stats.subscriptionData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -196,7 +229,7 @@ export default function AdminDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={categoryData}
+                      data={stats.categoryData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -205,7 +238,7 @@ export default function AdminDashboard() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {categoryData.map((entry, index) => (
+                      {stats.categoryData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -219,4 +252,4 @@ export default function AdminDashboard() {
       </div>
     </AdminLayout>
   );
-} 
+}

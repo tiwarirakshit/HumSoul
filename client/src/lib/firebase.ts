@@ -48,6 +48,8 @@ export const signInWithGoogle = async () => {
 export const signOutUser = async () => {
   try {
     await signOut(auth);
+    localStorage.removeItem('adminUser');
+    window.location.href = '/';
   } catch (error) {
     console.error("Error signing out: ", error);
     throw error;

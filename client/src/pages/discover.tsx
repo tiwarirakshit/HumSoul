@@ -144,16 +144,9 @@ export default function Discover() {
                   </div>
                   <div className="p-3">
                     <h3 className="font-medium text-sm line-clamp-1">{playlist.title}</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {playlist.affirmationCount} affirmations • {formatDuration(playlist.duration)}
-                    </p>
+                   
                     <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center space-x-1">
-                        <PlayCircle className="text-primary h-5 w-5" />
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {Math.floor(Math.random() * 5000)}
-                        </span>
-                      </div>
+                      
                       <button 
                         className="text-primary dark:text-primary-light"
                         onClick={(e) => toggleFavorite(playlist.id, e)}
