@@ -722,7 +722,8 @@ api.delete("/admin/users/:id", async (req, res) => {
     try {
       const filePath = path.join(
         process.cwd(),
-        "uploads",
+        "client",
+        "public",
         "audio",
         req.params.file
       );
