@@ -433,26 +433,14 @@ export class MemStorage implements IStorage {
       throw new Error(`Playlist not found: ${id}`);
     }
     
-    // Also remove related affirmations, favorites, and recent plays
-    Array.from(this.affirmations.entries()).forEach(([affirmationId, affirmation]) => {
-      if (affirmation.playlistId === id) {
-        this.affirmations.delete(affirmationId);
-      }
-    });
-    
-    Array.from(this.userFavorites.entries()).forEach(([favoriteId, favorite]) => {
-      if (favorite.playlistId === id) {
-        this.userFavorites.delete(favoriteId);
-      }
-    });
-    
-    Array.from(this.recentPlays.entries()).forEach(([recentPlayId, recentPlay]) => {
-      if (recentPlay.playlistId === id) {
-        this.recentPlays.delete(recentPlayId);
-      }
-    });
-    
-    this.playlists.delete(id);
+    // First, delete all affirmations for this playlist
+    await db.delete(affirmations).where(eq(affirmations.playlistId, id));
+    // Then, delete all recent plays for this playlist
+    await db.delete(recentPlays).where(eq(recentPlays.playlistId, id));
+    // Then, delete all user favorites for this playlist
+    await db.delete(userFavorites).where(eq(userFavorites.playlistId, id));
+    // Finally, delete the playlist
+    await db.delete(playlists).where(eq(playlists.id, id));
   }
 
   async getPlaylistsByCategory(categoryId: number): Promise<Playlist[]> {
@@ -801,6 +789,24 @@ export class MemStorage implements IStorage {
       playlistId: 8
     });
   }
+
+  async deleteAffirmation(id: number): Promise<void> {
+    if (!this.affirmations.has(id)) throw new Error('Affirmation not found');
+    this.affirmations.delete(id);
+  }
+
+  async updateAffirmation(id: number, update: Partial<InsertAffirmation>): Promise<Affirmation> {
+    // Remove undefined fields
+    const updateFields = Object.fromEntries(
+      Object.entries(update).filter(([_, v]) => v !== undefined && v !== null)
+    );
+    if (Object.keys(updateFields).length === 0) {
+      throw new Error('No fields to update');
+    }
+    const [updated] = await db.update(affirmations).set(updateFields).where(eq(affirmations.id, id)).returning();
+    if (!updated) throw new Error('Affirmation not found');
+    return updated;
+  }
 }
 
 import { db } from "./db";
@@ -1076,6 +1082,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deletePlaylist(id: number): Promise<void> {
+    // First, delete all affirmations for this playlist
+    await db.delete(affirmations).where(eq(affirmations.playlistId, id));
+    // Then, delete all recent plays for this playlist
+    await db.delete(recentPlays).where(eq(recentPlays.playlistId, id));
+    // Then, delete all user favorites for this playlist
+    await db.delete(userFavorites).where(eq(userFavorites.playlistId, id));
+    // Finally, delete the playlist
     await db.delete(playlists).where(eq(playlists.id, id));
   }
 
@@ -1289,6 +1302,23 @@ export class DatabaseStorage implements IStorage {
     ];
     
     await db.insert(recentPlays).values(recentPlayData);
+  }
+
+  async deleteAffirmation(id: number): Promise<void> {
+    await db.delete(affirmations).where(eq(affirmations.id, id));
+  }
+
+  async updateAffirmation(id: number, update: Partial<InsertAffirmation>): Promise<Affirmation> {
+    // Remove undefined fields
+    const updateFields = Object.fromEntries(
+      Object.entries(update).filter(([_, v]) => v !== undefined && v !== null)
+    );
+    if (Object.keys(updateFields).length === 0) {
+      throw new Error('No fields to update');
+    }
+    const [updated] = await db.update(affirmations).set(updateFields).where(eq(affirmations.id, id)).returning();
+    if (!updated) throw new Error('Affirmation not found');
+    return updated;
   }
 }
 

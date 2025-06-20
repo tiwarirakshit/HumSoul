@@ -77,6 +77,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const affirmationSoundRef = useRef<Howl | null>(null);
   const backgroundSoundRef = useRef<Howl | null>(null);
   const timerRef = useRef<number | null>(null);
+  const lastLoadedAffirmationIndex = useRef<number | null>(null);
 
   // Get current affirmation
   const currentAffirmation = currentTrack
@@ -135,71 +136,69 @@ export function AudioProvider({ children }: AudioProviderProps) {
   }, [isPlaying]);
 
   // Play a playlist
- // In audio-context.tsx, modify playPlaylist:
-const playPlaylist = (playlist: Playlist, affirmations: Affirmation[], startIndex: number = 0) => {
-  // Stop any existing sounds
-  if (affirmationSoundRef.current) {
-    affirmationSoundRef.current.stop();
-  }
+  const playPlaylist = (playlist: Playlist, affirmations: Affirmation[], startIndex: number = 0) => {
+    // Stop any existing sounds
+    if (affirmationSoundRef.current) {
+      affirmationSoundRef.current.stop();
+    }
 
-  // Create a new track with the specified starting index
-  const newTrack: AudioTrack = {
-    playlist,
-    affirmations,
-    currentAffirmationIndex: startIndex
+    // Create a new track with the specified starting index
+    const newTrack: AudioTrack = {
+      playlist,
+      affirmations,
+      currentAffirmationIndex: startIndex
+    };
+
+    setCurrentTrack(newTrack);
+    setIsPlaying(true); // Set playing state immediately
+    
+    // Load and play the affirmation at the specified index
+    if (affirmations.length > startIndex) {
+      loadAffirmation(affirmations[startIndex]);
+    }
   };
 
-  setCurrentTrack(newTrack);
-  setIsPlaying(true); // Set playing state immediately
-  
-  // Load and play the affirmation at the specified index
-  if (affirmations.length > startIndex) {
-    loadAffirmation(affirmations[startIndex]);
-  }
-};
-
   // Load an affirmation into the Howl instance
-// In loadAffirmation function, make sure it respects the isPlaying state:
-const loadAffirmation = (affirmation: Affirmation) => {
-  if (affirmationSoundRef.current) {
-    affirmationSoundRef.current.stop();
-    affirmationSoundRef.current.unload();
-  }
+  const loadAffirmation = (affirmation: Affirmation) => {
+    if (affirmationSoundRef.current) {
+      affirmationSoundRef.current.stop();
+      affirmationSoundRef.current.unload();
+    }
 
-  affirmationSoundRef.current = new Howl({
-    src: [affirmation.audioUrl],
-    html5: true,
-    volume: volume,
-    onend: handleAffirmationEnd,
-    onload: () => {
-      if (affirmationSoundRef.current) {
-        const soundDuration = affirmationSoundRef.current.duration();
-        setDuration(soundDuration);
-        setCurrentTime(0);
-        setProgress(0);
-        
-        // Only start playing if isPlaying is true
-        if (isPlaying) {
-          affirmationSoundRef.current.play();
-          // Start background music if available
-          if (backgroundSoundRef.current && backgroundMusic) {
-            backgroundSoundRef.current.play();
+    affirmationSoundRef.current = new Howl({
+      src: [affirmation.audioUrl],
+      html5: true,
+      volume: volume,
+      onend: handleAffirmationEnd,
+      onload: () => {
+        if (affirmationSoundRef.current) {
+          const soundDuration = affirmationSoundRef.current.duration();
+          setDuration(soundDuration);
+          setCurrentTime(0);
+          setProgress(0);
+          
+          // Only start playing if isPlaying is true
+          if (isPlaying) {
+            affirmationSoundRef.current.play();
+            // Start background music if available
+            if (backgroundSoundRef.current && backgroundMusic) {
+              backgroundSoundRef.current.play();
+            }
           }
         }
+      },
+      onloaderror: (id, error) => {
+        console.error('Failed to load audio:', error);
+        console.error('Audio URL:', affirmation.audioUrl);
+      },
+      onplayerror: (id, error) => {
+        console.error('Failed to play audio:', error);
       }
-    },
-    onloaderror: (id, error) => {
-      console.error('Failed to load audio:', error);
-      console.error('Audio URL:', affirmation.audioUrl);
-    },
-    onplayerror: (id, error) => {
-      console.error('Failed to play audio:', error);
-    }
-  });
+    });
 
-  // Load the sound
-  affirmationSoundRef.current.load();
-};
+    // Load the sound
+    affirmationSoundRef.current.load();
+  };
 
   // Handle affirmation end
   const handleAffirmationEnd = () => {
@@ -334,12 +333,17 @@ const loadAffirmation = (affirmation: Affirmation) => {
     }
   }, [backgroundMusicVolume]);
 
-  // If the current affirmation changes, load the new one
+  // If the current affirmation index changes, load the new one
   useEffect(() => {
-    if (currentTrack && currentAffirmation) {
+    if (
+      currentTrack &&
+      currentAffirmation &&
+      currentTrack.currentAffirmationIndex !== lastLoadedAffirmationIndex.current
+    ) {
       loadAffirmation(currentAffirmation);
+      lastLoadedAffirmationIndex.current = currentTrack.currentAffirmationIndex;
     }
-  }, [currentTrack?.currentAffirmationIndex]);
+  }, [currentTrack?.currentAffirmationIndex, currentAffirmation, currentTrack]);
 
   const value = {
     currentTrack,

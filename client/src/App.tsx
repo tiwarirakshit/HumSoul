@@ -113,7 +113,11 @@ function Router() {
   // Redirect from login page if already authenticated
   useEffect(() => {
     if (user && window.location.pathname === '/login') {
-      setLocation('/onboarding');
+      if (user.isAdmin) {
+        setLocation('/admin');
+      } else {
+        setLocation('/onboarding');
+      }
     }
   }, [user, setLocation]);
 
@@ -223,6 +227,9 @@ function AppContent() {
     );
   }
 
+  // Hide bottom nav on /admin routes
+  const isAdminRoute = window.location.pathname.startsWith('/admin');
+
   // Show full app layout for authenticated users
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden relative font-sans">
@@ -230,7 +237,7 @@ function AppContent() {
       <main className="flex-1 overflow-y-auto px-4 pb-24">
         <Router />
       </main>
-      <BottomNavigation />
+      {!isAdminRoute && <BottomNavigation />}
 
       {/* Background Music Toggle */}
       <Button

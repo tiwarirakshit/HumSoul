@@ -101,18 +101,6 @@ export default function BottomNavigation() {
           </a>
         </Link>
         
-        <Link href="/record">
-          <a className={cn(
-            itemClasses,
-            isActive("/record") 
-              ? "text-primary dark:text-primary-light" 
-              : "text-gray-500 dark:text-gray-400"
-          )}>
-            <Mic className={iconClasses} />
-            <span>Record</span>
-          </a>
-        </Link>
-        
         <Link href="/profile">
           <a className={cn(
             itemClasses,

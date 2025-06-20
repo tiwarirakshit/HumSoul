@@ -91,6 +91,11 @@ const createPlaylistSchema = z.object({
   categoryId: z.number().int().positive(),
   isFeatured: z.boolean().optional().default(false),
   userId: z.number().int().positive(), // Creator of the playlist
+  duration: z.number().int().nonnegative(),
+  affirmationCount: z.number().int().nonnegative(),
+  coverGradientStart: z.string().min(1),
+  coverGradientEnd: z.string().min(1),
+  icon: z.string().min(1),
 });
 
 const uploadAffirmationSchema = z.object({
@@ -458,6 +463,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // NEW: Upload affirmation audio file only (for editing)
+  api.post(
+    "/affirmations/upload-audio",
+    uploadAffirmation.single("audio"),
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No audio file provided" });
+        }
+        // Just return the audioUrl, do not create a DB record
+        res.status(201).json({ audioUrl: '/audio/' + req.file.filename });
+      } catch (error) {
+        // Clean up uploaded file on error
+        if (req.file) {
+          await fs.unlink(req.file.path).catch(console.error);
+        }
+        console.error("Error uploading audio file:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  );
+
   // Background Music routes
   api.get("/background-music", async (req, res) => {
     const category = req.query.category as string | undefined;
@@ -739,6 +766,49 @@ api.delete("/admin/users/:id", async (req, res) => {
       res.sendFile(filePath);
     } catch (error) {
       res.status(404).json({ message: "Audio file not found" });
+    }
+  });
+
+  // Add DELETE endpoint for affirmations
+  api.delete("/affirmations/:id", async (req, res) => {
+    try {
+      const affirmationId = parseInt(req.params.id);
+      if (isNaN(affirmationId)) {
+        return res.status(400).json({ message: "Invalid affirmation ID" });
+      }
+      const affirmation = await storage.getAffirmation(affirmationId);
+      if (!affirmation) {
+        return res.status(404).json({ message: "Affirmation not found" });
+      }
+      // Optionally: delete the audio file from disk here
+      await storage.deleteAffirmation(affirmationId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting affirmation:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Add PUT endpoint for affirmations (edit)
+  api.put("/affirmations/:id", async (req, res) => {
+    try {
+      const affirmationId = parseInt(req.params.id);
+      if (isNaN(affirmationId)) {
+        return res.status(400).json({ message: "Invalid affirmation ID" });
+      }
+      const updateData = uploadAffirmationSchema.partial().parse(req.body);
+      const affirmation = await storage.getAffirmation(affirmationId);
+      if (!affirmation) {
+        return res.status(404).json({ message: "Affirmation not found" });
+      }
+      const updatedAffirmation = await storage.updateAffirmation(affirmationId, updateData);
+      res.json(updatedAffirmation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid affirmation data", errors: error.errors });
+      }
+      console.error("Error updating affirmation:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

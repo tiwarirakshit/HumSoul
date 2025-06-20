@@ -72,15 +72,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const adminUser = { 
         email: _email,
         uid: 'admin-uid',
-        displayName: 'Admin User'
-      } as User;
+        displayName: 'Admin User',
+        isAdmin: true
+      } as User & { isAdmin: boolean };
       
       setUser(adminUser);
       setIsAdmin(true);
       setIsNewUser(false);
       localStorage.removeItem('isNewUser');
       localStorage.setItem('adminUser', JSON.stringify(adminUser));
-      window.location.href = '/admin';
       // Redirect will be handled by useEffect in Login component
     } else {
       throw new Error('Invalid email or password');
@@ -117,8 +117,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const adminUserJson = localStorage.getItem('adminUser');
     if (adminUserJson) {
       try {
-        const adminUser = JSON.parse(adminUserJson) as User;
+        let adminUser = JSON.parse(adminUserJson) as User & { isAdmin?: boolean };
         if (checkIsAdmin(adminUser.email)) {
+          adminUser = { ...adminUser, isAdmin: true };
           setUser(adminUser);
           setIsAdmin(true);
           setLoading(false);
