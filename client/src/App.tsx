@@ -260,20 +260,21 @@ function AppContent() {
 
 // Root application component
 function App() {
+  // Initialize native plugins on app start
   useEffect(() => {
     initializeCapacitorPlugins();
   }, []);
 
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AudioProvider>
-          <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AudioProvider>
             <AppContent />
             <Toaster />
-          </QueryClientProvider>
-        </AudioProvider>
-      </AuthProvider>
+          </AudioProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

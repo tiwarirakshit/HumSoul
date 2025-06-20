@@ -3,6 +3,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
+// IMPORTANT: Make sure google-services.json is present in android/app/ for Firebase Auth and Google Sign-In to work on Android.
+
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCNz34Vyr-kU2tiTKQDZi70MYDQqk4SEBY",
@@ -27,6 +29,9 @@ export const signInWithGoogle = async () => {
     if (Capacitor.isNativePlatform()) {
       // For mobile platforms
       const result = await GoogleAuth.signIn();
+      if (!result || !result.authentication || !result.authentication.idToken) {
+        throw new Error('Google sign-in failed: No idToken returned from native GoogleAuth plugin.');
+      }
       const credential = GoogleAuthProvider.credential(result.authentication.idToken);
       return signInWithCredential(auth, credential);
     } else {
