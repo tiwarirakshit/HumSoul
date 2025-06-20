@@ -12,7 +12,7 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined
 ): Promise<Response> {
-  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const baseUrl = import.meta.env.VITE_BACKEND_URL;
   const fullUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
 
   const res = await fetch(fullUrl, {
@@ -38,7 +38,7 @@ interface QueryOptions {
 export const getQueryFn: <T>(options: QueryOptions) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior, method = "GET", data, headers = {} }) =>
   async ({ queryKey }) => {
-    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    const baseUrl = import.meta.env.VITE_BACKEND_URL;
     const url = queryKey[0] as string;
     const fullUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
 
