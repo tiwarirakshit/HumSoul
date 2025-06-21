@@ -32,7 +32,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="676589244801-qrsi56orrp539ueps2sg6u62e61qv254.apps.googleusercontent.com" />
+                <data android:scheme="367237349555-lc4s3ugefef8ufp8mjgh6gu5hcv6uirj.apps.googleusercontent.com" />
             </intent-filter>
         </activity>
 

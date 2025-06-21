@@ -18,7 +18,9 @@ export function SplashScreen() {
     try {
       setError(null);
       setLoading(true);
+      console.log('Starting Google Sign-In process...');
       await signInWithGoogle();
+      console.log('Google Sign-In completed successfully');
       // Success is handled by the auth state observer
     } catch (error: any) {
       console.error("Error during sign in", error);
@@ -40,8 +42,16 @@ export function SplashScreen() {
         setError(
           "The sign-in popup was blocked by your browser. Please allow popups for this website and try again."
         );
+      } else if (errorCode === "auth/network-request-failed") {
+        setError(
+          "Network error occurred during sign-in. Please check your internet connection and try again."
+        );
+      } else if (errorCode === "auth/invalid-credential") {
+        setError(
+          "Invalid credentials. Please try signing in again or contact support if the problem persists."
+        );
       } else {
-        setError(`Sign-in failed: ${errorCode}. Please try again or contact support.`);
+        setError(`Sign-in failed: ${errorCode} - ${errorMessage}. Please try again or contact support.`);
       }
       
       toast({

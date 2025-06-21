@@ -5,14 +5,14 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 // IMPORTANT: Make sure google-services.json is present in android/app/ for Firebase Auth and Google Sign-In to work on Android.
 
-// Firebase configuration
+// Firebase configuration for humsoul-spare project
 const firebaseConfig = {
-  apiKey: "AIzaSyCNz34Vyr-kU2tiTKQDZi70MYDQqk4SEBY",
-  authDomain: "humsoul-8ac3c.firebaseapp.com",
-  projectId: "humsoul-8ac3c",
-  storageBucket: "humsoul-8ac3c.firebasestorage.app",
-  messagingSenderId: "676589244801",
-  appId: "1:676589244801:web:54f2cdff0c9da945add880",
+  apiKey: "AIzaSyCSTSf-g7crDqYZ7YNqlpAklxtORGGAEZ4",
+  authDomain: "humsoul-spare.firebaseapp.com",
+  projectId: "humsoul-spare",
+  storageBucket: "humsoul-spare.firebasestorage.app",
+  messagingSenderId: "919451172750",
+  appId: "1:919451172750:android:c81c05964d7a9335836edf",
   measurementId: "G-KGYP02QBVR"
 };
 
@@ -28,14 +28,22 @@ export const signInWithGoogle = async () => {
   try {
     if (Capacitor.isNativePlatform()) {
       // For mobile platforms
+      console.log('Attempting Google Sign-In on native platform');
       const result = await GoogleAuth.signIn();
+      console.log('GoogleAuth.signIn result:', result);
+      
       if (!result || !result.authentication || !result.authentication.idToken) {
+        console.error('Google sign-in failed: Invalid result structure:', result);
         throw new Error('Google sign-in failed: No idToken returned from native GoogleAuth plugin.');
       }
+      
+      console.log('Creating Firebase credential with idToken');
       const credential = GoogleAuthProvider.credential(result.authentication.idToken);
+      console.log('Signing in to Firebase with credential');
       return signInWithCredential(auth, credential);
     } else {
       // For web platforms
+      console.log('Attempting Google Sign-In on web platform');
       googleProvider.addScope('profile');
       googleProvider.addScope('email');
       googleProvider.setCustomParameters({
@@ -45,6 +53,11 @@ export const signInWithGoogle = async () => {
     }
   } catch (error) {
     console.error("Error signing in with Google: ", error);
+    console.error("Error details:", {
+      code: error?.code,
+      message: error?.message,
+      stack: error?.stack
+    });
     throw error;
   }
 };
