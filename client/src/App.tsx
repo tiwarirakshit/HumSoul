@@ -36,6 +36,7 @@ import AdminSubscriptions from "@/pages/admin/subscriptions";
 import NotificationPreferences from "@/pages/notification-preferences";
 import EditProfile from "@/pages/edit-profile";
 import { initializeCapacitorPlugins } from '@/lib/capacitor';
+import { Capacitor } from '@capacitor/core';
 
 interface ProtectedRouteProps {
   component: React.ComponentType<any>;
@@ -233,7 +234,7 @@ function AppContent() {
   // Show full app layout for authenticated users
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden relative font-sans">
-      <Header />
+      {!isAdminRoute && <Header />}
       <main className="flex-1 overflow-y-auto px-4 pb-24">
         <Router />
       </main>

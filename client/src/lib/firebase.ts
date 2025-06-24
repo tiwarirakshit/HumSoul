@@ -67,7 +67,7 @@ export const signOutUser = async () => {
   try {
     await signOut(auth);
     localStorage.removeItem('adminUser');
-    window.location.href = '/';
+    window.location.href = '/login';
   } catch (error) {
     console.error("Error signing out: ", error);
     throw error;

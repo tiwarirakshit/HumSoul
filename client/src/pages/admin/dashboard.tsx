@@ -86,6 +86,10 @@ export default function AdminDashboard() {
     );
   }
 
+  const filteredCategoryData = stats.categoryData.filter(
+    (entry) => entry.value > 0 && entry.name
+  );
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -229,7 +233,7 @@ export default function AdminDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={stats.categoryData}
+                      data={filteredCategoryData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -238,7 +242,7 @@ export default function AdminDashboard() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {stats.categoryData.map((entry, index) => (
+                      {filteredCategoryData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
