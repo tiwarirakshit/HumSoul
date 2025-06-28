@@ -20,6 +20,7 @@ import AdminLayout from "./layout";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Capacitor } from "@capacitor/core";
+import { useGlobalAudioPlayer } from "@/components/ui/global-audio-player";
 
 // Types
 interface Category {
@@ -100,6 +101,7 @@ interface MusicForm {
 
 export default function AdminMusic() {
   const { user } = useAuth();
+  const { playSong } = useGlobalAudioPlayer();
   const [categories, setCategories] = useState<Category[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [affirmations, setAffirmations] = useState<Affirmation[]>([]);
@@ -548,6 +550,12 @@ export default function AdminMusic() {
     }
   };
 
+  // Test function to play uploaded songs
+  const testPlaySong = (audioUrl: string, title: string) => {
+    console.log("🎵 Testing global player with:", { audioUrl, title });
+    playSong(audioUrl, title, "Uploaded Song", "Admin Uploads");
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6 p-6 max-w-7xl mx-auto">
@@ -713,6 +721,14 @@ export default function AdminMusic() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => testPlaySong(affirmation.audioUrl, affirmation.text || affirmation.title)}
+                            title="Play with Global Player"
+                          >
+                            <Play className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleEditAffirmation(affirmation)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -750,6 +766,14 @@ export default function AdminMusic() {
                           ) : (
                             <Play className="h-4 w-4" />
                           )}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => testPlaySong(music.fileName, music.title)}
+                          title="Play with Global Player"
+                        >
+                          <Music className="h-4 w-4" />
                         </Button>
                         <div>
                           <h4 className="font-medium">{music.title}</h4>

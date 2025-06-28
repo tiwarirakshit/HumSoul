@@ -4,46 +4,54 @@ import { Button } from "@/components/ui/button";
 import {
   Play,
   Pause,
-  SkipBack,
-  SkipForward,
-  Repeat,
-  Shuffle,
   Volume2,
   Volume1,
   VolumeX,
   Maximize2,
   Minimize2,
   Heart,
-  List
+  List,
+  Music
 } from "lucide-react";
 import { formatTime } from "@/lib/audio";
-import { useAudio } from "@/hooks/use-audio";
-import AudioProgress from "./audio-progress";
-import { Music } from "lucide-react";
+import { useSimpleAudio } from "@/hooks/use-audio";
 
-interface AudioPlayerProps {
-  showWaveform?: boolean;
-  minified?: boolean;
+interface SimpleAudioPlayerProps {
+  audioUrl?: string;
+  songTitle?: string;
+  artistName?: string;
+  albumName?: string;
 }
 
-export function AudioPlayer({ showWaveform = false, minified = false }: AudioPlayerProps) {
+export function SimpleAudioPlayer({ 
+  audioUrl, 
+  songTitle = "Song Title", 
+  artistName = "Artist Name", 
+  albumName = "Album Name" 
+}: SimpleAudioPlayerProps) {
   const {
     isPlaying,
     currentTime,
     duration,
     progress,
     volume,
-    backgroundMusicVolume,
+    currentSong,
+    loadSong,
     togglePlay,
     seek,
-    next,
-    previous,
-    setVolume,
-    setBackgroundMusicVolume
-  } = useAudio();
+    setVolume
+  } = useSimpleAudio();
 
   const [showVolumeControl, setShowVolumeControl] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Load song when audioUrl changes
+  useEffect(() => {
+    if (audioUrl && audioUrl !== currentSong) {
+      console.log("🎵 Loading song:", audioUrl);
+      loadSong(audioUrl);
+    }
+  }, [audioUrl, currentSong, loadSong]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -51,10 +59,6 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
       if (e.code === "Space") {
         e.preventDefault();
         togglePlay();
-      } else if (e.code === "ArrowRight") {
-        next();
-      } else if (e.code === "ArrowLeft") {
-        previous();
       }
     };
 
@@ -62,18 +66,11 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [togglePlay, next, previous]);
+  }, [togglePlay]);
 
   // Handle seek when slider is moved
   const handleSeek = (value: number[]) => {
     const newTime = (value[0] / 100) * duration;
-    seek(newTime);
-  };
-
-  // Handle seek for HTML range input
-  const handleRangeSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    const newTime = (value / 100) * duration;
     seek(newTime);
   };
 
@@ -82,24 +79,23 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
     setVolume(value[0] / 100);
   };
 
-  // Handle background music volume control
-  const handleBackgroundVolumeChange = (value: number[]) => {
-    setBackgroundMusicVolume(value[0] / 100);
-  };
-
   const VolumeIcon = () => {
     if (volume === 0) return <VolumeX className="h-5 w-5" />;
     if (volume < 0.5) return <Volume1 className="h-5 w-5" />;
     return <Volume2 className="h-5 w-5" />;
   };
 
-  // --- Spotify-like fixed bottom bar ---
+  // Don't render if no audio URL
+  if (!audioUrl) {
+    return null;
+  }
+
   return (
     <>
       {/* Main Player Bar */}
       <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-dark-lighter/90 shadow-2xl border-t border-gray-200 dark:border-gray-800 backdrop-blur-lg">
         <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 py-2 gap-2">
-          {/* Song Info (placeholder) */}
+          {/* Song Info */}
           <div className="flex items-center gap-3 min-w-[180px] w-full md:w-auto mb-2 md:mb-0">
             <div 
               className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded shadow-inner flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
@@ -109,22 +105,16 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
               <Music className="h-7 w-7 text-gray-400" />
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-base text-gray-900 dark:text-white truncate max-w-[120px]">Song Title</span>
-              <span className="text-xs text-gray-500 dark:text-gray-300 truncate max-w-[120px]">Artist Name</span>
+              <span className="font-semibold text-base text-gray-900 dark:text-white truncate max-w-[120px]">{songTitle}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-300 truncate max-w-[120px]">{artistName}</span>
             </div>
           </div>
 
           {/* Main Controls */}
           <div className="flex flex-col items-center flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={previous}>
-                <SkipBack className="h-6 w-6" />
-              </Button>
               <Button variant="default" size="icon" className="h-14 w-14 rounded-full shadow-lg" onClick={togglePlay}>
                 {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
-              </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={next}>
-                <SkipForward className="h-6 w-6" />
               </Button>
             </div>
             <div className="flex items-center w-full gap-2">
@@ -163,18 +153,6 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
                       />
                     </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium mb-1">Background Music</div>
-                    <div className="flex items-center gap-2">
-                      <Volume1 className="h-4 w-4" />
-                      <Slider
-                        value={[backgroundMusicVolume * 100]}
-                        max={100}
-                        step={1}
-                        onValueChange={handleBackgroundVolumeChange}
-                      />
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
@@ -193,9 +171,9 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
                   <Music className="h-12 w-12 text-gray-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Song Title</h2>
-                  <p className="text-gray-500 dark:text-gray-300">Artist Name</p>
-                  <p className="text-sm text-gray-400">Album Name</p>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{songTitle}</h2>
+                  <p className="text-gray-500 dark:text-gray-300">{artistName}</p>
+                  <p className="text-sm text-gray-400">{albumName}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -225,20 +203,8 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
 
             {/* Expanded Controls */}
             <div className="flex items-center justify-center gap-4 mb-6">
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Shuffle className="h-6 w-6" />
-              </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={previous}>
-                <SkipBack className="h-8 w-8" />
-              </Button>
               <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={togglePlay}>
                 {isPlaying ? <Pause className="h-10 w-10" /> : <Play className="h-10 w-10" />}
-              </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={next}>
-                <SkipForward className="h-8 w-8" />
-              </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Repeat className="h-6 w-6" />
               </Button>
             </div>
 
@@ -258,4 +224,4 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
       )}
     </>
   );
-}
+} 

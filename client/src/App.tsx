@@ -38,6 +38,7 @@ import EditProfile from "@/pages/edit-profile";
 import { initializeCapacitorPlugins } from '@/lib/capacitor';
 import { Capacitor } from '@capacitor/core';
 import { NetworkDebug } from "@/components/ui/network-debug";
+import { GlobalAudioPlayerProvider } from "@/components/ui/global-audio-player";
 
 interface ProtectedRouteProps {
   component: React.ComponentType<any>;
@@ -77,14 +78,14 @@ function ProtectedRoute({ component: Component, ...rest }: ProtectedRouteProps) 
 
 // Protected route wrapper with admin check
 function AdminRoute({ component: Component, ...rest }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!loading && (!user || !user.isAdmin)) {
+    if (!loading && (!user || !isAdmin)) {
       setLocation('/');
     }
-  }, [user, loading, setLocation]);
+  }, [user, loading, isAdmin, setLocation]);
 
   if (loading) {
     return (
@@ -99,7 +100,7 @@ function AdminRoute({ component: Component, ...rest }: ProtectedRouteProps) {
     );
   }
 
-  if (!user || !user.isAdmin) {
+  if (!user || !isAdmin) {
     return null;
   }
 
@@ -108,7 +109,7 @@ function AdminRoute({ component: Component, ...rest }: ProtectedRouteProps) {
 
 // Main router component
 function Router() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const pathname = window.location.pathname;
   console.log("Current pathname:", pathname);
@@ -119,7 +120,7 @@ function Router() {
     
     // Redirect from login page if already authenticated
     if (window.location.pathname === '/login') {
-      if (user.isAdmin) {
+      if (isAdmin) {
         setLocation('/admin');
       } else {
         setLocation('/onboarding');
@@ -128,17 +129,17 @@ function Router() {
     }
     
     // Redirect admin users to admin dashboard if they're on non-admin routes
-    if (user.isAdmin && !window.location.pathname.startsWith('/admin')) {
+    if (isAdmin && !window.location.pathname.startsWith('/admin')) {
       setLocation('/admin');
       return;
     }
     
     // Redirect regular users to onboarding if they're on admin routes
-    if (!user.isAdmin && window.location.pathname.startsWith('/admin')) {
+    if (!isAdmin && window.location.pathname.startsWith('/admin')) {
       setLocation('/onboarding');
       return;
     }
-  }, [user, setLocation]);
+  }, [user, isAdmin, setLocation]);
 
   return (
     <>
@@ -234,17 +235,15 @@ function AppContent() {
 
     // Show subscription popup after 3 days of usage
     const subscriptionTimer = setTimeout(() => {
-      // Check if user has already subscribed
-      if (!user?.isSubscribed) {
-        setShowSubscriptionPopup(true);
-      }
+      // Show subscription popup for all users after 3 days
+      setShowSubscriptionPopup(true);
     }, 3 * 24 * 60 * 60 * 1000); // 3 days in milliseconds
 
     return () => {
       clearTimeout(timer);
       clearTimeout(subscriptionTimer);
     };
-  }, [user?.isSubscribed]);
+  }, []);
 
   if (showSplash) {
     return <SplashScreen />;
@@ -303,8 +302,10 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <AudioProvider>
-            <AppContent />
-            <Toaster />
+            <GlobalAudioPlayerProvider>
+              <AppContent />
+              <Toaster />
+            </GlobalAudioPlayerProvider>
           </AudioProvider>
         </AuthProvider>
       </QueryClientProvider>
