@@ -15,6 +15,7 @@
     "db:reset": "tsx scripts/reset-database.ts",
     "db:create-admin": "tsx scripts/create-admin-user.ts",
     "generate:audio": "tsx scripts/generate-audio.ts",
+    "fix:audio": "tsx scripts/fix-audio-files.ts",
     "cap:init": "npx cap init",
     "cap:add:ios": "npx cap add ios",
     "cap:add:android": "npx cap add android",

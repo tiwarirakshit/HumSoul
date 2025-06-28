@@ -160,6 +160,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
   // Load an affirmation into the Howl instance
   const loadAffirmation = (affirmation: Affirmation) => {
+    console.log("🎵 Loading affirmation:", affirmation);
+    console.log("🎵 Audio URL:", affirmation.audioUrl);
+
     if (affirmationSoundRef.current) {
       affirmationSoundRef.current.stop();
       affirmationSoundRef.current.unload();
@@ -171,6 +174,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
       volume: volume,
       onend: handleAffirmationEnd,
       onload: () => {
+        console.log("✅ Audio loaded successfully");
         if (affirmationSoundRef.current) {
           const soundDuration = affirmationSoundRef.current.duration();
           setDuration(soundDuration);
@@ -179,6 +183,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
           
           // Only start playing if isPlaying is true
           if (isPlaying) {
+            console.log("▶️ Starting playback after load");
             affirmationSoundRef.current.play();
             // Start background music if available
             if (backgroundSoundRef.current && backgroundMusic) {
@@ -188,15 +193,16 @@ export function AudioProvider({ children }: AudioProviderProps) {
         }
       },
       onloaderror: (id, error) => {
-        console.error('Failed to load audio:', error);
-        console.error('Audio URL:', affirmation.audioUrl);
+        console.error('❌ Failed to load audio:', error);
+        console.error('❌ Audio URL:', affirmation.audioUrl);
       },
       onplayerror: (id, error) => {
-        console.error('Failed to play audio:', error);
+        console.error('❌ Failed to play audio:', error);
       }
     });
 
     // Load the sound
+    console.log("🔄 Loading sound...");
     affirmationSoundRef.current.load();
   };
 
@@ -223,18 +229,26 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
   // Toggle play/pause
   const togglePlay = () => {
+    console.log("🎵 Toggle play clicked");
+    console.log("Current track:", currentTrack);
+    console.log("Affirmation sound ref:", affirmationSoundRef.current);
+    console.log("Is playing:", isPlaying);
+
     if (!currentTrack || !affirmationSoundRef.current) {
+      console.log("❌ No current track or sound ref - cannot play");
       return;
     }
 
     console.debug("currentTrack", currentTrack);
 
     if (isPlaying) {
+      console.log("⏸️ Pausing audio...");
       affirmationSoundRef.current.pause();
       if (backgroundSoundRef.current) {
         backgroundSoundRef.current.pause();
       }
     } else {
+      console.log("▶️ Playing audio...");
       affirmationSoundRef.current.play();
       if (backgroundSoundRef.current) {
         backgroundSoundRef.current.play();
