@@ -112,14 +112,31 @@ function Router() {
   const [, setLocation] = useLocation();
   const pathname = window.location.pathname;
   console.log("Current pathname:", pathname);
-  // Redirect from login page if already authenticated
+  
+  // Redirect logic for authenticated users
   useEffect(() => {
-    if (user && window.location.pathname === '/login') {
+    if (!user) return; // Don't redirect if not authenticated
+    
+    // Redirect from login page if already authenticated
+    if (window.location.pathname === '/login') {
       if (user.isAdmin) {
         setLocation('/admin');
       } else {
         setLocation('/onboarding');
       }
+      return;
+    }
+    
+    // Redirect admin users to admin dashboard if they're on non-admin routes
+    if (user.isAdmin && !window.location.pathname.startsWith('/admin')) {
+      setLocation('/admin');
+      return;
+    }
+    
+    // Redirect regular users to onboarding if they're on admin routes
+    if (!user.isAdmin && window.location.pathname.startsWith('/admin')) {
+      setLocation('/onboarding');
+      return;
     }
   }, [user, setLocation]);
 

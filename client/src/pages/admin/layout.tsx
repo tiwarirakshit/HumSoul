@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { Users, Music2, LayoutDashboard, Settings, Crown, Menu, X } from "lucide-react";
+import { Users, Music2, LayoutDashboard, Settings, Crown, Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,16 @@ const navigation = [
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,6 +81,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       })}
                     </ul>
                   </li>
+                  <li className="mt-auto">
+                    <button
+                      onClick={handleLogout}
+                      className="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-muted-foreground hover:text-foreground hover:bg-muted w-full"
+                    >
+                      <LogOut
+                        className="h-6 w-6 shrink-0 text-muted-foreground group-hover:text-foreground"
+                        aria-hidden="true"
+                      />
+                      Logout
+                    </button>
+                  </li>
                 </ul>
               </nav>
             </div>
@@ -115,16 +138,28 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   })}
                 </ul>
               </li>
+              <li className="mt-auto">
+                <button
+                  onClick={handleLogout}
+                  className="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-muted-foreground hover:text-foreground hover:bg-muted w-full"
+                >
+                  <LogOut
+                    className="h-6 w-6 shrink-0 text-muted-foreground group-hover:text-foreground"
+                    aria-hidden="true"
+                  />
+                  Logout
+                </button>
+              </li>
             </ul>
           </nav>
         </div>
       </div>
 
       {/* Mobile header */}
-      <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-card px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:hidden">
+      <div className="sticky top-20 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-card px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:hidden mx-4 rounded-lg">
         <button
           type="button"
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted"
           onClick={() => setSidebarOpen(true)}
         >
           <Menu className="h-6 w-6" />
@@ -132,6 +167,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="flex-1 text-sm font-semibold leading-6">
           <h1 className="text-xl font-bold">HumSoul Admin</h1>
         </div>
+        <button
+          type="button"
+          className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-6 w-6" />
+        </button>
       </div>
 
       {/* Main content */}
