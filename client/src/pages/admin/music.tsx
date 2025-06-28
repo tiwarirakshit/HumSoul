@@ -580,6 +580,13 @@ export default function AdminMusic() {
                 <FileAudio className="h-4 w-4" />
                 Affirmations
               </TabsTrigger>
+              <TabsTrigger
+                value="background-music"
+                className="flex-shrink-0 min-w-fit flex items-center gap-2 whitespace-nowrap"
+              >
+                <Music className="h-4 w-4" />
+                Background Music
+              </TabsTrigger>
             </div>
           </TabsList>
           {/* Categories Tab */}

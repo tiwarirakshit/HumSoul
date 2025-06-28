@@ -4,7 +4,6 @@ import CategoriesSection from "@/components/home/categories-section";
 import PlaylistsSection from "@/components/home/playlists-section";
 import RecentPlaysSection from "@/components/home/recent-plays-section";
 import { TrialPopup } from "@/components/subscription/trial-popup";
-import { AudioTest } from "@/components/ui/audio-test";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Home() {
@@ -40,11 +39,6 @@ export default function Home() {
       <CategoriesSection />
       <PlaylistsSection />
       <RecentPlaysSection />
-      
-      {/* Audio Test Component - Remove after debugging */}
-      <div className="mb-6">
-        <AudioTest />
-      </div>
       
       {showTrialPopup && <TrialPopup daysLeft={trialDaysLeft} />}
     </>
