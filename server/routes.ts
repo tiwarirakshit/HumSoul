@@ -308,14 +308,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NEW: Create playlist route
   api.post("/playlists", async (req, res) => {
     try {
+      // Inject userId manually
+      req.body.userId = 1;
+  
       const playlistData = createPlaylistSchema.parse(req.body);
-
+  
       // Verify user exists
       const user = await storage.getUser(playlistData.userId);
+      console.log(user, "user data", playlistData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-
+  
       // Verify category exists
       const categories = await storage.getCategories();
       const categoryExists = categories.some(
@@ -324,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!categoryExists) {
         return res.status(404).json({ message: "Category not found" });
       }
-
+  
       const playlist = await storage.createPlaylist(playlistData);
       res.status(201).json(playlist);
     } catch (error) {
@@ -337,6 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Internal server error" });
     }
   });
+  
 
   // NEW: Update playlist route
   api.put("/playlists/:id", async (req, res) => {
@@ -808,6 +813,66 @@ api.delete("/admin/users/:id", async (req, res) => {
         return res.status(400).json({ message: "Invalid affirmation data", errors: error.errors });
       }
       console.error("Error updating affirmation:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all subscriptions for admin
+  api.get("/admin/subscriptions", async (req, res) => {
+    try {
+      // For now, return an empty array since we don't have a subscriptions table yet
+      // You can implement this later when you add a subscriptions table
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all subscription plans for admin
+  api.get("/admin/plans", async (req, res) => {
+    try {
+      // For now, return an empty array since we don't have a plans table yet
+      // You can implement this later when you add a plans table
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create subscription plan
+  api.post("/admin/plans", async (req, res) => {
+    try {
+      // For now, just return success since we don't have a plans table yet
+      // You can implement this later when you add a plans table
+      res.status(201).json({ message: "Plan created successfully" });
+    } catch (error) {
+      console.error("Error creating plan:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete subscription plan
+  api.delete("/admin/plans/:id", async (req, res) => {
+    try {
+      // For now, just return success since we don't have a plans table yet
+      // You can implement this later when you add a plans table
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting plan:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update subscription status
+  api.put("/admin/subscriptions/:id", async (req, res) => {
+    try {
+      // For now, just return success since we don't have a subscriptions table yet
+      // You can implement this later when you add a subscriptions table
+      res.json({ message: "Subscription updated successfully" });
+    } catch (error) {
+      console.error("Error updating subscription:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
