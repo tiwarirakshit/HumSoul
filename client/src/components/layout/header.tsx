@@ -1,6 +1,5 @@
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
-import { signOutUser } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -11,13 +10,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Moon, Sun, Search, LogOut } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Header() {
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   
   // Query to get current user
   const { data: user } = useQuery<{
@@ -32,11 +32,13 @@ export default function Header() {
   
   const handleSignOut = async () => {
     try {
-      await signOutUser();
+      await logout();
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account."
       });
+      // Redirect to login page
+      setLocation('/login');
     } catch (error) {
       console.error("Error signing out:", error);
       toast({

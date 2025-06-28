@@ -17,6 +17,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Play, Pause, Music, FileAudio, FolderOpen, Upload, Star } from "lucide-react";
 import AdminLayout from "./layout";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { Capacitor } from "@capacitor/core";
 
 // Types
 interface Category {
@@ -96,95 +99,101 @@ interface MusicForm {
 }
 
 export default function AdminMusic() {
-
-  // State management
-  const [activeTab, setActiveTab] = useState("categories");
-  const [isPlaying, setIsPlaying] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
-
-  // Data state
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [affirmations, setAffirmations] = useState<Affirmation[]>([]);
   const [backgroundMusic, setBackgroundMusic] = useState<BackgroundMusic[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState<number | null>(null);
-
-  // Form state
-  const [categoryForm, setCategoryForm] = useState<CategoryForm>({
-    name: '', description: '', icon: '', color: '#000000'
-  });
-  const [playlistForm, setPlaylistForm] = useState<PlaylistForm>({
-    title: '', description: '', categoryId: '', isFeatured: false, duration: '0', affirmationCount: '0', coverGradientStart: '#6D5AE6', coverGradientEnd: '#8BD3DD', icon: 'podcast'
-  });
-  const [affirmationForm, setAffirmationForm] = useState<AffirmationForm>({
-    title: '', description: '', file: null
-  });
-  const [musicForm, setMusicForm] = useState<MusicForm>({
-    title: '', category: '', description: '', file: null
-  });
-
-  // Add state for currently playing affirmation
-  const [playingAffirmationId, setPlayingAffirmationId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<string>('categories');
+  const [isLoading, setIsLoading] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState<string | null>(null);
+  const [playingAffirmationId, setPlayingAffirmationId] = useState<string | null>(null);
 
-  // Initialize data
+  // Form states
+  const [categoryForm, setCategoryForm] = useState<CategoryForm>({
+    name: '',
+    description: '',
+    icon: '',
+    color: '#000000'
+  });
+
+  const [playlistForm, setPlaylistForm] = useState<PlaylistForm>({
+    title: '',
+    description: '',
+    categoryId: '',
+    isFeatured: false,
+    duration: '0',
+    affirmationCount: '0',
+    coverGradientStart: '#6D5AE6',
+    coverGradientEnd: '#8BD3DD',
+    icon: 'podcast'
+  });
+
+  const [affirmationForm, setAffirmationForm] = useState<AffirmationForm>({
+    title: '',
+    description: '',
+    file: null
+  });
+
+  const [musicForm, setMusicForm] = useState<MusicForm>({
+    title: '',
+    category: '',
+    description: '',
+    file: null
+  });
+
   useEffect(() => {
-    Promise.all([
-      fetchCategories(),
-      fetchPlaylists(),
-      fetchBackgroundMusic()
-    ]);
+    fetchCategories();
+    fetchPlaylists();
+    fetchBackgroundMusic();
   }, []);
 
-  // API functions
-  const api = {
-    async request(url: string, options: RequestInit = {}) {
-      try {
-        const response = await fetch(url, {
-          headers: { 'Content-Type': 'application/json', ...options.headers },
-          ...options
-        });
-
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({ message: 'Request failed' }));
-          throw new Error(error.message);
-        }
-
-        return response.status === 204 ? null : await response.json();
-      } catch (error) {
-        window.alert(error instanceof Error ? error.message : "An error occurred");
-        throw error;
-      }
-    },
-
-    async upload(url: string, formData: FormData) {
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({ message: 'Upload failed' }));
-          throw new Error(error.message);
-        }
-
-        return await response.json();
-      } catch (error) {
-        window.alert(error instanceof Error ? error.message : "Upload failed");
-        throw error;
-      }
+  // Fetch functions using apiRequest
+  const fetchCategories = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/categories');
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
-  // Fetch functions
-  const fetchCategories = () => api.request('/api/categories').then(setCategories);
-  const fetchPlaylists = () => api.request('/api/playlists').then(setPlaylists);
-  const fetchBackgroundMusic = () => api.request('/api/background-music').then(setBackgroundMusic);
-  const fetchAffirmations = (playlistId: number) =>
-    api.request(`/api/affirmations?playlistId=${playlistId}`).then(setAffirmations);
+  const fetchPlaylists = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/playlists');
+      const data = await response.json();
+      setPlaylists(data);
+    } catch (error) {
+      console.error('Error fetching playlists:', error);
+    }
+  };
+
+  const fetchBackgroundMusic = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/background-music');
+      const data = await response.json();
+      setBackgroundMusic(data);
+    } catch (error) {
+      console.error('Error fetching background music:', error);
+    }
+  };
+
+  const fetchAffirmations = async (playlistId: number) => {
+    try {
+      const response = await apiRequest('GET', `/api/affirmations?playlistId=${playlistId}`);
+      const data = await response.json();
+      setAffirmations(data);
+    } catch (error) {
+      console.error('Error fetching affirmations:', error);
+    }
+  };
 
   // Form helpers
   const resetForms = () => {
@@ -207,22 +216,24 @@ export default function AdminMusic() {
 
   // Category operations
   const handleCategorySubmit = async () => {
+    if (!categoryForm.name) {
+      window.alert('Category name is required');
+      return;
+    }
+    
     setIsLoading(true);
     try {
       if (editingItem) {
-        await api.request(`/api/categories/${editingItem.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(categoryForm)
-        });
+        await apiRequest('PUT', `/api/categories/${editingItem.id}`, categoryForm);
         showSuccess('Category updated successfully');
       } else {
-        await api.request('/api/categories', {
-          method: 'POST',
-          body: JSON.stringify(categoryForm)
-        });
+        await apiRequest('POST', '/api/categories', categoryForm);
         showSuccess('Category created successfully');
       }
       await fetchCategories();
+    } catch (error) {
+      console.error('Error in category operation:', error);
+      window.alert('Error: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
@@ -236,6 +247,7 @@ export default function AdminMusic() {
       icon: category.icon || '',
       color: category.color || '#000000'
     });
+    setActiveTab('categories');
     setIsDialogOpen(true);
   };
 
@@ -243,17 +255,27 @@ export default function AdminMusic() {
     if (!confirm('Are you sure you want to delete this category?')) return;
 
     try {
-      await api.request(`/api/categories/${id}`, { method: 'DELETE' });
+      await apiRequest('DELETE', `/api/categories/${id}`);
       window.alert('Success: Category deleted successfully');
       await fetchCategories();
     } catch (error) {
-      // Error is already handled in api.request
+      console.error('Error deleting category:', error);
+      window.alert('Error: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
   // Playlist operations
   const handlePlaylistSubmit = async () => {
-    if (!playlistForm.title || !playlistForm.categoryId) return;
+    if (!playlistForm.title || !playlistForm.categoryId) {
+      window.alert('Title and category are required');
+      return;
+    }
+    
+    if (!user) {
+      window.alert('You must be logged in to create a playlist');
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const body = {
@@ -266,12 +288,15 @@ export default function AdminMusic() {
         coverGradientStart: playlistForm.coverGradientStart || '#6D5AE6',
         coverGradientEnd: playlistForm.coverGradientEnd || '#8BD3DD',
         icon: playlistForm.icon || 'podcast',
-        userId: 1, // Default to admin user for now
+        userId: 2, // Use admin user ID (we created this user)
       };
       console.log('Creating playlist with body:', body);
-      await api.request('/api/playlists', { method: 'POST', body: JSON.stringify(body) });
+      await apiRequest('POST', '/api/playlists', body);
       showSuccess('Playlist created successfully');
       await fetchPlaylists();
+    } catch (error) {
+      console.error('Error creating playlist:', error);
+      window.alert('Error: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
@@ -290,6 +315,7 @@ export default function AdminMusic() {
       coverGradientEnd: '#8BD3DD',
       icon: 'podcast',
     });
+    setActiveTab('playlists');
     setIsDialogOpen(true);
   };
 
@@ -297,17 +323,21 @@ export default function AdminMusic() {
     if (!confirm('Are you sure you want to delete this playlist?')) return;
 
     try {
-      await api.request(`/api/playlists/${id}`, { method: 'DELETE' });
+      await apiRequest('DELETE', `/api/playlists/${id}`);
       window.alert('Success: Playlist deleted successfully');
       await fetchPlaylists();
     } catch (error) {
-      // Error is already handled in api.request
+      console.error('Error deleting playlist:', error);
+      window.alert('Error: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
   // Affirmation operations
   const handleAffirmationUpload = async () => {
-    if (!affirmationForm.file || !selectedPlaylist) return;
+    if (!affirmationForm.file || !selectedPlaylist) {
+      window.alert('Please select a file and playlist');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -324,9 +354,22 @@ export default function AdminMusic() {
       formData.append('path', affirmationForm.file.name);
       formData.append('duration', duration.toString());
 
-      await api.upload('/api/affirmations/upload', formData);
+      // Get the base URL using the same logic as apiRequest
+      const baseUrl = Capacitor.isNativePlatform() ? "https://mpforestvillage.in" : (import.meta.env.VITE_BACKEND_URL || "https://mpforestvillage.in");
+      const response = await fetch(`${baseUrl}/api/affirmations/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
       showSuccess('Affirmation uploaded successfully');
       await fetchAffirmations(selectedPlaylist);
+    } catch (error) {
+      console.error('Error uploading affirmation:', error);
+      window.alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
@@ -334,7 +377,10 @@ export default function AdminMusic() {
 
   // Background music operations
   const handleMusicUpload = async () => {
-    if (!musicForm.file) return;
+    if (!musicForm.file) {
+      window.alert('Please select a file');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -344,9 +390,22 @@ export default function AdminMusic() {
       formData.append('category', musicForm.category);
       formData.append('description', musicForm.description);
 
-      await api.upload('/api/background-music/upload', formData);
+      // Get the base URL using the same logic as apiRequest
+      const baseUrl = Capacitor.isNativePlatform() ? "https://mpforestvillage.in" : (import.meta.env.VITE_BACKEND_URL || "https://mpforestvillage.in");
+      const response = await fetch(`${baseUrl}/api/background-music/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
       showSuccess('Background music uploaded successfully');
       await fetchBackgroundMusic();
+    } catch (error) {
+      console.error('Error uploading background music:', error);
+      window.alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
@@ -354,32 +413,45 @@ export default function AdminMusic() {
 
   // UI helpers
   const togglePlay = (id: string) => {
-    setIsPlaying(isPlaying === id ? null : id);
+    if (isPlaying === id) {
+      if (audioElement) {
+        audioElement.pause();
+      }
+      setIsPlaying(null);
+      setPlayingAffirmationId(null);
+      return;
+    }
+    // Implementation for playing background music
+    setIsPlaying(id);
   };
 
   const formatDuration = (seconds?: number) => {
-    if (!seconds) return 'Unknown';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    if (!seconds) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const handlePlaylistSelect = (playlistId: string) => {
     const id = parseInt(playlistId);
     setSelectedPlaylist(id);
-    fetchAffirmations(id);
+    if (id) {
+      fetchAffirmations(id);
+    }
   };
 
   const openCreateDialog = (type: string) => {
-    resetForms();
     setActiveTab(type);
+    setEditingItem(null);
+    resetForms();
     setIsDialogOpen(true);
   };
 
-  // Play/pause handler for affirmations
   const handlePlayAffirmation = (affirmation: Affirmation) => {
     if (playingAffirmationId === affirmation.id.toString()) {
-      audioElement?.pause();
+      if (audioElement) {
+        audioElement.pause();
+      }
       setPlayingAffirmationId(null);
       return;
     }
@@ -401,6 +473,7 @@ export default function AdminMusic() {
       description: affirmation.description || '',
       file: null
     });
+    setActiveTab('affirmations');
     setIsDialogOpen(true);
   };
 
@@ -408,8 +481,8 @@ export default function AdminMusic() {
   const handleDeleteAffirmation = async (id: number) => {
     if (!confirm('Are you sure you want to delete this affirmation?')) return;
     try {
-      const res = await fetch(`/api/affirmations/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete affirmation');
+      const res = await apiRequest('DELETE', `/api/affirmations/${id}`);
+      if (!res) throw new Error('Failed to delete affirmation');
       window.alert('Success: Affirmation deleted successfully');
       if (selectedPlaylist) await fetchAffirmations(selectedPlaylist);
     } catch (error) {
@@ -440,15 +513,14 @@ export default function AdminMusic() {
         const formData = new FormData();
         formData.append('audio', affirmationForm.file);
         // Only upload the file, do not create a new affirmation
-        const uploadRes = await fetch('/api/affirmations/upload-audio', {
-          method: 'POST',
-          body: formData,
-        });
-        if (!uploadRes.ok) {
+        const uploadRes = await apiRequest('POST', '/api/affirmations/upload-audio', formData);
+        if (!uploadRes || !uploadRes.ok) {
           let msg = 'Failed to upload new audio';
           try {
-            const err = await uploadRes.json();
-            msg = err.message || msg;
+            if (uploadRes) {
+              const err = await uploadRes.json();
+              msg = err.message || msg;
+            }
           } catch {}
           throw new Error(msg);
         }
@@ -458,18 +530,14 @@ export default function AdminMusic() {
         editingItem.duration = duration;
       }
       // Now update the affirmation
-      const res = await fetch(`/api/affirmations/${editingItem.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: affirmationForm.title,
-          description: affirmationForm.description,
-          audioUrl,
-          duration: editingItem.duration || 1, // fallback to 1 if missing
-          playlistId: editingItem.playlistId,
-        }),
+      const res = await apiRequest('PUT', `/api/affirmations/${editingItem.id}`, {
+        text: affirmationForm.title,
+        description: affirmationForm.description,
+        audioUrl,
+        duration: editingItem.duration || 1, // fallback to 1 if missing
+        playlistId: editingItem.playlistId,
       });
-      if (!res.ok) throw new Error('Failed to update affirmation');
+      if (!res) throw new Error('Failed to update affirmation');
       window.alert('Success: Affirmation updated successfully');
       setIsDialogOpen(false);
       if (selectedPlaylist) await fetchAffirmations(selectedPlaylist);
@@ -758,78 +826,157 @@ export default function AdminMusic() {
                       onChange={(e) => setCategoryForm(prev => ({ ...prev, color: e.target.value }))}
                     />
                   </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handleCategorySubmit} disabled={isLoading} className="flex-1">
+                      {isLoading ? 'Saving...' : (editingItem ? 'Update Category' : 'Create Category')}
+                    </Button>
+                    <Button variant="outline" onClick={closeDialog} className="flex-1">
+                      Cancel
+                    </Button>
+                  </div>
                 </>
               )}
 
               {/* Playlist Form */}
               {activeTab === 'playlists' && (
-                <div className="relative space-y-4 w-full max-w-xs mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
-                  {/* Close button */}
-                  <button
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                    onClick={closeDialog}
-                    aria-label="Close"
-                    type="button"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                  <Label>Title</Label>
-                  <Input className="w-full" value={playlistForm.title} onChange={e => setPlaylistForm(f => ({ ...f, title: e.target.value }))} />
-                  <Label>Description</Label>
-                  <Textarea className="w-full" value={playlistForm.description} onChange={e => setPlaylistForm(f => ({ ...f, description: e.target.value }))} />
-                  <Label>Category</Label>
-                  <Select value={playlistForm.categoryId} onValueChange={val => setPlaylistForm(f => ({ ...f, categoryId: val }))}>
-                    <SelectTrigger className="w-full"><SelectValue placeholder="Select category" /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Label>Duration (seconds)</Label>
-                  <Input className="w-full" type="number" min="0" value={playlistForm.duration} onChange={e => setPlaylistForm(f => ({ ...f, duration: e.target.value }))} />
-                  <Label>Affirmation Count</Label>
-                  <Input className="w-full" type="number" min="0" value={playlistForm.affirmationCount} onChange={e => setPlaylistForm(f => ({ ...f, affirmationCount: e.target.value }))} />
-                  <Label>Cover Gradient Start</Label>
-                  <Input className="w-full h-10 p-0" type="color" value={playlistForm.coverGradientStart} onChange={e => setPlaylistForm(f => ({ ...f, coverGradientStart: e.target.value }))} />
-                  <Label>Cover Gradient End</Label>
-                  <Input className="w-full h-10 p-0" type="color" value={playlistForm.coverGradientEnd} onChange={e => setPlaylistForm(f => ({ ...f, coverGradientEnd: e.target.value }))} />
-                  <Label>Icon</Label>
-                  <Input className="w-full" value={playlistForm.icon} onChange={e => setPlaylistForm(f => ({ ...f, icon: e.target.value }))} />
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" checked={playlistForm.isFeatured} onChange={e => setPlaylistForm(f => ({ ...f, isFeatured: e.target.checked }))} />
-                    <Label>Featured</Label>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="playlist-title">Title</Label>
+                    <Input
+                      id="playlist-title"
+                      value={playlistForm.title}
+                      onChange={(e) => setPlaylistForm(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Playlist title"
+                    />
                   </div>
-                  <Button className="w-full" onClick={handlePlaylistSubmit} disabled={isLoading}>Create Playlist</Button>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="playlist-description">Description</Label>
+                    <Textarea
+                      id="playlist-description"
+                      value={playlistForm.description}
+                      onChange={(e) => setPlaylistForm(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Playlist description"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="playlist-category">Category</Label>
+                    <Select value={playlistForm.categoryId} onValueChange={(val) => setPlaylistForm(prev => ({ ...prev, categoryId: val }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="playlist-duration">Duration (seconds)</Label>
+                    <Input
+                      id="playlist-duration"
+                      type="number"
+                      min="0"
+                      value={playlistForm.duration}
+                      onChange={(e) => setPlaylistForm(prev => ({ ...prev, duration: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="playlist-affirmation-count">Affirmation Count</Label>
+                    <Input
+                      id="playlist-affirmation-count"
+                      type="number"
+                      min="0"
+                      value={playlistForm.affirmationCount}
+                      onChange={(e) => setPlaylistForm(prev => ({ ...prev, affirmationCount: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="playlist-gradient-start">Cover Gradient Start</Label>
+                    <Input
+                      id="playlist-gradient-start"
+                      type="color"
+                      value={playlistForm.coverGradientStart}
+                      onChange={(e) => setPlaylistForm(prev => ({ ...prev, coverGradientStart: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="playlist-gradient-end">Cover Gradient End</Label>
+                    <Input
+                      id="playlist-gradient-end"
+                      type="color"
+                      value={playlistForm.coverGradientEnd}
+                      onChange={(e) => setPlaylistForm(prev => ({ ...prev, coverGradientEnd: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="playlist-icon">Icon</Label>
+                    <Input
+                      id="playlist-icon"
+                      value={playlistForm.icon}
+                      onChange={(e) => setPlaylistForm(prev => ({ ...prev, icon: e.target.value }))}
+                      placeholder="Icon name"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="playlist-featured"
+                      checked={playlistForm.isFeatured}
+                      onChange={(e) => setPlaylistForm(prev => ({ ...prev, isFeatured: e.target.checked }))}
+                    />
+                    <Label htmlFor="playlist-featured">Featured</Label>
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handlePlaylistSubmit} disabled={isLoading} className="flex-1">
+                      {isLoading ? 'Saving...' : (editingItem ? 'Update Playlist' : 'Create Playlist')}
+                    </Button>
+                    <Button variant="outline" onClick={closeDialog} className="flex-1">
+                      Cancel
+                    </Button>
+                  </div>
+                </>
               )}
 
               {/* Affirmation Form */}
               {activeTab === 'affirmations' && (
-                <div className="relative space-y-4 w-full max-w-xs mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
-                  {/* Close button */}
-                  <button
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                    onClick={closeDialog}
-                    aria-label="Close"
-                    type="button"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                  <Label>Title</Label>
-                  <Input className="w-full" value={affirmationForm.title} onChange={e => setAffirmationForm(f => ({ ...f, title: e.target.value }))} />
-                  <Label>Description</Label>
-                  <Textarea className="w-full" value={affirmationForm.description} onChange={e => setAffirmationForm(f => ({ ...f, description: e.target.value }))} />
-                  <Label>Audio File</Label>
-                  <Input className="w-full" type="file" accept="audio/*" onChange={e => setAffirmationForm(f => ({ ...f, file: e.target.files?.[0] || null }))} />
-                  <Button className="w-full mt-2" onClick={handleAffirmationUpload} disabled={isLoading}>
-                    {isLoading ? 'Uploading...' : 'Upload Affirmation'}
-                  </Button>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="affirmation-title">Title</Label>
+                    <Input
+                      id="affirmation-title"
+                      value={affirmationForm.title}
+                      onChange={(e) => setAffirmationForm(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Affirmation title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="affirmation-description">Description</Label>
+                    <Textarea
+                      id="affirmation-description"
+                      value={affirmationForm.description}
+                      onChange={(e) => setAffirmationForm(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Affirmation description"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="affirmation-file">Audio File</Label>
+                    <Input
+                      id="affirmation-file"
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => setAffirmationForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={editingItem ? handleUpdateAffirmation : handleAffirmationUpload} disabled={isLoading} className="flex-1">
+                      {isLoading ? 'Uploading...' : (editingItem ? 'Update Affirmation' : 'Upload Affirmation')}
+                    </Button>
+                    <Button variant="outline" onClick={closeDialog} className="flex-1">
+                      Cancel
+                    </Button>
+                  </div>
+                </>
               )}
 
               {/* Background Music Form */}
@@ -870,6 +1017,14 @@ export default function AdminMusic() {
                       accept="audio/*"
                       onChange={(e) => setMusicForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
                     />
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handleMusicUpload} disabled={isLoading} className="flex-1">
+                      {isLoading ? 'Uploading...' : 'Upload Music'}
+                    </Button>
+                    <Button variant="outline" onClick={closeDialog} className="flex-1">
+                      Cancel
+                    </Button>
                   </div>
                 </>
               )}

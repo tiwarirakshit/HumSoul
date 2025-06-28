@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/tabs";
 import { Save, RefreshCw, Trash2, Lock, Globe, Mail, BellRing } from "lucide-react";
 import AdminLayout from "./layout";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function AdminSettings() {
   const [generalSettings, setGeneralSettings] = useState({
@@ -57,19 +58,22 @@ export default function AdminSettings() {
     passwordRequireSpecialChars: true
   });
 
-  const handleGeneralSubmit = (e: React.FormEvent) => {
+  const handleGeneralSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving general settings:", generalSettings);
+    const response = await apiRequest('PUT', '/api/admin/settings', generalSettings);
+    console.log("Saving general settings:", response);
   };
 
-  const handleNotificationSubmit = (e: React.FormEvent) => {
+  const handleNotificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving notification settings:", notificationSettings);
+    const response = await apiRequest('PUT', '/api/admin/settings', notificationSettings);
+    console.log("Saving notification settings:", response);
   };
 
-  const handleSecuritySubmit = (e: React.FormEvent) => {
+  const handleSecuritySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving security settings:", securitySettings);
+    const response = await apiRequest('PUT', '/api/admin/settings', securitySettings);
+    console.log("Saving security settings:", response);
   };
 
   const clearCache = () => {

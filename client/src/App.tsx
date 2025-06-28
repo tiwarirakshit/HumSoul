@@ -37,6 +37,7 @@ import NotificationPreferences from "@/pages/notification-preferences";
 import EditProfile from "@/pages/edit-profile";
 import { initializeCapacitorPlugins } from '@/lib/capacitor';
 import { Capacitor } from '@capacitor/core';
+import { NetworkDebug } from "@/components/ui/network-debug";
 
 interface ProtectedRouteProps {
   component: React.ComponentType<any>;
@@ -123,67 +124,80 @@ function Router() {
   }, [user, setLocation]);
 
   return (
-    <Switch>
-      {/* Public routes */}
-      <Route path="/login">
-        {() => {
-          if (user) return null;
-          return <Login />;
-        }}
-      </Route>
+    <>
+      <Switch>
+        {/* Public routes */}
+        <Route path="/login">
+          {() => {
+            if (user) return null;
+            return <Login />;
+          }}
+        </Route>
 
-      {/* Admin routes */}
-      <Route path="/admin">
-        {() => <ProtectedRoute component={AdminDashboard} />}
-      </Route>
-      <Route path="/admin/music">
-        {() => <ProtectedRoute component={AdminMusic} />}
-      </Route>
-      <Route path="/admin/users">
-        {() => <ProtectedRoute component={AdminUsers} />}
-      </Route>
-      <Route path="/admin/subscriptions">
-        {() => <ProtectedRoute component={AdminSubscriptions} />}
-      </Route>
-      <Route path="/admin/settings">
-        {() => <ProtectedRoute component={AdminSettings} />}
-      </Route>
+        {/* Admin routes */}
+        <Route path="/admin">
+          {() => <AdminRoute component={AdminDashboard} />}
+        </Route>
+        <Route path="/admin/music">
+          {() => <AdminRoute component={AdminMusic} />}
+        </Route>
+        <Route path="/admin/users">
+          {() => <AdminRoute component={AdminUsers} />}
+        </Route>
+        <Route path="/admin/subscriptions">
+          {() => <AdminRoute component={AdminSubscriptions} />}
+        </Route>
+        <Route path="/admin/settings">
+          {() => <AdminRoute component={AdminSettings} />}
+        </Route>
 
-      {/* Auth required routes */}
-      <Route path="/onboarding">
-        {() => <ProtectedRoute component={Onboarding} />}
-      </Route>
-      <Route path="/personalize">
-        {() => <ProtectedRoute component={Personalize} />}
-      </Route>
-      <Route path="/subscription">
-        {() => <ProtectedRoute component={Subscription} />}
-      </Route>
-      <Route path="/audio">
-        {() => <ProtectedRoute component={Audio} />}
-      </Route>
-      <Route path="/">
-        {() => <ProtectedRoute component={Home} />}
-      </Route>
-      <Route path="/discover">
-        {() => <ProtectedRoute component={Discover} />}
-      </Route>
-      <Route path="/library">
-        {() => <ProtectedRoute component={Library} />}
-      </Route>
-      <Route path="/record">
-        {() => <ProtectedRoute component={Record} />}
-      </Route>
-      <Route path="/profile">
-        {() => <ProtectedRoute component={Profile} />}
-      </Route>
-      <Route path="/playlist/:id">
-        {(params) => <ProtectedRoute component={Playlist} {...params} />}
-      </Route>
-      <Route path="/notification-preferences" component={NotificationPreferences} />
-      <Route path="/edit-profile" component={EditProfile} />
-      <Route component={NotFound} />
-    </Switch>
+        {/* Auth required routes */}
+        <Route path="/onboarding">
+          {() => <ProtectedRoute component={Onboarding} />}
+        </Route>
+        <Route path="/personalize">
+          {() => <ProtectedRoute component={Personalize} />}
+        </Route>
+        <Route path="/subscription">
+          {() => <ProtectedRoute component={Subscription} />}
+        </Route>
+        <Route path="/audio">
+          {() => <ProtectedRoute component={Audio} />}
+        </Route>
+        <Route path="/">
+          {() => <ProtectedRoute component={Home} />}
+        </Route>
+        <Route path="/discover">
+          {() => <ProtectedRoute component={Discover} />}
+        </Route>
+        <Route path="/library">
+          {() => <ProtectedRoute component={Library} />}
+        </Route>
+        <Route path="/profile">
+          {() => <ProtectedRoute component={Profile} />}
+        </Route>
+        <Route path="/edit-profile">
+          {() => <ProtectedRoute component={EditProfile} />}
+        </Route>
+        <Route path="/playlist/:id">
+          {() => <ProtectedRoute component={Playlist} />}
+        </Route>
+        <Route path="/record">
+          {() => <ProtectedRoute component={Record} />}
+        </Route>
+        <Route path="/notification-preferences">
+          {() => <ProtectedRoute component={NotificationPreferences} />}
+        </Route>
+
+        {/* 404 route */}
+        <Route>
+          {() => <NotFound />}
+        </Route>
+      </Switch>
+      
+      {/* Network Debug Component - Only show in development */}
+      {import.meta.env.DEV && <NetworkDebug />}
+    </>
   );
 }
 

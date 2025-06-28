@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import AdminLayout from "./layout";
+import { apiRequest } from "@/lib/queryClient";
 
 interface AdminUser {
   id: number;
@@ -109,14 +110,12 @@ export default function AdminUsers() {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
 
-      const response = await fetch(`/api/admin/users?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch users');
-      
+      const response = await apiRequest('GET', `/api/admin/users?${params}`);
       const data = await response.json();
       setUsers(data);
     } catch (error) {
       console.error('Error fetching users:', error);
-      console.error('Failed to fetch users');
+      window.alert('Failed to fetch users: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -125,30 +124,22 @@ export default function AdminUsers() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.name || !createForm.email || !createForm.username || !createForm.password) {
-      console.error('Please fill in all fields');
+      window.alert('Please fill in all fields');
       return;
     }
 
     try {
       setSubmitting(true);
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(createForm)
-      });
+      const response = await apiRequest('POST', '/api/admin/users', createForm);
+      const data = await response.json();
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create user');
-      }
-
-      console.success('User created successfully');
+      window.alert('User created successfully');
       setCreateDialogOpen(false);
       setCreateForm({ name: "", email: "", username: "", password: "" });
       fetchUsers();
     } catch (error) {
       console.error('Error creating user:', error);
-      console.error(error.message || 'Failed to create user');
+      window.alert('Failed to create user: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -160,24 +151,16 @@ export default function AdminUsers() {
 
     try {
       setSubmitting(true);
-      const response = await fetch(`/api/admin/users/${editingUser.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm)
-      });
+      const response = await apiRequest('PUT', `/api/admin/users/${editingUser.id}`, editForm);
+      const data = await response.json();
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update user');
-      }
-
-      console.success('User updated successfully');
+      window.alert('User updated successfully');
       setEditDialogOpen(false);
       setEditingUser(null);
       fetchUsers();
     } catch (error) {
       console.error('Error updating user:', error);
-      console.error(error.message || 'Failed to update user');
+      window.alert('Failed to update user: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -186,24 +169,19 @@ export default function AdminUsers() {
   const handleStatusToggle = async (user: AdminUser) => {
     try {
       const newStatus = user.status === "active" ? "suspended" : "active";
-      const response = await fetch(`/api/admin/users/${user.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name: user.name,
-          email: user.email,
-          status: newStatus,
-          subscriptionStatus: user.subscriptionStatus
-        })
+      const response = await apiRequest('PUT', `/api/admin/users/${user.id}`, { 
+        name: user.name,
+        email: user.email,
+        status: newStatus,
+        subscriptionStatus: user.subscriptionStatus
       });
+      const data = await response.json();
 
-      if (!response.ok) throw new Error('Failed to update user status');
-
-      console.success(`User ${newStatus === 'active' ? 'activated' : 'suspended'}`);
+      window.alert(`User ${newStatus === 'active' ? 'activated' : 'suspended'} successfully`);
       fetchUsers();
     } catch (error) {
       console.error('Error updating user status:', error);
-      console.error('Failed to update user status');
+      window.alert('Failed to update user status: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -212,19 +190,16 @@ export default function AdminUsers() {
 
     try {
       setSubmitting(true);
-      const response = await fetch(`/api/admin/users/${deletingUser.id}`, {
-        method: 'DELETE'
-      });
+      const response = await apiRequest('DELETE', `/api/admin/users/${deletingUser.id}`);
+      const data = await response.json();
 
-      if (!response.ok) throw new Error('Failed to delete user');
-
-      console.success('User deleted successfully');
+      window.alert('User deleted successfully');
       setDeleteDialogOpen(false);
       setDeletingUser(null);
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
-      console.error('Failed to delete user');
+      window.alert('Failed to delete user: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setSubmitting(false);
     }

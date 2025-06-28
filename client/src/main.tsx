@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { testApiUrl } from "./lib/queryClient";
 
 /**
  * Main application entry point
@@ -9,6 +10,10 @@ import "./index.css";
  * 2. AudioProvider - For audio playback functionality
  * 3. QueryClientProvider - For data fetching with react-query
  */
+
+// Test API URL configuration on app startup
+testApiUrl();
+
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {

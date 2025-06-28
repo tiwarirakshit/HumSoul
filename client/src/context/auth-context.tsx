@@ -1,6 +1,8 @@
 import { createContext, useState, useEffect, ReactNode } from "react";
 import { User } from "firebase/auth";
 import { onAuthStateChange, signInWithGoogle, signOutUser } from "@/lib/firebase";
+import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 // Define AuthContext type
 type AuthContextType = {
@@ -43,6 +45,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return userEmail === "admin@humsoul.com";
   };
 
+  // Save new user to database
+  const saveNewUserToDatabase = async (user: User) => {
+    try {
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName || user.email?.split('@')[0] || 'User',
+        username: user.email?.split('@')[0] || 'user',
+        avatarUrl: user.photoURL,
+        isSubscribed: false,
+        subscriptionStatus: 'free'
+      };
+
+      await apiRequest('POST', '/api/users', userData);
+      console.log('New user saved to database successfully');
+    } catch (error) {
+      console.error('Error saving new user to database:', error);
+      // Don't throw error here as we don't want to break the login flow
+    }
+  };
+
   const loginWithGoogle = async () => {
     try {
       const result = await signInWithGoogle();
@@ -50,6 +73,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (result?.user?.metadata.creationTime === result?.user?.metadata.lastSignInTime) {
         setIsNewUser(true);
         localStorage.setItem('isNewUser', 'true');
+        
+        // Save new user to database
+        await saveNewUserToDatabase(result.user);
       }
     } catch (error) {
       console.error("Error signing in with Google:", error);

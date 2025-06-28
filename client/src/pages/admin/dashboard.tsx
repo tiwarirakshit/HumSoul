@@ -16,11 +16,27 @@ import {
 } from "recharts";
 import { Users, Music, Crown, Play, Loader2 } from "lucide-react";
 import AdminLayout from "./layout";
+import { apiRequest } from "@/lib/queryClient";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
+interface DashboardStats {
+  totalUsers: number;
+  totalTracks: number;
+  totalSubscribers: number;
+  totalPlays: number;
+  userGrowth: Array<{ name: string; users: number }>;
+  listeningData: Array<{ name: string; minutes: number }>;
+  subscriptionData: Array<{ name: string; value: number }>;
+  categoryData: Array<{ name: string; value: number }>;
+  userGrowthPercent?: number;
+  newTracksThisWeek?: number;
+  conversionRate?: number;
+  playsGrowthPercent?: number;
+}
+
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalTracks: 0,
     totalSubscribers: 0,
@@ -31,7 +47,7 @@ export default function AdminDashboard() {
     categoryData: []
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -40,16 +56,12 @@ export default function AdminDashboard() {
   const fetchDashboardStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/dashboard-stats');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats');
-      }
-      
+      const response = await apiRequest('GET', '/api/admin/dashboard-stats');
       const data = await response.json();
       setStats(data);
     } catch (err) {
-      setError(err.message);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
       console.error('Error fetching dashboard stats:', err);
     } finally {
       setLoading(false);
@@ -105,7 +117,7 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.userGrowthPercent > 0 ? '+' : ''}{stats.userGrowthPercent}% from last month
+                {stats.userGrowthPercent && stats.userGrowthPercent > 0 ? '+' : ''}{stats.userGrowthPercent || 0}% from last month
               </p>
             </CardContent>
           </Card>
@@ -118,7 +130,7 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalTracks}</div>
               <p className="text-xs text-muted-foreground">
-                +{stats.newTracksThisWeek} new this week
+                +{stats.newTracksThisWeek || 0} new this week
               </p>
             </CardContent>
           </Card>
@@ -131,7 +143,7 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalSubscribers.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.conversionRate}% conversion rate
+                {stats.conversionRate || 0}% conversion rate
               </p>
             </CardContent>
           </Card>
@@ -144,7 +156,7 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalPlays.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.playsGrowthPercent > 0 ? '+' : ''}{stats.playsGrowthPercent}% from last month
+                {stats.playsGrowthPercent && stats.playsGrowthPercent > 0 ? '+' : ''}{stats.playsGrowthPercent || 0}% from last month
               </p>
             </CardContent>
           </Card>

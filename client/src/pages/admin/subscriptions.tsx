@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -36,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Plus, Check, Ban, ReceiptText } from "lucide-react";
 import AdminLayout from "./layout";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Subscription {
   id: string;
@@ -60,98 +61,150 @@ interface Plan {
 }
 
 export default function AdminSubscriptions() {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([
-    {
-      id: "sub_1234",
-      userId: "1",
-      userName: "John Doe",
-      userEmail: "john@example.com",
-      plan: "Premium Yearly",
-      status: "active",
-      startDate: "2024-01-15",
-      endDate: "2025-01-15",
-      amount: 89.99
-    },
-    {
-      id: "sub_5678",
-      userId: "2",
-      userName: "Jane Smith",
-      userEmail: "jane@example.com",
-      plan: "Premium Monthly",
-      status: "active",
-      startDate: "2024-03-10",
-      endDate: "2024-04-10",
-      amount: 9.99
-    },
-    {
-      id: "sub_9012",
-      userId: "3",
-      userName: "Bob Johnson",
-      userEmail: "bob@example.com",
-      plan: "Premium Yearly",
-      status: "cancelled",
-      startDate: "2023-11-05",
-      endDate: "2024-04-01",
-      amount: 89.99
-    }
-  ]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [planForm, setPlanForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    interval: 'monthly' as 'monthly' | 'yearly',
+    features: '',
+    isPopular: false
+  });
 
-  const [plans, setPlans] = useState<Plan[]>([
-    {
-      id: "plan_monthly",
-      name: "Premium Monthly",
-      description: "Monthly subscription plan with all premium features",
-      price: 9.99,
-      interval: "monthly",
-      features: [
-        "Unlimited affirmations",
-        "Background music",
-        "Custom playlists",
-        "Basic meditation guides",
-        "Daily reminders",
-        "Basic analytics"
-      ]
-    },
-    {
-      id: "plan_yearly",
-      name: "Premium Yearly",
-      description: "Yearly subscription plan with all premium features (save 25%)",
-      price: 89.99,
-      interval: "yearly",
-      isPopular: true,
-      features: [
-        "All Monthly features",
-        "Save 25%",
-        "Priority support",
-        "Advanced meditation guides",
-        "Exclusive content",
-        "Advanced analytics",
-        "Custom themes",
-        "Offline access"
-      ]
-    }
-  ]);
+  useEffect(() => {
+    fetchSubscriptions();
+    fetchPlans();
+  }, []);
 
-  const handleAddPlan = (e: React.FormEvent<HTMLFormElement>) => {
+  const fetchSubscriptions = async () => {
+    try {
+      setLoading(true);
+      const response = await apiRequest('GET', '/api/admin/subscriptions');
+      const data = await response.json();
+      setSubscriptions(data);
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+      window.alert('Failed to fetch subscriptions: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPlans = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/admin/plans');
+      const data = await response.json();
+      setPlans(data);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      // If plans API doesn't exist, use default plans
+      setPlans([
+        {
+          id: "plan_monthly",
+          name: "Premium Monthly",
+          description: "Monthly subscription plan with all premium features",
+          price: 9.99,
+          interval: "monthly",
+          features: [
+            "Unlimited affirmations",
+            "Background music",
+            "Custom playlists",
+            "Basic meditation guides",
+            "Daily reminders",
+            "Basic analytics"
+          ]
+        },
+        {
+          id: "plan_yearly",
+          name: "Premium Yearly",
+          description: "Yearly subscription plan with all premium features (save 25%)",
+          price: 89.99,
+          interval: "yearly",
+          isPopular: true,
+          features: [
+            "All Monthly features",
+            "Save 25%",
+            "Priority support",
+            "Advanced meditation guides",
+            "Exclusive content",
+            "Advanced analytics",
+            "Custom themes",
+            "Offline access"
+          ]
+        }
+      ]);
+    }
+  };
+
+  const handleAddPlan = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Add plan logic
-    console.log("Adding new plan...");
+    
+    if (!planForm.name || !planForm.description || !planForm.price) {
+      window.alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const features = planForm.features.split('\n').filter(f => f.trim());
+      
+      const planData = {
+        name: planForm.name,
+        description: planForm.description,
+        price: parseFloat(planForm.price),
+        interval: planForm.interval,
+        features: features,
+        isPopular: planForm.isPopular
+      };
+
+      const response = await apiRequest('POST', '/api/admin/plans', planData);
+      const data = await response.json();
+
+      window.alert('Plan created successfully');
+      setCreateDialogOpen(false);
+      setPlanForm({
+        name: '',
+        description: '',
+        price: '',
+        interval: 'monthly',
+        features: '',
+        isPopular: false
+      });
+      await fetchPlans();
+    } catch (error) {
+      console.error('Error creating plan:', error);
+      window.alert('Failed to create plan: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleDeletePlan = (id: string) => {
-    setPlans(plans.filter(plan => plan.id !== id));
+  const handleDeletePlan = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this plan?')) return;
+
+    try {
+      await apiRequest('DELETE', `/api/admin/plans/${id}`);
+      window.alert('Plan deleted successfully');
+      await fetchPlans();
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      window.alert('Failed to delete plan: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
   };
 
-  const handleCancelSubscription = (id: string) => {
-    setSubscriptions(subscriptions.map(sub => {
-      if (sub.id === id) {
-        return {
-          ...sub,
-          status: "cancelled"
-        };
-      }
-      return sub;
-    }));
+  const handleCancelSubscription = async (id: string) => {
+    try {
+      await apiRequest('PUT', `/api/admin/subscriptions/${id}`, { status: 'cancelled' });
+      window.alert('Subscription cancelled successfully');
+      await fetchSubscriptions();
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      window.alert('Failed to cancel subscription: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
   };
 
   return (
@@ -169,9 +222,9 @@ export default function AdminSubscriptions() {
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-semibold">Manage Plans</h3>
               
-              <Dialog>
+              <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button onClick={() => setCreateDialogOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Plan
                   </Button>
@@ -187,18 +240,47 @@ export default function AdminSubscriptions() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Plan Name</Label>
-                        <Input id="name" placeholder="Premium Monthly" />
+                        <Input 
+                          id="name" 
+                          placeholder="Premium Monthly"
+                          value={planForm.name}
+                          onChange={(e) => setPlanForm(prev => ({ ...prev, name: e.target.value }))}
+                          required
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="price">Price</Label>
-                        <Input id="price" type="number" step="0.01" placeholder="9.99" />
+                        <Input 
+                          id="price" 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="9.99"
+                          value={planForm.price}
+                          onChange={(e) => setPlanForm(prev => ({ ...prev, price: e.target.value }))}
+                          required
+                        />
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="interval">Interval</Label>
+                      <select
+                        id="interval"
+                        value={planForm.interval}
+                        onChange={(e) => setPlanForm(prev => ({ ...prev, interval: e.target.value as 'monthly' | 'yearly' }))}
+                        className="w-full p-2 border rounded-md"
+                      >
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="description">Description</Label>
                       <Textarea 
                         id="description" 
                         placeholder="Monthly subscription plan with all premium features"
+                        value={planForm.description}
+                        onChange={(e) => setPlanForm(prev => ({ ...prev, description: e.target.value }))}
+                        required
                       />
                     </div>
                     <div className="space-y-2">
@@ -209,11 +291,32 @@ export default function AdminSubscriptions() {
 Background music
 Custom playlists"
                         rows={5}
+                        value={planForm.features}
+                        onChange={(e) => setPlanForm(prev => ({ ...prev, features: e.target.value }))}
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Create Plan
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="isPopular"
+                        checked={planForm.isPopular}
+                        onChange={(e) => setPlanForm(prev => ({ ...prev, isPopular: e.target.checked }))}
+                      />
+                      <Label htmlFor="isPopular">Mark as Popular</Label>
+                    </div>
+                    <div className="flex gap-2 pt-4">
+                      <Button type="submit" disabled={submitting} className="flex-1">
+                        {submitting ? 'Creating...' : 'Create Plan'}
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setCreateDialogOpen(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </form>
                 </DialogContent>
               </Dialog>

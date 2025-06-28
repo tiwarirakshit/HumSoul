@@ -25,12 +25,11 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { signOutUser } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export default function Profile() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
@@ -57,11 +56,13 @@ export default function Profile() {
   
   const handleSignOut = async () => {
     try {
-      await signOutUser();
+      await logout();
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account."
       });
+      // Redirect to login page
+      setLocation('/login');
     } catch (error) {
       console.error("Error signing out:", error);
       toast({
