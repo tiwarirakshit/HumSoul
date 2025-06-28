@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, foreignKey, decimal } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -62,6 +62,29 @@ export const recentPlays = pgTable("recent_plays", {
   playedAt: timestamp("played_at").defaultNow(),
 });
 
+// NEW: Subscription Plans table
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  duration: integer("duration").notNull(), // in days
+  features: text("features").array(), // Array of feature strings
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// NEW: User Subscriptions table
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  planId: integer("plan_id").notNull().references(() => subscriptionPlans.id),
+  status: text("status").notNull().default("active"), // active, cancelled, expired
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas for each table
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -96,6 +119,24 @@ export const insertRecentPlaySchema = createInsertSchema(recentPlays).pick({
   playlistId: true,
 });
 
+// NEW: Insert schemas for subscription tables
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).pick({
+  name: true,
+  description: true,
+  price: true,
+  duration: true,
+  features: true,
+  isActive: true,
+});
+
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).pick({
+  userId: true,
+  planId: true,
+  status: true,
+  startDate: true,
+  endDate: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -118,10 +159,18 @@ export type InsertUserFavorite = z.infer<typeof insertUserFavoriteSchema>;
 export type RecentPlay = typeof recentPlays.$inferSelect;
 export type InsertRecentPlay = z.infer<typeof insertRecentPlaySchema>;
 
+// NEW: Types for subscription tables
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
+
 // Define relations between tables
 export const usersRelations = relations(users, ({ many }) => ({
   userFavorites: many(userFavorites),
-  recentPlays: many(recentPlays)
+  recentPlays: many(recentPlays),
+  userSubscriptions: many(userSubscriptions)
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -164,5 +213,21 @@ export const recentPlaysRelations = relations(recentPlays, ({ one }) => ({
   playlist: one(playlists, {
     fields: [recentPlays.playlistId],
     references: [playlists.id]
+  })
+}));
+
+// NEW: Relations for subscription tables
+export const subscriptionPlansRelations = relations(subscriptionPlans, ({ many }) => ({
+  userSubscriptions: many(userSubscriptions)
+}));
+
+export const userSubscriptionsRelations = relations(userSubscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [userSubscriptions.userId],
+    references: [users.id]
+  }),
+  plan: one(subscriptionPlans, {
+    fields: [userSubscriptions.planId],
+    references: [subscriptionPlans.id]
   })
 }));

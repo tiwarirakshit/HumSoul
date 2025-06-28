@@ -6,6 +6,8 @@ import {
   backgroundMusics,
   userFavorites,
   recentPlays,
+  subscriptionPlans,
+  userSubscriptions,
   type User,
   type InsertUser,
   type Category,
@@ -20,6 +22,10 @@ import {
   type InsertUserFavorite,
   type RecentPlay,
   type InsertRecentPlay,
+  type SubscriptionPlan,
+  type InsertSubscriptionPlan,
+  type UserSubscription,
+  type InsertUserSubscription,
 } from "@shared/schema";
 
 import { db } from "./db";
@@ -115,7 +121,19 @@ getAdminUsers(filters?: AdminUserFilters): Promise<AdminUser[]>;
     mimeType?: string;
   }): Promise<BackgroundMusic>;
 
-  
+  // Subscription Plan methods
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan>;
+  deleteSubscriptionPlan(id: number): Promise<void>;
+
+  // User Subscription methods
+  getUserSubscriptions(): Promise<UserSubscription[]>;
+  getUserSubscription(id: number): Promise<UserSubscription | undefined>;
+  createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
+  updateUserSubscription(id: number, subscription: Partial<InsertUserSubscription>): Promise<UserSubscription>;
+  deleteUserSubscription(id: number): Promise<void>;
 
   // User Favorites methods
   getUserFavorites(userId: number): Promise<Playlist[]>;
@@ -1319,6 +1337,72 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(affirmations).set(updateFields).where(eq(affirmations.id, id)).returning();
     if (!updated) throw new Error('Affirmation not found');
     return updated;
+  }
+
+  // Subscription Plan methods
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return db.select().from(subscriptionPlans);
+  }
+
+  async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    return plan;
+  }
+
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [newPlan] = await db.insert(subscriptionPlans).values(plan).returning();
+    return newPlan;
+  }
+
+  async updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan> {
+    const [updatedPlan] = await db
+      .update(subscriptionPlans)
+      .set(plan)
+      .where(eq(subscriptionPlans.id, id))
+      .returning();
+    
+    if (!updatedPlan) {
+      throw new Error(`Subscription plan not found: ${id}`);
+    }
+    
+    return updatedPlan;
+  }
+
+  async deleteSubscriptionPlan(id: number): Promise<void> {
+    await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+  }
+
+  // User Subscription methods
+  async getUserSubscriptions(): Promise<UserSubscription[]> {
+    return db.select().from(userSubscriptions);
+  }
+
+  async getUserSubscription(id: number): Promise<UserSubscription | undefined> {
+    const [subscription] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.id, id));
+    return subscription;
+  }
+
+  async createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription> {
+    const [newSubscription] = await db.insert(userSubscriptions).values(subscription).returning();
+    return newSubscription;
+  }
+
+  async updateUserSubscription(id: number, subscription: Partial<InsertUserSubscription>): Promise<UserSubscription> {
+    const [updatedSubscription] = await db
+      .update(userSubscriptions)
+      .set(subscription)
+      .where(eq(userSubscriptions.id, id))
+      .returning();
+    
+    if (!updatedSubscription) {
+      throw new Error(`User subscription not found: ${id}`);
+    }
+    
+    return updatedSubscription;
+  }
+
+  async deleteUserSubscription(id: number): Promise<void> {
+    await db.delete(userSubscriptions).where(eq(userSubscriptions.id, id));
   }
 }
 

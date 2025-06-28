@@ -817,9 +817,8 @@ api.delete("/admin/users/:id", async (req, res) => {
   // Get all subscriptions for admin
   api.get("/admin/subscriptions", async (req, res) => {
     try {
-      // For now, return an empty array since we don't have a subscriptions table yet
-      // You can implement this later when you add a subscriptions table
-      res.json([]);
+      const subscriptions = await storage.getUserSubscriptions();
+      res.json(subscriptions);
     } catch (error) {
       console.error("Error fetching subscriptions:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -829,9 +828,8 @@ api.delete("/admin/users/:id", async (req, res) => {
   // Get all subscription plans for admin
   api.get("/admin/plans", async (req, res) => {
     try {
-      // For now, return an empty array since we don't have a plans table yet
-      // You can implement this later when you add a plans table
-      res.json([]);
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
     } catch (error) {
       console.error("Error fetching plans:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -841,11 +839,47 @@ api.delete("/admin/users/:id", async (req, res) => {
   // Create subscription plan
   api.post("/admin/plans", async (req, res) => {
     try {
-      // For now, just return success since we don't have a plans table yet
-      // You can implement this later when you add a plans table
-      res.status(201).json({ message: "Plan created successfully" });
+      const planData = {
+        name: req.body.name,
+        description: req.body.description,
+        price: req.body.price.toString(),
+        duration: parseInt(req.body.duration),
+        features: req.body.features || [],
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true
+      };
+
+      const plan = await storage.createSubscriptionPlan(planData);
+      res.status(201).json(plan);
     } catch (error) {
       console.error("Error creating plan:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update subscription plan
+  api.put("/admin/plans/:id", async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      if (isNaN(planId)) {
+        return res.status(400).json({ message: "Invalid plan ID" });
+      }
+
+      const updateData = {
+        name: req.body.name,
+        description: req.body.description,
+        price: req.body.price ? req.body.price.toString() : undefined,
+        duration: req.body.duration ? parseInt(req.body.duration) : undefined,
+        features: req.body.features,
+        isActive: req.body.isActive
+      };
+
+      const plan = await storage.updateSubscriptionPlan(planId, updateData);
+      res.json(plan);
+    } catch (error) {
+      console.error("Error updating plan:", error);
+      if (error.message.includes("not found")) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -853,8 +887,12 @@ api.delete("/admin/users/:id", async (req, res) => {
   // Delete subscription plan
   api.delete("/admin/plans/:id", async (req, res) => {
     try {
-      // For now, just return success since we don't have a plans table yet
-      // You can implement this later when you add a plans table
+      const planId = parseInt(req.params.id);
+      if (isNaN(planId)) {
+        return res.status(400).json({ message: "Invalid plan ID" });
+      }
+
+      await storage.deleteSubscriptionPlan(planId);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting plan:", error);
@@ -865,11 +903,24 @@ api.delete("/admin/users/:id", async (req, res) => {
   // Update subscription status
   api.put("/admin/subscriptions/:id", async (req, res) => {
     try {
-      // For now, just return success since we don't have a subscriptions table yet
-      // You can implement this later when you add a subscriptions table
-      res.json({ message: "Subscription updated successfully" });
+      const subscriptionId = parseInt(req.params.id);
+      if (isNaN(subscriptionId)) {
+        return res.status(400).json({ message: "Invalid subscription ID" });
+      }
+
+      const updateData = {
+        status: req.body.status,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined
+      };
+
+      const subscription = await storage.updateUserSubscription(subscriptionId, updateData);
+      res.json(subscription);
     } catch (error) {
       console.error("Error updating subscription:", error);
+      if (error.message.includes("not found")) {
+        return res.status(404).json({ message: "Subscription not found" });
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   });
