@@ -839,11 +839,18 @@ api.delete("/admin/users/:id", async (req, res) => {
   // Create subscription plan
   api.post("/admin/plans", async (req, res) => {
     try {
+      const duration = parseInt(req.body.duration);
+      if (isNaN(duration) || duration <= 0) {
+        return res.status(400).json({ 
+          message: "Invalid duration. Duration must be a positive number." 
+        });
+      }
+
       const planData = {
         name: req.body.name,
         description: req.body.description,
         price: req.body.price.toString(),
-        duration: parseInt(req.body.duration),
+        duration: duration,
         features: req.body.features || [],
         isActive: req.body.isActive !== undefined ? req.body.isActive : true
       };
@@ -864,14 +871,26 @@ api.delete("/admin/users/:id", async (req, res) => {
         return res.status(400).json({ message: "Invalid plan ID" });
       }
 
-      const updateData = {
+      const updateData: any = {
         name: req.body.name,
         description: req.body.description,
-        price: req.body.price ? req.body.price.toString() : undefined,
-        duration: req.body.duration ? parseInt(req.body.duration) : undefined,
         features: req.body.features,
         isActive: req.body.isActive
       };
+
+      if (req.body.price !== undefined) {
+        updateData.price = req.body.price.toString();
+      }
+
+      if (req.body.duration !== undefined) {
+        const duration = parseInt(req.body.duration);
+        if (isNaN(duration) || duration <= 0) {
+          return res.status(400).json({ 
+            message: "Invalid duration. Duration must be a positive number." 
+          });
+        }
+        updateData.duration = duration;
+      }
 
       const plan = await storage.updateSubscriptionPlan(planId, updateData);
       res.json(plan);
