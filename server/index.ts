@@ -49,6 +49,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve audio files
+app.use('/audio', express.static(path.join(process.cwd(), 'client', 'public', 'audio')));
+
 (async () => {
   // Initialize database if needed
   if (storage instanceof DatabaseStorage) {

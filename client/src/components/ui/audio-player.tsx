@@ -15,6 +15,7 @@ import {
 import { formatTime } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import AudioProgress from "./audio-progress";
+import { Music } from "lucide-react";
 
 interface AudioPlayerProps {
   showWaveform?: boolean;
@@ -82,146 +83,88 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
   };
 
   const VolumeIcon = () => {
-    if (volume === 0) return <VolumeX className="h-4 w-4" />;
-    if (volume < 0.5) return <Volume1 className="h-4 w-4" />;
-    return <Volume2 className="h-4 w-4" />;
+    if (volume === 0) return <VolumeX className="h-5 w-5" />;
+    if (volume < 0.5) return <Volume1 className="h-5 w-5" />;
+    return <Volume2 className="h-5 w-5" />;
   };
 
-  if (minified) {
-    return (
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-dark dark:text-light hover:bg-light dark:hover:bg-dark-lighter"
-          onClick={previous}
-        >
-          <SkipBack className="h-5 w-5" />
-        </Button>
-
-        <Button
-          variant="primary"
-          size="icon"
-          className="h-10 w-10 rounded-full"
-          onClick={togglePlay}
-        >
-          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-dark dark:text-light hover:bg-light dark:hover:bg-dark-lighter"
-          onClick={next}
-        >
-          <SkipForward className="h-5 w-5" />
-        </Button>
-      </div>
-    );
-  }
-
+  // --- Spotify-like fixed bottom bar ---
   return (
-    <div className="w-full">
-
-      {!showWaveform? <AudioProgress progress={progress}/>:<div className="mb-4">
-        <Slider
-          value={[progress]}
-          max={100}
-          step={1}
-          onValueChange={handleSeek}
-          className="w-full"
-        />
-        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-      </div>}
-
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-dark dark:text-light hover:bg-light dark:hover:bg-dark-lighter"
-          >
-            <Shuffle className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-dark dark:text-light hover:bg-light dark:hover:bg-dark-lighter"
-            onClick={previous}
-          >
-            <SkipBack className="h-5 w-5" />
-          </Button>
-
-          <Button
-            variant="primary"
-            size="icon"
-            className="h-10 w-10 rounded-full"
-            onClick={togglePlay}
-          >
-            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-dark dark:text-light hover:bg-light dark:hover:bg-dark-lighter"
-            onClick={next}
-          >
-            <SkipForward className="h-5 w-5" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-dark dark:text-light hover:bg-light dark:hover:bg-dark-lighter"
-          >
-            <Repeat className="h-4 w-4" />
-          </Button>
+    <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-dark-lighter/90 shadow-2xl border-t border-gray-200 dark:border-gray-800 backdrop-blur-lg">
+      <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 py-2 gap-2">
+        {/* Song Info (placeholder) */}
+        <div className="flex items-center gap-3 min-w-[180px] w-full md:w-auto mb-2 md:mb-0">
+          <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded shadow-inner flex items-center justify-center">
+            {/* Album Art Placeholder */}
+            <Music className="h-7 w-7 text-gray-400" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-base text-gray-900 dark:text-white truncate max-w-[120px]">Song Title</span>
+            <span className="text-xs text-gray-500 dark:text-gray-300 truncate max-w-[120px]">Artist Name</span>
+          </div>
         </div>
 
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-dark dark:text-light hover:bg-light dark:hover:bg-dark-lighter"
-            onClick={() => setShowVolumeControl(!showVolumeControl)}
-          >
-            <VolumeIcon />
-          </Button>
+        {/* Main Controls */}
+        <div className="flex flex-col items-center flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-1">
+            <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={previous}>
+              <SkipBack className="h-6 w-6" />
+            </Button>
+            <Button variant="default" size="icon" className="h-14 w-14 rounded-full shadow-lg" onClick={togglePlay}>
+              {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={next}>
+              <SkipForward className="h-6 w-6" />
+            </Button>
+          </div>
+          <div className="flex items-center w-full gap-2">
+            <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(currentTime)}</span>
+            <Slider
+              value={[progress]}
+              max={100}
+              step={1}
+              onValueChange={handleSeek}
+              className="w-full max-w-xs"
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(duration)}</span>
+          </div>
+        </div>
 
-          {showVolumeControl && (
-            <div className="absolute bottom-full right-0 p-3 bg-white dark:bg-dark-lighter rounded-lg shadow-lg z-10 min-w-[150px]">
-              <div className="mb-3">
-                <div className="text-xs font-medium mb-1">Affirmation Volume</div>
-                <div className="flex items-center gap-2">
-                  <VolumeIcon />
-                  <Slider
-                    value={[volume * 100]}
-                    max={100}
-                    step={1}
-                    onValueChange={handleVolumeChange}
-                  />
+        {/* Volume & More */}
+        <div className="flex flex-col items-end min-w-[120px] w-full md:w-auto mt-2 md:mt-0">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => setShowVolumeControl(!showVolumeControl)}>
+              <VolumeIcon />
+            </Button>
+            {showVolumeControl && (
+              <div className="absolute bottom-16 right-4 p-3 bg-white dark:bg-dark-lighter rounded-lg shadow-lg z-50 min-w-[150px]">
+                <div className="mb-3">
+                  <div className="text-xs font-medium mb-1">Volume</div>
+                  <div className="flex items-center gap-2">
+                    <VolumeIcon />
+                    <Slider
+                      value={[volume * 100]}
+                      max={100}
+                      step={1}
+                      onValueChange={handleVolumeChange}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium mb-1">Background Music</div>
+                  <div className="flex items-center gap-2">
+                    <Volume1 className="h-4 w-4" />
+                    <Slider
+                      value={[backgroundMusicVolume * 100]}
+                      max={100}
+                      step={1}
+                      onValueChange={handleBackgroundVolumeChange}
+                    />
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <div className="text-xs font-medium mb-1">Background Music</div>
-                <div className="flex items-center gap-2">
-                  <Volume1 className="h-4 w-4" />
-                  <Slider
-                    value={[backgroundMusicVolume * 100]}
-                    max={100}
-                    step={1}
-                    onValueChange={handleBackgroundVolumeChange}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
