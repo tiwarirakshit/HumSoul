@@ -1,18 +1,34 @@
 {
   "project_info": {
-    "project_number": "919451172750",
-    "project_id": "humsoul-spare",
-    "storage_bucket": "humsoul-spare.firebasestorage.app"
+    "project_number": "367237349555",
+    "project_id": "humsoul-27d0f",
+    "storage_bucket": "humsoul-27d0f.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:919451172750:android:c81c05964d7a9335836edf",
+        "mobilesdk_app_id": "1:367237349555:android:cdc6d212e90530c591f0c6",
         "android_client_info": {
           "package_name": "com.humsoul.app"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "367237349555-056rmtaa65524rpge10aoue12hmrmvo2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.humsoul.app",
+            "certificate_hash": "3eda2af80948ca2ad34638714dcb23841e40653f"
+          }
+        },
+        {
+          "client_id": "367237349555-1ff00kraog6q7trohb5qs93jvsjdfrab.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.humsoul.app",
+            "certificate_hash": "c7bb3ca18a02947272771c16b132801ff83a6a72"
+          }
+        },
         {
           "client_id": "367237349555-lc4s3ugefef8ufp8mjgh6gu5hcv6uirj.apps.googleusercontent.com",
           "client_type": 3
@@ -20,7 +36,7 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCSTSf-g7crDqYZ7YNqlpAklxtORGGAEZ4"
+          "current_key": "AIzaSyC9ny6pp-Ns8w2rKBlI7_AArWxlFf2iWog"
         }
       ],
       "services": {

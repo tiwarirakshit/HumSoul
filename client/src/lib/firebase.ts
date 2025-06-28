@@ -3,17 +3,15 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
-// IMPORTANT: Make sure google-services.json is present in android/app/ for Firebase Auth and Google Sign-In to work on Android.
-
-// Firebase configuration for humsoul-spare project
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCSTSf-g7crDqYZ7YNqlpAklxtORGGAEZ4",
-  authDomain: "humsoul-spare.firebaseapp.com",
-  projectId: "humsoul-spare",
-  storageBucket: "humsoul-spare.firebasestorage.app",
-  messagingSenderId: "919451172750",
-  appId: "1:919451172750:android:c81c05964d7a9335836edf",
-  measurementId: "G-KGYP02QBVR"
+  apiKey: "AIzaSyBnWgEXuqyRUEmcVNk5IiEpTLyaJpyt7VQ",
+  authDomain: "humsoul-27d0f.firebaseapp.com",
+  projectId: "humsoul-27d0f",
+  storageBucket: "humsoul-27d0f.firebasestorage.app",
+  messagingSenderId: "367237349555",
+  appId: "1:367237349555:web:0a8a1643ef90a1a391f0c6",
+  measurementId: "G-H5N3K457WF"
 };
 
 // Initialize Firebase
@@ -28,22 +26,11 @@ export const signInWithGoogle = async () => {
   try {
     if (Capacitor.isNativePlatform()) {
       // For mobile platforms
-      console.log('Attempting Google Sign-In on native platform');
       const result = await GoogleAuth.signIn();
-      console.log('GoogleAuth.signIn result:', result);
-      
-      if (!result || !result.authentication || !result.authentication.idToken) {
-        console.error('Google sign-in failed: Invalid result structure:', result);
-        throw new Error('Google sign-in failed: No idToken returned from native GoogleAuth plugin.');
-      }
-      
-      console.log('Creating Firebase credential with idToken');
       const credential = GoogleAuthProvider.credential(result.authentication.idToken);
-      console.log('Signing in to Firebase with credential');
       return signInWithCredential(auth, credential);
     } else {
       // For web platforms
-      console.log('Attempting Google Sign-In on web platform');
       googleProvider.addScope('profile');
       googleProvider.addScope('email');
       googleProvider.setCustomParameters({
@@ -53,11 +40,6 @@ export const signInWithGoogle = async () => {
     }
   } catch (error) {
     console.error("Error signing in with Google: ", error);
-    console.error("Error details:", {
-      code: error?.code,
-      message: error?.message,
-      stack: error?.stack
-    });
     throw error;
   }
 };
@@ -66,8 +48,6 @@ export const signInWithGoogle = async () => {
 export const signOutUser = async () => {
   try {
     await signOut(auth);
-    localStorage.removeItem('adminUser');
-    window.location.href = '/login';
   } catch (error) {
     console.error("Error signing out: ", error);
     throw error;
