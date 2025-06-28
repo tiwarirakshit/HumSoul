@@ -1,22 +1,28 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
+import "dotenv/config";
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import * as schema from "../shared/schema";
 import fs from "fs/promises";
 import path from "path";
 
-const connectionString = process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/humsoul";
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL must be set. Did you forget to set up Postgres?");
+}
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 async function resetDatabase() {
   console.log("🔄 Starting database reset...");
   
-  const sql = postgres(connectionString, { max: 1 });
-  const db = drizzle(sql, { schema });
+  const db = drizzle(pool, { schema });
 
   try {
     // Drop all tables
     console.log("🗑️  Dropping all tables...");
-    await sql`
+    await pool.query(`
       DROP TABLE IF EXISTS 
         user_subscriptions,
         subscription_plans,
@@ -28,7 +34,7 @@ async function resetDatabase() {
         categories,
         users
       CASCADE;
-    `;
+    `);
 
     // Run migrations to recreate tables
     console.log("📦 Running migrations...");
@@ -112,7 +118,7 @@ async function resetDatabase() {
       {
         name: "Free Trial",
         description: "7-day free trial with limited access",
-        price: 0,
+        price: "0.00",
         duration: 7,
         features: ["Access to basic affirmations", "Limited playlists", "Standard quality audio"],
         isActive: true
@@ -120,7 +126,7 @@ async function resetDatabase() {
       {
         name: "Premium Monthly",
         description: "Full access to all content",
-        price: 9.99,
+        price: "9.99",
         duration: 30,
         features: ["Unlimited affirmations", "All playlists", "High quality audio", "Background music", "Offline downloads"],
         isActive: true
@@ -128,7 +134,7 @@ async function resetDatabase() {
       {
         name: "Premium Yearly",
         description: "Best value with annual billing",
-        price: 99.99,
+        price: "99.99",
         duration: 365,
         features: ["Unlimited affirmations", "All playlists", "High quality audio", "Background music", "Offline downloads", "Priority support"],
         isActive: true
@@ -148,7 +154,7 @@ async function resetDatabase() {
     console.error("❌ Error resetting database:", error);
     throw error;
   } finally {
-    await sql.end();
+    await pool.end();
   }
 }
 
