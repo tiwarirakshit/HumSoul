@@ -33,20 +33,36 @@ async function setupSubscriptionTables() {
     `);
     console.log("✅ Created user_subscriptions table");
 
-    // Add foreign key constraints
-    await db.execute(`
-      ALTER TABLE user_subscriptions 
-      ADD CONSTRAINT IF NOT EXISTS user_subscriptions_user_id_users_id_fk 
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-    `);
-    console.log("✅ Added user_id foreign key constraint");
+    // Add foreign key constraints (check if they exist first)
+    try {
+      await db.execute(`
+        ALTER TABLE user_subscriptions 
+        ADD CONSTRAINT user_subscriptions_user_id_users_id_fk 
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+      `);
+      console.log("✅ Added user_id foreign key constraint");
+    } catch (error: any) {
+      if (error.message.includes("already exists")) {
+        console.log("ℹ️  user_id foreign key constraint already exists");
+      } else {
+        throw error;
+      }
+    }
 
-    await db.execute(`
-      ALTER TABLE user_subscriptions 
-      ADD CONSTRAINT IF NOT EXISTS user_subscriptions_plan_id_subscription_plans_id_fk 
-      FOREIGN KEY (plan_id) REFERENCES subscription_plans(id) ON DELETE CASCADE;
-    `);
-    console.log("✅ Added plan_id foreign key constraint");
+    try {
+      await db.execute(`
+        ALTER TABLE user_subscriptions 
+        ADD CONSTRAINT user_subscriptions_plan_id_subscription_plans_id_fk 
+        FOREIGN KEY (plan_id) REFERENCES subscription_plans(id) ON DELETE CASCADE;
+      `);
+      console.log("✅ Added plan_id foreign key constraint");
+    } catch (error: any) {
+      if (error.message.includes("already exists")) {
+        console.log("ℹ️  plan_id foreign key constraint already exists");
+      } else {
+        throw error;
+      }
+    }
 
     console.log("🎉 All subscription tables created successfully!");
   } catch (error) {
