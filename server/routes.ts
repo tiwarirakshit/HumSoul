@@ -308,18 +308,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NEW: Create playlist route
   api.post("/playlists", async (req, res) => {
     try {
-      // Inject userId manually
-      req.body.userId = 2;
-  
       const playlistData = createPlaylistSchema.parse(req.body);
-  
+
       // Verify user exists
       const user = await storage.getUser(playlistData.userId);
       console.log(user, "user data", playlistData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-  
+
       // Verify category exists
       const categories = await storage.getCategories();
       const categoryExists = categories.some(
@@ -328,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!categoryExists) {
         return res.status(404).json({ message: "Category not found" });
       }
-  
+
       const playlist = await storage.createPlaylist(playlistData);
       res.status(201).json(playlist);
     } catch (error) {
