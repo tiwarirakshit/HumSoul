@@ -928,6 +928,15 @@ api.delete("/admin/users/:id", async (req, res) => {
   // Mount the API routes
   app.use("/api", api);
 
+  // Add 404 handler for API routes
+  app.use("/api/*", (req, res) => {
+    res.status(404).json({ 
+      message: "API endpoint not found",
+      path: req.path,
+      method: req.method
+    });
+  });
+
   // Create and return the HTTP server
   const server = createServer(app);
   return server;

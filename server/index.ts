@@ -4,6 +4,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage, DatabaseStorage } from "./storage";
 import cors from "cors"; // ✅ Added this
+import path from "path";
+import fs from "fs";
 
 
 
@@ -74,7 +76,20 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // In production, serve static files but exclude API routes
+    const distPath = path.resolve(import.meta.dirname, "public");
+    
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      
+      // Only serve index.html for non-API routes
+      app.use("*", (req, res, next) => {
+        if (req.path.startsWith("/api")) {
+          return next(); // Let API routes handle 404s
+        }
+        res.sendFile(path.resolve(distPath, "index.html"));
+      });
+    }
   }
 
   // Serve the app on port 3000 on localhost
