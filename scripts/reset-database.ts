@@ -40,6 +40,35 @@ async function resetDatabase() {
     console.log("📦 Running migrations...");
     await migrate(db, { migrationsFolder: "./migrations" });
 
+    // Create missing subscription tables manually
+    console.log("📋 Creating subscription tables...");
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "subscription_plans" (
+        "id" serial PRIMARY KEY NOT NULL,
+        "name" text NOT NULL,
+        "description" text,
+        "price" decimal(10,2) NOT NULL,
+        "duration" integer NOT NULL,
+        "features" text[],
+        "is_active" boolean DEFAULT true,
+        "created_at" timestamp DEFAULT now()
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "user_subscriptions" (
+        "id" serial PRIMARY KEY NOT NULL,
+        "user_id" integer NOT NULL,
+        "plan_id" integer NOT NULL,
+        "status" text NOT NULL DEFAULT 'active',
+        "start_date" timestamp NOT NULL,
+        "end_date" timestamp NOT NULL,
+        "created_at" timestamp DEFAULT now(),
+        CONSTRAINT "user_subscriptions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE,
+        CONSTRAINT "user_subscriptions_plan_id_subscription_plans_id_fk" FOREIGN KEY ("plan_id") REFERENCES "subscription_plans"("id") ON DELETE CASCADE
+      );
+    `);
+
     // Clear all audio files
     console.log("🎵 Clearing audio files...");
     const audioDirs = [
