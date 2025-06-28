@@ -846,10 +846,17 @@ api.delete("/admin/users/:id", async (req, res) => {
         });
       }
 
+      const price = parseFloat(req.body.price);
+      if (isNaN(price) || price < 0) {
+        return res.status(400).json({ 
+          message: "Invalid price. Price must be a positive number." 
+        });
+      }
+
       const planData = {
         name: req.body.name,
         description: req.body.description,
-        price: req.body.price.toString(),
+        price: price.toString(),
         duration: duration,
         features: req.body.features || [],
         isActive: req.body.isActive !== undefined ? req.body.isActive : true
@@ -879,7 +886,13 @@ api.delete("/admin/users/:id", async (req, res) => {
       };
 
       if (req.body.price !== undefined) {
-        updateData.price = req.body.price.toString();
+        const price = parseFloat(req.body.price);
+        if (isNaN(price) || price < 0) {
+          return res.status(400).json({ 
+            message: "Invalid price. Price must be a positive number." 
+          });
+        }
+        updateData.price = price.toString();
       }
 
       if (req.body.duration !== undefined) {
