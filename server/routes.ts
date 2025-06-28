@@ -990,6 +990,30 @@ api.delete("/admin/users/:id", async (req, res) => {
     }
   });
 
+  // Public: Create or update user
+  api.post("/users", async (req, res) => {
+    const { uid, email, name, username, avatarUrl } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    // Check if user exists
+    let user = await storage.getUserByEmail(email);
+    if (user) {
+      // Optionally update user info here
+      return res.status(200).json(user);
+    }
+
+    // Create new user
+    user = await storage.createUser({
+      uid,
+      email,
+      name,
+      username,
+      avatarUrl,
+      createdAt: new Date(),
+    });
+    res.status(201).json(user);
+  });
+
   // Mount the API routes
   app.use("/api", api);
 

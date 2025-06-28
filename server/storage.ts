@@ -144,6 +144,9 @@ getAdminUsers(filters?: AdminUserFilters): Promise<AdminUser[]>;
   // Recent Plays methods
   getRecentPlays(userId: number): Promise<{ playlist: Playlist; playedAt: Date }[]>;
   addRecentPlay(recentPlay: InsertRecentPlay): Promise<RecentPlay>;
+
+  // New method
+  getUserByEmail(email: string): Promise<User | undefined>;
 }
 
 
@@ -828,6 +831,10 @@ export class MemStorage implements IStorage {
     if (!updated) throw new Error('Affirmation not found');
     return updated;
   }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
 }
 
 /**
@@ -1403,6 +1410,11 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUserSubscription(id: number): Promise<void> {
     await db.delete(userSubscriptions).where(eq(userSubscriptions.id, id));
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
   }
 }
 

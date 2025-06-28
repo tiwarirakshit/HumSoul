@@ -69,13 +69,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const loginWithGoogle = async () => {
     try {
       const result = await signInWithGoogle();
+      // Always save/update user in DB after Google login
+      if (result?.user) {
+        await saveNewUserToDatabase(result.user);
+      }
       // Check if this is the user's first sign in
       if (result?.user?.metadata.creationTime === result?.user?.metadata.lastSignInTime) {
         setIsNewUser(true);
         localStorage.setItem('isNewUser', 'true');
-        
-        // Save new user to database
-        await saveNewUserToDatabase(result.user);
       }
     } catch (error) {
       console.error("Error signing in with Google:", error);
