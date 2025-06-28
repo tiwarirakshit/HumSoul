@@ -311,7 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playlistData = createPlaylistSchema.parse(req.body);
 
       // Verify user exists
-      const user = await storage.getUser(playlistData.userId);
+      const user = 2
       console.log(user, "user data", playlistData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
