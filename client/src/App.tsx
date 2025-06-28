@@ -242,17 +242,18 @@ function AppContent() {
     );
   }
 
-  // Hide bottom nav on /admin routes
+  // Hide bottom nav on /admin routes and login page
   const isAdminRoute = window.location.pathname.startsWith('/admin');
+  const isLoginPage = window.location.pathname === '/login';
 
   // Show full app layout for authenticated users
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden relative font-sans">
-      {!isAdminRoute && <Header />}
+      {!isAdminRoute && !isLoginPage && <Header />}
       <main className="flex-1 overflow-y-auto px-4 pb-24">
         <Router />
       </main>
-      {!isAdminRoute && <BottomNavigation />}
+      {!isAdminRoute && !isLoginPage && <BottomNavigation />}
 
       {/* Background Music Toggle */}
       <Button
