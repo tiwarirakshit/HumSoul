@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "367237349555-sj9haomrsfjueh0c13q1rsfdimvqaedv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.humsoul.app",
+            "certificate_hash": "24e54ffd277e888ee75df843312d15170a1ea600"
+          }
+        },
+        {
           "client_id": "367237349555-lc4s3ugefef8ufp8mjgh6gu5hcv6uirj.apps.googleusercontent.com",
           "client_type": 3
         }

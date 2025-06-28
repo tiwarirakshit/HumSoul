@@ -2,38 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Star } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
-
-const plans = [
-  {
-    name: "Monthly",
-    price: "$9.99",
-    period: "month",
-    features: [
-      "Unlimited affirmations",
-      "Background music",
-      "Custom playlists",
-      "Basic meditation guides",
-      "Daily reminders",
-      "Basic analytics"
-    ]
-  },
-  {
-    name: "Yearly",
-    price: "$89.99",
-    period: "year",
-    features: [
-      "All Monthly features",
-      "Save 25%",
-      "Priority support",
-      "Advanced meditation guides",
-      "Exclusive content",
-      "Advanced analytics",
-      "Custom themes",
-      "Offline access"
-    ],
-    popular: true
-  }
-];
+import { useSubscriptionPlans } from "@/hooks/use-subscription-plans";
 
 // Load Razorpay script
 function loadRazorpayScript(src: string) {
@@ -46,45 +15,77 @@ function loadRazorpayScript(src: string) {
   });
 }
 
-
 export default function Subscription() {
   const [, setLocation] = useLocation();
-  const [selectedPlan, setSelectedPlan] = useState<number>(1); // Default to yearly plan
+  const { plans, loading } = useSubscriptionPlans();
+  const [selectedPlan, setSelectedPlan] = useState<number>(0);
 
   const handleSubscribe = async () => {
-  const res = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
+    const res = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
 
-  if (!res) {
-    alert("Razorpay SDK failed to load. Are you online?");
-    return;
+    if (!res) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+
+    const plan = plans[selectedPlan];
+    if (!plan) {
+      alert("Please select a plan");
+      return;
+    }
+
+    const razorpay = new (window as any).Razorpay({
+      key: "rzp_test_o8ZBYNkHRr83ul", // Replace with your test key
+      amount: Math.round(parseFloat(plan.price) * 100), // Convert to paise
+      currency: "INR",
+      name: "Humsoul",
+      description: `${plan.name} Subscription`,
+      image: "/your-logo.png", // Optional: replace with your logo path
+      handler: function (response: any) {
+        // Handle payment success here (e.g., call backend to confirm subscription)
+        alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+        setLocation("/thank-you"); // Redirect after payment
+      },
+      prefill: {
+        name: "Test User",
+        email: "test@example.com",
+      },
+      theme: {
+        color: "#6366F1", // Tailwind primary color (adjust as needed)
+      },
+    });
+
+    razorpay.open();
+  };
+
+  // Helper function to get period display
+  const getPeriodDisplay = (duration: number) => {
+    if (duration === 30) return "month";
+    if (duration === 365) return "year";
+    return `${duration} days`;
+  };
+
+  // Helper function to determine if plan is popular (yearly plans are typically popular)
+  const isPopular = (duration: number) => duration === 365;
+
+  if (loading) {
+    return (
+      <div className="container max-w-4xl py-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
+          <p className="text-muted-foreground">
+            Start your journey to a better you with our premium features
+          </p>
+        </div>
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading plans...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
-
-  const plan = plans[selectedPlan];
-
-  const razorpay = new (window as any).Razorpay({
-    key: "rzp_test_o8ZBYNkHRr83ul", // Replace with your test key
-    amount: selectedPlan === 0 ? 99900 : 899900, // in paise (₹9.99 or ₹89.99)
-    currency: "INR",
-    name: "Humsoul",
-    description: `${plan.name} Subscription`,
-    image: "/your-logo.png", // Optional: replace with your logo path
-    handler: function (response: any) {
-      // Handle payment success here (e.g., call backend to confirm subscription)
-      alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
-      setLocation("/thank-you"); // Redirect after payment
-    },
-    prefill: {
-      name: "Test User",
-      email: "test@example.com",
-    },
-    theme: {
-      color: "#6366F1", // Tailwind primary color (adjust as needed)
-    },
-  });
-
-  razorpay.open();
-};
-
 
   return (
     <div className="container max-w-4xl py-8">
@@ -98,14 +99,14 @@ export default function Subscription() {
       <div className="grid md:grid-cols-2 gap-8">
         {plans.map((plan, index) => (
           <div
-            key={index}
+            key={plan.id}
             className={`relative p-8 rounded-2xl border-2 ${
               selectedPlan === index
                 ? "border-primary bg-primary/5"
                 : "border-border"
-            } ${plan.popular ? "border-primary" : ""}`}
+            } ${isPopular(plan.duration) ? "border-primary" : ""}`}
           >
-            {plan.popular && (
+            {isPopular(plan.duration) && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
                   <Star className="h-4 w-4" />
@@ -117,8 +118,8 @@ export default function Subscription() {
             <div className="text-center">
               <h3 className="text-2xl font-semibold mb-2">{plan.name}</h3>
               <div className="mb-6">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-muted-foreground">/{plan.period}</span>
+                <span className="text-4xl font-bold">${plan.price}</span>
+                <span className="text-muted-foreground">/{getPeriodDisplay(plan.duration)}</span>
               </div>
               
               <Button
@@ -130,7 +131,7 @@ export default function Subscription() {
               </Button>
               
               <ul className="space-y-3 text-left">
-                {plan.features.map((feature, i) => (
+                {plan.features?.map((feature, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <Check className="h-5 w-5 text-primary" />
                     <span>{feature}</span>
@@ -147,6 +148,7 @@ export default function Subscription() {
           className="px-8 py-6 text-lg" 
           size="lg"
           onClick={handleSubscribe}
+          disabled={plans.length === 0}
         >
           Subscribe Now
         </Button>

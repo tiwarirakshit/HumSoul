@@ -836,6 +836,19 @@ api.delete("/admin/users/:id", async (req, res) => {
     }
   });
 
+  // Get all active subscription plans for users
+  api.get("/plans", async (req, res) => {
+    try {
+      const allPlans = await storage.getSubscriptionPlans();
+      // Filter to only show active plans for users
+      const activePlans = allPlans.filter(plan => plan.isActive);
+      res.json(activePlans);
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Create subscription plan
   api.post("/admin/plans", async (req, res) => {
     try {
