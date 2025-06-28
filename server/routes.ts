@@ -309,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   api.post("/playlists", async (req, res) => {
     try {
       // Inject userId manually
-      req.body.userId = 1;
+      req.body.userId = 2;
   
       const playlistData = createPlaylistSchema.parse(req.body);
   
