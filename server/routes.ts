@@ -839,17 +839,35 @@ api.delete("/admin/users/:id", async (req, res) => {
   // Create subscription plan
   api.post("/admin/plans", async (req, res) => {
     try {
+      console.log("Received plan creation request:", {
+        body: req.body,
+        duration: req.body.duration,
+        durationType: typeof req.body.duration,
+        price: req.body.price,
+        priceType: typeof req.body.price
+      });
+
       const duration = parseInt(req.body.duration);
+      console.log("Parsed duration:", duration, "isNaN:", isNaN(duration));
+      
       if (isNaN(duration) || duration <= 0) {
+        console.log("Duration validation failed:", { duration, isNaN: isNaN(duration) });
         return res.status(400).json({ 
-          message: "Invalid duration. Duration must be a positive number." 
+          message: "Invalid duration. Duration must be a positive number.",
+          received: req.body.duration,
+          parsed: duration
         });
       }
 
       const price = parseFloat(req.body.price);
+      console.log("Parsed price:", price, "isNaN:", isNaN(price));
+      
       if (isNaN(price) || price < 0) {
+        console.log("Price validation failed:", { price, isNaN: isNaN(price) });
         return res.status(400).json({ 
-          message: "Invalid price. Price must be a positive number." 
+          message: "Invalid price. Price must be a positive number.",
+          received: req.body.price,
+          parsed: price
         });
       }
 
@@ -861,6 +879,8 @@ api.delete("/admin/users/:id", async (req, res) => {
         features: req.body.features || [],
         isActive: req.body.isActive !== undefined ? req.body.isActive : true
       };
+
+      console.log("Final plan data:", planData);
 
       const plan = await storage.createSubscriptionPlan(planData);
       res.status(201).json(plan);

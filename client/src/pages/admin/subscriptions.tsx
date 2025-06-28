@@ -152,14 +152,19 @@ export default function AdminSubscriptions() {
       setSubmitting(true);
       const features = planForm.features.split('\n').filter(f => f.trim());
       
+      // Convert interval to duration (days)
+      const duration = planForm.interval === 'yearly' ? 365 : 30;
+      
       const planData = {
         name: planForm.name,
         description: planForm.description,
-        price: parseFloat(planForm.price),
-        interval: planForm.interval,
+        price: planForm.price, // Keep as string, backend will parse
+        duration: duration,
         features: features,
-        isPopular: planForm.isPopular
+        isActive: true // Always active when created
       };
+
+      console.log('Sending plan data:', planData);
 
       const response = await apiRequest('POST', '/api/admin/plans', planData);
       const data = await response.json();
