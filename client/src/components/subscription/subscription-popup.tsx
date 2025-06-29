@@ -75,7 +75,7 @@ export function SubscriptionPopup({ isOpen, onClose }: SubscriptionPopupProps) {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">{plan.name}</h3>
                 <div className="my-2">
-                  <span className="text-3xl font-bold">${plan.price}</span>
+                  <span className="text-3xl font-bold">₹{plan.price}</span>
                   <span className="text-muted-foreground">/{getPeriodDisplay(plan.duration)}</span>
                 </div>
                 

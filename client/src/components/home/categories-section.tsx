@@ -2,28 +2,35 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { 
   Smile, 
-  DollarSign, 
   Heart, 
   Users, 
   Trophy, 
   Leaf, 
   Star, 
   Cloud, 
-  Moon 
+  Moon,
+  Target,
+  Zap,
+  Sun
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 // Icon mapping for categories
 const iconMap: Record<string, React.ReactNode> = {
   smile: <Smile className="h-6 w-6" />,
-  money: <DollarSign className="h-6 w-6" />,
+  money: <span className="text-2xl font-bold">₹</span>,
   heart: <Heart className="h-6 w-6" />,
   group: <Users className="h-6 w-6" />,
   trophy: <Trophy className="h-6 w-6" />,
   leaf: <Leaf className="h-6 w-6" />,
   star: <Star className="h-6 w-6" />,
   cloud: <Cloud className="h-6 w-6" />,
-  moon: <Moon className="h-6 w-6" />
+  moon: <Moon className="h-6 w-6" />,
+  target: <Target className="h-6 w-6" />,
+  zap: <Zap className="h-6 w-6" />,
+  sun: <Sun className="h-6 w-6" />
 };
 
 export default function CategoriesSection() {
@@ -48,7 +55,7 @@ export default function CategoriesSection() {
     );
   }
   
-  if (!categories || categories.length === 0) {
+  if (!categories || !Array.isArray(categories) || categories.length === 0) {
     return (
       <section className="py-4">
         <h2 className="text-xl font-medium mb-4">Categories</h2>
@@ -61,7 +68,7 @@ export default function CategoriesSection() {
     <section className="py-4">
       <h2 className="text-xl font-medium mb-4">Categories</h2>
       <div className="flex space-x-3 overflow-x-auto pb-2 no-scrollbar">
-        {categories.map(category => (
+        {categories.map((category: any) => (
           <Link key={category.id} href={`/discover?category=${category.id}`}>
             <div className="flex-shrink-0 text-center cursor-pointer">
               <div 

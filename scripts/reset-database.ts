@@ -241,7 +241,7 @@ async function resetDatabase() {
       {
         name: "Premium Monthly",
         description: "Full access to all content",
-        price: "9.99",
+        price: "799.00",
         duration: 30,
         features: ["Unlimited affirmations", "All playlists", "High quality audio", "Background music", "Offline downloads"],
         isActive: true
@@ -249,7 +249,7 @@ async function resetDatabase() {
       {
         name: "Premium Yearly",
         description: "Best value with annual billing",
-        price: "99.99",
+        price: "7999.00",
         duration: 365,
         features: ["Unlimited affirmations", "All playlists", "High quality audio", "Background music", "Offline downloads", "Priority support"],
         isActive: true

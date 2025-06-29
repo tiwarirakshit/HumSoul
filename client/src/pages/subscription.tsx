@@ -118,7 +118,7 @@ export default function Subscription() {
             <div className="text-center">
               <h3 className="text-2xl font-semibold mb-2">{plan.name}</h3>
               <div className="mb-6">
-                <span className="text-4xl font-bold">${plan.price}</span>
+                <span className="text-4xl font-bold">₹{plan.price}</span>
                 <span className="text-muted-foreground">/{getPeriodDisplay(plan.duration)}</span>
               </div>
               
@@ -176,7 +176,7 @@ export default function Subscription() {
           <div className="p-6 rounded-lg bg-muted">
             <h3 className="font-semibold mb-2">What payment methods do you accept?</h3>
             <p className="text-muted-foreground">
-              We accept all major credit cards, PayPal, and Apple Pay for subscription payments.
+              We accept UPI, all major credit/debit cards, net banking, and digital wallets like Paytm, PhonePe, and Google Pay for subscription payments.
             </p>
           </div>
         </div>

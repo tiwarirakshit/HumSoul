@@ -60,17 +60,26 @@ interface Plan {
   isPopular?: boolean;
 }
 
+interface PlanForm {
+  name: string;
+  description: string;
+  price: string;
+  interval: "monthly" | "yearly";
+  features: string;
+  isPopular: boolean;
+}
+
 export default function AdminSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [planForm, setPlanForm] = useState({
+  const [planForm, setPlanForm] = useState<PlanForm>({
     name: '',
     description: '',
     price: '',
-    interval: 'monthly' as 'monthly' | 'yearly',
+    interval: 'monthly',
     features: '',
     isPopular: false
   });
@@ -107,7 +116,7 @@ export default function AdminSubscriptions() {
           id: "plan_monthly",
           name: "Premium Monthly",
           description: "Monthly subscription plan with all premium features",
-          price: 9.99,
+          price: 799,
           interval: "monthly",
           features: [
             "Unlimited affirmations",
@@ -122,7 +131,7 @@ export default function AdminSubscriptions() {
           id: "plan_yearly",
           name: "Premium Yearly",
           description: "Yearly subscription plan with all premium features (save 25%)",
-          price: 89.99,
+          price: 7999,
           interval: "yearly",
           isPopular: true,
           features: [
@@ -254,12 +263,12 @@ export default function AdminSubscriptions() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="price">Price</Label>
+                        <Label htmlFor="price">Price (₹)</Label>
                         <Input 
                           id="price" 
                           type="number" 
                           step="0.01" 
-                          placeholder="9.99"
+                          placeholder="799.00"
                           value={planForm.price}
                           onChange={(e) => setPlanForm(prev => ({ ...prev, price: e.target.value }))}
                           required
@@ -343,7 +352,7 @@ Custom playlists"
                   </CardHeader>
                   <CardContent>
                     <div className="mb-4">
-                      <span className="text-3xl font-bold">${plan.price}</span>
+                      <span className="text-3xl font-bold">₹{plan.price}</span>
                       <span className="text-muted-foreground">
                         /{plan.interval === "monthly" ? "month" : "year"}
                       </span>

@@ -25,7 +25,7 @@ async function seedSubscriptionPlans() {
       {
         name: "Premium Monthly",
         description: "Full access to all premium features",
-        price: "9.99",
+        price: "799.00",
         duration: 30,
         features: [
           "Unlimited affirmations",
@@ -40,7 +40,7 @@ async function seedSubscriptionPlans() {
       {
         name: "Premium Yearly",
         description: "Full access with 2 months free",
-        price: "99.99",
+        price: "7999.00",
         duration: 365,
         features: [
           "Unlimited affirmations",
