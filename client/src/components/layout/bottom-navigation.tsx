@@ -19,7 +19,7 @@ export default function BottomNavigation() {
   const itemClasses = "flex flex-col items-center text-xs";
   const iconClasses = "h-6 w-6 mb-1";
   
-  // Reset mini player visibility when track changes
+  // Reset mini player visibility when track changes or playback starts
   useEffect(() => {
     if (currentTrack) {
       setIsMiniPlayerVisible(true);
