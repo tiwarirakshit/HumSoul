@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { Howl } from 'howler';
+import { useToast } from "@/hooks/use-toast";
 
 export interface Affirmation {
   id: number;
@@ -79,6 +80,8 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const timerRef = useRef<number | null>(null);
   const lastLoadedAffirmationIndex = useRef<number | null>(null);
 
+  const { toast } = useToast();
+
   // Get current affirmation
   const currentAffirmation = currentTrack
     ? currentTrack.affirmations[currentTrack.currentAffirmationIndex]
@@ -137,6 +140,15 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
   // Play a playlist
   const playPlaylist = (playlist: Playlist, affirmations: Affirmation[], startIndex: number = 0) => {
+    // Defensive: check affirmations and audioUrl
+    if (!affirmations || affirmations.length === 0) {
+      toast({ title: "No affirmations available", description: "This playlist has no affirmations to play.", variant: "destructive" });
+      return;
+    }
+    if (!affirmations[startIndex] || !affirmations[startIndex].audioUrl) {
+      toast({ title: "Audio not available", description: "The selected affirmation has no audio file.", variant: "destructive" });
+      return;
+    }
     // Stop any existing sounds
     if (affirmationSoundRef.current) {
       affirmationSoundRef.current.stop();
@@ -160,6 +172,10 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
   // Load an affirmation into the Howl instance
   const loadAffirmation = (affirmation: Affirmation) => {
+    if (!affirmation.audioUrl) {
+      toast({ title: "Audio not available", description: "This affirmation does not have a valid audio file.", variant: "destructive" });
+      return;
+    }
     console.log("🎵 Loading affirmation:", affirmation);
     console.log("🎵 Audio URL:", affirmation.audioUrl);
 
@@ -195,9 +211,11 @@ export function AudioProvider({ children }: AudioProviderProps) {
       onloaderror: (id, error) => {
         console.error('❌ Failed to load audio:', error);
         console.error('❌ Audio URL:', affirmation.audioUrl);
+        toast({ title: "Failed to load audio", description: `Could not load audio for this affirmation.`, variant: "destructive" });
       },
       onplayerror: (id, error) => {
         console.error('❌ Failed to play audio:', error);
+        toast({ title: "Failed to play audio", description: `Could not play audio for this affirmation.`, variant: "destructive" });
       }
     });
 

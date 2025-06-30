@@ -34,9 +34,10 @@ export default function BottomNavigation() {
   };
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-light border-t border-gray-200 dark:border-dark-lighter z-20 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-light border-t border-gray-200 dark:border-dark-lighter z-30 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* Mini Player: absolutely positioned above the nav bar */}
       {showMiniPlayer && (
-        <div className="px-4 py-2 border-b border-gray-200 dark:border-dark-lighter">
+        <div className="absolute w-full bottom-16 left-0 px-4 py-2 border-b border-gray-200 dark:border-dark-lighter z-40">
           <div className="flex items-center justify-between mb-2">
             <div 
               className="flex items-center gap-3 flex-1 cursor-pointer"
@@ -64,7 +65,8 @@ export default function BottomNavigation() {
           <AudioPlayer minified />
         </div>
       )}
-      <div className="flex justify-around items-center py-3 px-3">
+      {/* Navigation Bar: always visible at the bottom */}
+      <div className="flex justify-around items-center py-3 px-3 bg-white dark:bg-dark-light z-50 relative">
         <Link href="/">
           <a className={cn(
             itemClasses,

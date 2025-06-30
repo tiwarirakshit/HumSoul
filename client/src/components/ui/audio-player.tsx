@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +44,8 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
 
   const [showVolumeControl, setShowVolumeControl] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const wasPlayingRef = useRef(false);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -64,10 +66,25 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
     };
   }, [togglePlay, next, previous]);
 
-  // Handle seek when slider is moved
-  const handleSeek = (value: number[]) => {
+  // Debounced seek logic
+  const handleSeekStart = () => {
+    setIsSeeking(true);
+    if (isPlaying) {
+      wasPlayingRef.current = true;
+      togglePlay(); // Pause
+    } else {
+      wasPlayingRef.current = false;
+    }
+  };
+  const handleSeekEnd = (value: number[]) => {
     const newTime = (value[0] / 100) * duration;
     seek(newTime);
+    setIsSeeking(false);
+    setTimeout(() => {
+      if (wasPlayingRef.current) {
+        togglePlay(); // Resume
+      }
+    }, 100); // Small delay to allow Howler to process seek
   };
 
   // Handle seek for HTML range input
@@ -91,6 +108,11 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
     if (volume === 0) return <VolumeX className="h-5 w-5" />;
     if (volume < 0.5) return <Volume1 className="h-5 w-5" />;
     return <Volume2 className="h-5 w-5" />;
+  };
+
+  // UI-only seek handler for smooth slider movement
+  const handleSeek = (value: number[]) => {
+    // This function intentionally left blank to allow slider to move smoothly without triggering audio seek
   };
 
   // --- Spotify-like fixed bottom bar ---
@@ -134,6 +156,8 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
                 max={100}
                 step={1}
                 onValueChange={handleSeek}
+                onValueCommit={handleSeekEnd}
+                onPointerDown={handleSeekStart}
                 className="w-full max-w-xs"
               />
               <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(duration)}</span>
@@ -215,6 +239,8 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
                 max={100}
                 step={1}
                 onValueChange={handleSeek}
+                onValueCommit={handleSeekEnd}
+                onPointerDown={handleSeekStart}
                 className="w-full mb-2"
               />
               <div className="flex justify-between text-sm text-gray-500 dark:text-gray-300">

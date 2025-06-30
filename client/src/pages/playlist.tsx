@@ -393,6 +393,10 @@ export default function Playlist() {
               <div
                 key={affirmation.id}
                 onClick={() => {
+                  if (!affirmation.audioUrl) {
+                    alert('This affirmation does not have a valid audio file.');
+                    return;
+                  }
                   if (!currentTrack || currentTrack.playlist.id !== Number(id)) {
                     // Start playlist from this affirmation
                     handlePlayPlaylistFromIndex(index);
@@ -420,7 +424,12 @@ export default function Playlist() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm line-clamp-2">{affirmation.text??affirmation.title}</p>
+                  <p className="font-medium text-sm line-clamp-2">
+                    {affirmation.text ?? affirmation.title}
+                    {!affirmation.audioUrl && (
+                      <span className="ml-2 text-xs text-red-500">(No audio)</span>
+                    )}
+                  </p>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {formatTime(affirmation.duration)}
                   </span>
@@ -430,7 +439,12 @@ export default function Playlist() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation();
+                      if (!affirmation.audioUrl) {
+                        alert('This affirmation does not have a valid audio file.');
+                        return;
+                      }
                       if (!currentTrack || currentTrack.playlist.id !== Number(id)) {
                         // Start playlist from this affirmation
                         handlePlayPlaylistFromIndex(index);
