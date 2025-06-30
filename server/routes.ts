@@ -8,6 +8,7 @@ import {
   insertPlaylistSchema,
   insertUserFavoriteSchema,
   insertRecentPlaySchema,
+  insertUserLikedAffirmationSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { text } from "stream/consumers";
@@ -1012,6 +1013,40 @@ api.delete("/admin/users/:id", async (req, res) => {
       createdAt: new Date(),
     });
     res.status(201).json(user);
+  });
+
+  // Liked Affirmations routes
+  api.get("/liked-affirmations", async (req, res) => {
+    const userId = Number(req.query.userId);
+    if (!userId) return res.status(400).json({ message: "Missing userId" });
+    const liked = await storage.getUserLikedAffirmations(userId);
+    res.json(liked);
+  });
+
+  api.post("/liked-affirmations", async (req, res) => {
+    try {
+      const likeData = insertUserLikedAffirmationSchema.parse(req.body);
+      const like = await storage.addUserLikedAffirmation(likeData);
+      res.status(201).json(like);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid like data", errors: error.errors });
+    }
+  });
+
+  api.delete("/liked-affirmations", async (req, res) => {
+    const userId = Number(req.query.userId);
+    const affirmationId = Number(req.query.affirmationId);
+    if (!userId || !affirmationId) return res.status(400).json({ message: "Missing userId or affirmationId" });
+    await storage.removeUserLikedAffirmation(userId, affirmationId);
+    res.status(204).end();
+  });
+
+  api.get("/liked-affirmations/check", async (req, res) => {
+    const userId = Number(req.query.userId);
+    const affirmationId = Number(req.query.affirmationId);
+    if (!userId || !affirmationId) return res.status(400).json({ message: "Missing userId or affirmationId" });
+    const liked = await storage.isAffirmationLiked(userId, affirmationId);
+    res.json({ liked });
   });
 
   // Mount the API routes

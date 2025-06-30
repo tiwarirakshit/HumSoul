@@ -8,6 +8,7 @@ import {
   recentPlays,
   subscriptionPlans,
   userSubscriptions,
+  userLikedAffirmations,
   type User,
   type InsertUser,
   type Category,
@@ -26,6 +27,8 @@ import {
   type InsertSubscriptionPlan,
   type UserSubscription,
   type InsertUserSubscription,
+  type UserLikedAffirmation,
+  type InsertUserLikedAffirmation,
 } from "@shared/schema";
 
 import { db } from "./db";
@@ -147,6 +150,12 @@ getAdminUsers(filters?: AdminUserFilters): Promise<AdminUser[]>;
 
   // New method
   getUserByEmail(email: string): Promise<User | undefined>;
+
+  // Liked Affirmations methods
+  getUserLikedAffirmations(userId: number): Promise<UserLikedAffirmation[]>;
+  addUserLikedAffirmation(like: InsertUserLikedAffirmation): Promise<UserLikedAffirmation>;
+  removeUserLikedAffirmation(userId: number, affirmationId: number): Promise<void>;
+  isAffirmationLiked(userId: number, affirmationId: number): Promise<boolean>;
 }
 
 
@@ -834,6 +843,34 @@ export class MemStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  // Liked Affirmations methods
+  async getUserLikedAffirmations(userId: number): Promise<UserLikedAffirmation[]> {
+    const liked = await db
+      .select({ affirmation: affirmations })
+      .from(userLikedAffirmations)
+      .innerJoin(affirmations, eq(userLikedAffirmations.affirmationId, affirmations.id))
+      .where(eq(userLikedAffirmations.userId, userId));
+    return liked.map(item => item.affirmation);
+  }
+
+  async addUserLikedAffirmation(like: InsertUserLikedAffirmation): Promise<UserLikedAffirmation> {
+    const [newLike] = await db.insert(userLikedAffirmations).values(like).returning();
+    return newLike;
+  }
+
+  async removeUserLikedAffirmation(userId: number, affirmationId: number): Promise<void> {
+    await db.delete(userLikedAffirmations)
+      .where(and(eq(userLikedAffirmations.userId, userId), eq(userLikedAffirmations.affirmationId, affirmationId)));
+  }
+
+  async isAffirmationLiked(userId: number, affirmationId: number): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(userLikedAffirmations)
+      .where(and(eq(userLikedAffirmations.userId, userId), eq(userLikedAffirmations.affirmationId, affirmationId)));
+    return result.length > 0;
   }
 }
 

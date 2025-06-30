@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
 import {
   Heart,
@@ -31,7 +31,6 @@ import { useState, useEffect } from "react";
 import { formatDuration, formatTime } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
 
 interface Affirmation {
   id: number;
@@ -92,6 +91,36 @@ export default function Playlist() {
   const { data: categories } = useQuery({
     queryKey: ['/api/categories'],
   });
+
+  // Add state to track liked affirmations
+  const { data: likedAffirmations = [] } = useQuery({
+    queryKey: ['/api/liked-affirmations', { userId: 1 }],
+  });
+  const queryClient = useQueryClient();
+
+  const likeMutation = useMutation({
+    mutationFn: async (affirmationId: number) => {
+      await fetch('/api/liked-affirmations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: 1, affirmationId }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/liked-affirmations'] });
+    },
+  });
+  const unlikeMutation = useMutation({
+    mutationFn: async (affirmationId: number) => {
+      await fetch(`/api/liked-affirmations?userId=1&affirmationId=${affirmationId}`, { method: 'DELETE' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/liked-affirmations'] });
+    },
+  });
+
+  const isAffirmationLiked = (affirmationId: number) =>
+    likedAffirmations.some((a: any) => a.id === affirmationId);
 
   const handlePlayPlaylistFromIndex = async (startIndex: number) => {
     if (!playlist || !affirmations) return;
@@ -441,27 +470,14 @@ export default function Playlist() {
                     className="h-8 w-8"
                     onClick={e => {
                       e.stopPropagation();
-                      if (!affirmation.audioUrl) {
-                        alert('This affirmation does not have a valid audio file.');
-                        return;
-                      }
-                      if (!currentTrack || currentTrack.playlist.id !== Number(id)) {
-                        // Start playlist from this affirmation
-                        handlePlayPlaylistFromIndex(index);
-                      } else if (currentTrack.currentAffirmationIndex === index) {
-                        togglePlay();
+                      if (isAffirmationLiked(affirmation.id)) {
+                        unlikeMutation.mutate(affirmation.id);
                       } else {
-                        // Skip to this affirmation
-                        skipToAffirmation(index);
+                        likeMutation.mutate(affirmation.id);
                       }
                     }}
                   >
-                    {currentTrack?.playlist.id === Number(id) &&
-                      currentTrack.currentAffirmationIndex === index && isPlaying ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
+                    <Heart className={`h-5 w-5 ${isAffirmationLiked(affirmation.id) ? 'fill-primary text-primary' : ''}`} />
                   </Button>
                 </div>
               </div>

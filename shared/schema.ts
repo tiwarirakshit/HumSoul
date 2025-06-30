@@ -85,6 +85,13 @@ export const userSubscriptions = pgTable("user_subscriptions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const userLikedAffirmations = pgTable("user_liked_affirmations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  affirmationId: integer("affirmation_id").notNull().references(() => affirmations.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas for each table
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -137,6 +144,8 @@ export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions
   endDate: true,
 });
 
+export const insertUserLikedAffirmationSchema = createInsertSchema(userLikedAffirmations);
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -165,6 +174,9 @@ export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema
 
 export type UserSubscription = typeof userSubscriptions.$inferSelect;
 export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
+
+export type UserLikedAffirmation = typeof userLikedAffirmations.$inferSelect;
+export type InsertUserLikedAffirmation = z.infer<typeof insertUserLikedAffirmationSchema>;
 
 // Define relations between tables
 export const usersRelations = relations(users, ({ many }) => ({
@@ -230,4 +242,15 @@ export const userSubscriptionsRelations = relations(userSubscriptions, ({ one })
     fields: [userSubscriptions.planId],
     references: [subscriptionPlans.id]
   })
+}));
+
+export const userLikedAffirmationsRelations = relations(userLikedAffirmations, ({ one }) => ({
+  user: one(users, {
+    fields: [userLikedAffirmations.userId],
+    references: [users.id],
+  }),
+  affirmation: one(affirmations, {
+    fields: [userLikedAffirmations.affirmationId],
+    references: [affirmations.id],
+  }),
 }));

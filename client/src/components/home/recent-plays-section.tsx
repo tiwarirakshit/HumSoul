@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Play, Headphones } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +13,8 @@ export default function RecentPlaysSection() {
   const { data: recentPlays, isLoading } = useQuery({
     queryKey: ['/api/recent-plays', { userId: 1 }],
   });
+  
+  const queryClient = useQueryClient();
   
   const handlePlay = async (playlistId: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,6 +35,9 @@ export default function RecentPlaysSection() {
         '/api/recent-plays',
         { userId: 1, playlistId }
       );
+      
+      // Refetch recent plays
+      queryClient.invalidateQueries({ queryKey: ['/api/recent-plays'] });
       
       // Play the playlist
       playPlaylist(playlist, affirmations);
@@ -93,9 +98,7 @@ export default function RecentPlaysSection() {
     <section className="py-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-medium">Recent Plays</h2>
-        <Link href="/library" className="text-primary dark:text-primary-light text-sm font-medium">
-          See All
-        </Link>
+        <Link href="/library" className="text-primary dark:text-primary-light text-sm font-medium">See All</Link>
       </div>
       
       <div className="space-y-3">

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, PlayCircle, Clock, Headphones } from "lucide-react";
@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 export default function Library() {
   const { playPlaylist } = useAudio();
+  const queryClient = useQueryClient();
   
   // Query favorites
   const { data: favorites, isLoading: favoritesLoading } = useQuery({
@@ -28,6 +29,11 @@ export default function Library() {
   const categoryMap = categories
     ? new Map(categories.map((c: any) => [c.id, c.name]))
     : new Map();
+  
+  // Query liked affirmations
+  const { data: likedAffirmations, isLoading: likedAffirmationsLoading } = useQuery({
+    queryKey: ['/api/liked-affirmations', { userId: 1 }],
+  });
   
   const handlePlay = async (playlistId: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -49,6 +55,9 @@ export default function Library() {
         { userId: 1, playlistId }
       );
       
+      // Refetch recent plays
+      queryClient.invalidateQueries({ queryKey: ['/api/recent-plays'] });
+      
       // Play the playlist
       playPlaylist(playlist, affirmations);
     } catch (error) {
@@ -64,6 +73,7 @@ export default function Library() {
         <TabsList className="w-full mb-6">
           <TabsTrigger value="favorites" className="flex-1">Favorites</TabsTrigger>
           <TabsTrigger value="recent" className="flex-1">Recent</TabsTrigger>
+          <TabsTrigger value="liked-affirmations" className="flex-1">Liked Affirmations</TabsTrigger>
         </TabsList>
         
         <TabsContent value="favorites">
@@ -181,6 +191,46 @@ export default function Library() {
                   Explore Affirmations
                 </a>
               </Link>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="liked-affirmations">
+          {likedAffirmationsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">
+                  <Skeleton className="w-12 h-12 rounded-md flex-shrink-0" />
+                  <div className="ml-3 flex-1">
+                    <Skeleton className="h-4 w-3/4 mb-2" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : likedAffirmations && likedAffirmations.length > 0 ? (
+            <div className="space-y-3">
+              {likedAffirmations.map((affirmation: any) => (
+                <div key={affirmation.id} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">
+                  <div className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0 bg-primary">
+                    <Heart className="h-5 w-5 fill-white" />
+                  </div>
+                  <div className="ml-3 flex-1 min-w-0">
+                    <h3 className="font-medium text-sm line-clamp-1">{affirmation.text || affirmation.title}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {affirmation.duration ? formatDuration(affirmation.duration) : ''}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <Heart className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <h3 className="text-lg font-medium mb-2">No liked affirmations yet</h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Like affirmations to see them here
+              </p>
             </div>
           )}
         </TabsContent>
