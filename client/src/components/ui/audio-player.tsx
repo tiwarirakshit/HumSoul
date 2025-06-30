@@ -46,6 +46,7 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const wasPlayingRef = useRef(false);
+  const [audioOpLock, setAudioOpLock] = useState(false);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -115,6 +116,20 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
     // This function intentionally left blank to allow slider to move smoothly without triggering audio seek
   };
 
+  // Wrap play/pause/seek actions to respect lock
+  const safeTogglePlay = () => {
+    if (audioOpLock) return;
+    setAudioOpLock(true);
+    togglePlay();
+    setTimeout(() => setAudioOpLock(false), 400);
+  };
+  const safeSeek = (newTime: number) => {
+    if (audioOpLock) return;
+    setAudioOpLock(true);
+    seek(newTime);
+    setTimeout(() => setAudioOpLock(false), 400);
+  };
+
   // --- Spotify-like fixed bottom bar ---
   if (minified) {
     // Mini player: simple seekbar, direct seek on change
@@ -126,11 +141,9 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
             value={[progress]}
             max={100}
             step={1}
-            onValueChange={value => {
-              const newTime = (value[0] / 100) * duration;
-              seek(newTime);
-            }}
+            onValueChange={value => safeSeek((value[0] / 100) * duration)}
             className="w-full max-w-xs"
+            disabled={audioOpLock}
           />
           <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(duration)}</span>
         </div>
@@ -164,7 +177,7 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
               <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={previous}>
                 <SkipBack className="h-6 w-6" />
               </Button>
-              <Button variant="default" size="icon" className="h-14 w-14 rounded-full shadow-lg" onClick={togglePlay}>
+              <Button variant="default" size="icon" className="h-14 w-14 rounded-full shadow-lg" onClick={safeTogglePlay} disabled={audioOpLock}>
                 {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
               </Button>
               <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={next}>
@@ -178,9 +191,10 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
                 max={100}
                 step={1}
                 onValueChange={handleSeek}
-                onValueCommit={handleSeekEnd}
+                onValueCommit={value => safeSeek((value[0] / 100) * duration)}
                 onPointerDown={handleSeekStart}
                 className="w-full max-w-xs"
+                disabled={audioOpLock}
               />
               <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(duration)}</span>
             </div>
@@ -279,7 +293,7 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
               <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={previous}>
                 <SkipBack className="h-8 w-8" />
               </Button>
-              <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={togglePlay}>
+              <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={safeTogglePlay} disabled={audioOpLock}>
                 {isPlaying ? <Pause className="h-10 w-10" /> : <Play className="h-10 w-10" />}
               </Button>
               <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={next}>

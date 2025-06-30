@@ -80,6 +80,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const timerRef = useRef<number | null>(null);
   const lastLoadedAffirmationIndex = useRef<number | null>(null);
   const isTogglingRef = useRef(false);
+  const audioOpLock = useRef(false);
 
   const { toast } = useToast();
 
@@ -173,6 +174,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
   // Load an affirmation into the Howl instance
   const loadAffirmation = (affirmation: Affirmation) => {
+    if (audioOpLock.current) return;
+    audioOpLock.current = true;
+    setTimeout(() => { audioOpLock.current = false; }, 400);
     if (!affirmation.audioUrl) {
       toast({ title: "Audio not available", description: "This affirmation does not have a valid audio file.", variant: "destructive" });
       return;
@@ -248,50 +252,30 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
   // Toggle play/pause
   const togglePlay = () => {
-    if (isTogglingRef.current) return;
-    isTogglingRef.current = true;
-    setTimeout(() => { isTogglingRef.current = false; }, 300); // Prevent rapid toggles
-    console.log("🎵 Toggle play clicked");
-    console.log("Current track:", currentTrack);
-    console.log("Affirmation sound ref:", affirmationSoundRef.current);
-    console.log("Is playing:", isPlaying);
-
-    if (!currentTrack || !affirmationSoundRef.current) {
-      console.log("❌ No current track or sound ref - cannot play");
-      return;
-    }
-
-    console.debug("currentTrack", currentTrack);
-
+    if (audioOpLock.current) return;
+    audioOpLock.current = true;
+    setTimeout(() => { audioOpLock.current = false; }, 400); // Prevent rapid toggles
+    if (!currentTrack || !affirmationSoundRef.current) return;
     if (isPlaying) {
-      console.log("⏸️ Pausing audio...");
       affirmationSoundRef.current.pause();
-      if (backgroundSoundRef.current) {
-        backgroundSoundRef.current.pause();
-      }
+      if (backgroundSoundRef.current) backgroundSoundRef.current.pause();
     } else {
-      console.log("▶️ Playing audio...");
       affirmationSoundRef.current.play();
-      if (backgroundSoundRef.current) {
-        backgroundSoundRef.current.play();
-      }
+      if (backgroundSoundRef.current) backgroundSoundRef.current.play();
     }
-
     setIsPlaying(!isPlaying);
   };
 
   // Seek to a specific time
   const seek = (time: number) => {
+    if (audioOpLock.current) return;
+    audioOpLock.current = true;
+    setTimeout(() => { audioOpLock.current = false; }, 400);
     if (!affirmationSoundRef.current) return;
-
     affirmationSoundRef.current.seek(time);
     setCurrentTime(time);
     setProgress((time / duration) * 100);
-
-    // If not playing, start the timer for a moment to update UI
-    if (!isPlaying) {
-      updateTimeProgress();
-    }
+    if (!isPlaying) updateTimeProgress();
   };
 
   // Go to next affirmation
