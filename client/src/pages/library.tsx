@@ -6,21 +6,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Library() {
   const { playPlaylist } = useAudio();
   const queryClient = useQueryClient();
+  const { backendUser, loading: authLoading } = useAuth();
+  const userId = backendUser?.id;
   
   // Query favorites
   const { data: favoritesResp, isLoading: favoritesLoading } = useQuery({
-    queryKey: ['/api/favorites', { userId: 1 }],
+    queryKey: ['/api/favorites', { userId }],
+    enabled: !!userId && !authLoading,
   });
   const favorites = favoritesResp?.data;
   const favoritesDebug = favoritesResp?.debug;
   
   // Query recent plays
   const { data: recentPlaysResp, isLoading: recentPlaysLoading } = useQuery({
-    queryKey: ['/api/recent-plays', { userId: 1 }],
+    queryKey: ['/api/recent-plays', { userId }],
+    enabled: !!userId && !authLoading,
   });
   const recentPlays = recentPlaysResp?.data;
   const recentPlaysDebug = recentPlaysResp?.debug;
@@ -36,7 +41,8 @@ export default function Library() {
   
   // Query liked affirmations
   const { data: likedAffirmationsResp, isLoading: likedAffirmationsLoading } = useQuery({
-    queryKey: ['/api/liked-affirmations', { userId: 1 }],
+    queryKey: ['/api/liked-affirmations', { userId }],
+    enabled: !!userId && !authLoading,
   });
   const likedAffirmations = likedAffirmationsResp?.data;
   const likedAffirmationsDebug = likedAffirmationsResp?.debug;
@@ -44,7 +50,7 @@ export default function Library() {
   const handlePlay = async (playlistId: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+    if (!userId) return;
     try {
       // Fetch the playlist
       const playlistRes = await fetch(`/api/playlists/${playlistId}`);
@@ -58,7 +64,7 @@ export default function Library() {
       await apiRequest(
         'POST',
         '/api/recent-plays',
-        { userId: 1, playlistId }
+        { userId, playlistId }
       );
       
       // Refetch recent plays

@@ -3,44 +3,53 @@ import { Link } from "wouter";
 import { Heart, PlayCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/audio";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function PlaylistsSection() {
+  const { backendUser, loading: authLoading } = useAuth();
+  const userId = backendUser?.id;
+  
   // Query all playlists
   const { data: playlists, isLoading } = useQuery({
     queryKey: ['/api/playlists'],
   });
   
   // Get favorited playlist IDs
-  const { data: favoritesList } = useQuery({
-    queryKey: ['/api/favorites', { userId: 1 }],
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['/api/favorites', { userId }],
+    enabled: !!userId && !authLoading,
   });
   
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   
-  // Set favorited playlist IDs when favorites are loaded
-  if (favoritesList && favoriteIds.size === 0) {
-    setFavoriteIds(new Set(favoritesList.map((p: any) => p.id)));
-  }
+  // Debug log
+  console.log('PlaylistsSection render', { userId, playlists, favorites, favoriteIds });
+  
+  useEffect(() => {
+    if (favorites && favoriteIds.size === 0) {
+      setFavoriteIds(new Set(favorites.map((p: any) => p.id)));
+    }
+  }, [favorites, favoriteIds.size]);
   
   const toggleFavorite = async (playlistId: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+    if (!userId) return;
     try {
       if (favoriteIds.has(playlistId)) {
         await apiRequest(
           'DELETE', 
-          `/api/favorites?userId=1&playlistId=${playlistId}`
+          `/api/favorites?userId=${userId}&playlistId=${playlistId}`
         );
         favoriteIds.delete(playlistId);
       } else {
         await apiRequest(
           'POST', 
           '/api/favorites', 
-          { userId: 1, playlistId }
+          { userId, playlistId }
         );
         favoriteIds.add(playlistId);
       }
@@ -119,6 +128,7 @@ export default function PlaylistsSection() {
                   <button 
                     className="text-primary dark:text-primary-light"
                     onClick={(e) => toggleFavorite(playlist.id, e)}
+                    disabled={!userId}
                   >
                     <Heart 
                       className={`h-5 w-5 ${favoriteIds.has(playlist.id) ? 'fill-primary text-primary' : ''}`}

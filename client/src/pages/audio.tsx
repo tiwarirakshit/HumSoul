@@ -3,33 +3,45 @@ import { useLocation } from "wouter";
 import { Heart, ChevronLeft, Clock, PlayCircle, PauseCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AudioPlayer } from "@/components/ui/audio-player";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { formatTime } from "@/lib/audio";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AudioPage() {
   const { currentTrack, currentAffirmation, duration, isPlaying, togglePlay } = useAudio();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const [redirected, setRedirected] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const { backendUser, loading: authLoading } = useAuth();
+  const userId = backendUser?.id;
+
+  useEffect(() => {
+    console.log('audio.tsx', { currentTrack, currentAffirmation, location, redirected });
+    if ((!currentTrack || !currentAffirmation) && location !== '/' && !redirected) {
+      setRedirected(true);
+      setLocation('/');
+    }
+  }, [currentTrack, currentAffirmation, setLocation, location, redirected]);
 
   if (!currentTrack || !currentAffirmation) {
-    setLocation('/');
     return null;
   }
 
   const toggleFavorite = async () => {
+    if (!userId) return;
     try {
       if (isFavorited) {
         await apiRequest(
           'DELETE', 
-          `/api/favorites?userId=1&playlistId=${currentTrack.playlist.id}`
+          `/api/favorites?userId=${userId}&playlistId=${currentTrack.playlist.id}`
         );
       } else {
         await apiRequest(
           'POST', 
           '/api/favorites', 
-          { userId: 1, playlistId: currentTrack.playlist.id }
+          { userId, playlistId: currentTrack.playlist.id }
         );
       }
       
@@ -39,6 +51,12 @@ export default function AudioPage() {
       console.error('Error toggling favorite:', error);
     }
   };
+
+  useEffect(() => {
+    if (userId && currentTrack?.playlist?.id) {
+      apiRequest('POST', '/api/recent-plays', { userId, playlistId: currentTrack.playlist.id });
+    }
+  }, [userId, currentTrack?.playlist?.id]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">

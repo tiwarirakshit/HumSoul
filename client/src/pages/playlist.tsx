@@ -31,6 +31,7 @@ import { useState, useEffect } from "react";
 import { formatDuration, formatTime } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Affirmation {
   id: number;
@@ -57,6 +58,8 @@ export default function Playlist() {
   const { playPlaylist, isPlaying, togglePlay, currentTrack, setBackgroundMusic, skipToAffirmation } = useAudio();
   const [, navigate] = useLocation();
   const [isFavorited, setIsFavorited] = useState(false);
+  const { backendUser, loading: authLoading } = useAuth();
+  const userId = backendUser?.id;
 
   // Get the playlist details
   const { data: playlist, isLoading: playlistLoading } = useQuery({
@@ -75,17 +78,13 @@ export default function Playlist() {
 
   // Check if this playlist is favorited
   useEffect(() => {
-    if (playlist?.id) {
-      fetch(`/api/favorites/check?userId=1&playlistId=${playlist.id}`)
-        .then(res => res.json())
-        .then(data => {
-          setIsFavorited(data.isFavorited);
-        })
-        .catch(err => {
-          console.error('Error checking favorite status:', err);
-        });
-    }
-  }, [playlist]);
+    if (!userId || !playlist?.id) return;
+    fetch(`/api/favorites/check?userId=${userId}&playlistId=${playlist.id}`)
+      .then(res => res.json())
+      .then(data => {
+        setIsFavorited(data.isFavorited);
+      });
+  }, [userId, playlist?.id]);
 
   // Get category name
   const { data: categories } = useQuery({
@@ -94,16 +93,18 @@ export default function Playlist() {
 
   // Add state to track liked affirmations
   const { data: likedAffirmations = [] } = useQuery({
-    queryKey: ['/api/liked-affirmations', { userId: 1 }],
+    queryKey: ['/api/liked-affirmations', { userId }],
+    enabled: !!userId && !authLoading,
   });
   const queryClient = useQueryClient();
 
   const likeMutation = useMutation({
     mutationFn: async (affirmationId: number) => {
+      if (!userId) return;
       await fetch('/api/liked-affirmations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 1, affirmationId }),
+        body: JSON.stringify({ userId, affirmationId }),
       });
     },
     onSuccess: () => {
@@ -112,7 +113,8 @@ export default function Playlist() {
   });
   const unlikeMutation = useMutation({
     mutationFn: async (affirmationId: number) => {
-      await fetch(`/api/liked-affirmations?userId=1&affirmationId=${affirmationId}`, { method: 'DELETE' });
+      if (!userId) return;
+      await fetch(`/api/liked-affirmations?userId=${userId}&affirmationId=${affirmationId}`, { method: 'DELETE' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/liked-affirmations'] });
@@ -123,10 +125,10 @@ export default function Playlist() {
     likedAffirmations.some((a: any) => a.id === affirmationId);
 
   const handlePlayPlaylistFromIndex = async (startIndex: number) => {
-    if (!playlist || !affirmations) return;
+    if (!playlist || !affirmations || !userId) return;
 
     try {
-      await apiRequest('POST', '/api/recent-plays', { userId: 1, playlistId: playlist.id });
+      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id });
       playPlaylist(playlist, affirmations, startIndex);
     } catch (error) {
       console.error('Error playing playlist:', error);
@@ -138,19 +140,19 @@ export default function Playlist() {
     : '';
 
   const handleToggleFavorite = async () => {
-    if (!playlist) return;
+    if (!playlist || !userId) return;
 
     try {
       if (isFavorited) {
         await apiRequest(
           'DELETE',
-          `/api/favorites?userId=1&playlistId=${playlist.id}`
+          `/api/favorites?userId=${userId}&playlistId=${playlist.id}`
         );
       } else {
         await apiRequest(
           'POST',
           '/api/favorites',
-          { userId: 1, playlistId: playlist.id }
+          { userId, playlistId: playlist.id }
         );
       }
 
@@ -162,17 +164,10 @@ export default function Playlist() {
   };
 
   const handlePlayPlaylist = async () => {
-    if (!playlist || !affirmations) return;
+    if (!playlist || !affirmations || !userId) return;
 
     try {
-      // Add to recent plays
-      await apiRequest(
-        'POST',
-        '/api/recent-plays',
-        { userId: 1, playlistId: playlist.id }
-      );
-
-      // Play the playlist
+      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id });
       playPlaylist(playlist, affirmations);
     } catch (error) {
       console.error('Error playing playlist:', error);
@@ -180,27 +175,16 @@ export default function Playlist() {
   };
 
   const handlePlayPause = async () => {
-    if (!playlist || !affirmations) return;
+    if (!playlist || !affirmations || !userId) return;
 
-    // If it's the same playlist and track exists, just toggle
     if (currentTrack?.playlist.id === Number(id)) {
       togglePlay();
       return;
     }
 
-    // Different playlist or no current track - start playing this playlist
     try {
-      // Add to recent plays
-      await apiRequest(
-        'POST',
-        '/api/recent-plays',
-        { userId: 1, playlistId: playlist.id }
-      );
-
-      // Start playing the playlist
+      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id });
       playPlaylist(playlist, affirmations, 0);
-
-      // Note: Don't call togglePlay here - playPlaylist should handle the initial play state
     } catch (error) {
       console.error('Error playing playlist:', error);
     }
@@ -476,6 +460,7 @@ export default function Playlist() {
                         likeMutation.mutate(affirmation.id);
                       }
                     }}
+                    disabled={!userId}
                   >
                     <Heart className={`h-5 w-5 ${isAffirmationLiked(affirmation.id) ? 'fill-primary text-primary' : ''}`} />
                   </Button>

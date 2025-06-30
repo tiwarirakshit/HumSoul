@@ -872,6 +872,14 @@ export class MemStorage implements IStorage {
       .where(and(eq(userLikedAffirmations.userId, userId), eq(userLikedAffirmations.affirmationId, affirmationId)));
     return result.length > 0;
   }
+
+  async updateUser(id: number, updates: Partial<InsertUser>) {
+    const user = this.users.get(id);
+    if (!user) return null;
+    const updatedUser = { ...user, ...updates };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
 }
 
 /**
@@ -1452,6 +1460,15 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
+  }
+
+  async updateUser(id: number, updates: Partial<InsertUser>) {
+    const [updated] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
   }
 }
 

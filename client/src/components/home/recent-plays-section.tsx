@@ -5,13 +5,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function RecentPlaysSection() {
   const { playPlaylist } = useAudio();
   
+  const { backendUser, loading: authLoading } = useAuth();
+  const userId = backendUser?.id;
+  
   // Query recent plays
   const { data: recentPlays, isLoading } = useQuery({
-    queryKey: ['/api/recent-plays', { userId: 1 }],
+    queryKey: ['/api/recent-plays', { userId }],
+    enabled: !!userId && !authLoading,
   });
   
   const queryClient = useQueryClient();
@@ -19,7 +24,7 @@ export default function RecentPlaysSection() {
   const handlePlay = async (playlistId: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+    if (!userId) return;
     try {
       // Fetch the playlist
       const playlistRes = await fetch(`/api/playlists/${playlistId}`);
@@ -33,7 +38,7 @@ export default function RecentPlaysSection() {
       await apiRequest(
         'POST',
         '/api/recent-plays',
-        { userId: 1, playlistId }
+        { userId, playlistId }
       );
       
       // Refetch recent plays

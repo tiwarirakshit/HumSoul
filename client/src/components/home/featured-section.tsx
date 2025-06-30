@@ -4,14 +4,17 @@ import { Button } from "@/components/ui/button";
 import { useAudio } from "@/hooks/use-audio";
 import { Play, Heart, Pause } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Playlist } from "@/context/audio-context";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function FeaturedSection() {
   const { playPlaylist, isPlaying } = useAudio();
   const [isFavorited, setIsFavorited] = useState(false);
+  const { backendUser, loading: authLoading } = useAuth();
+  const userId = backendUser?.id;
 
   // Query featured playlists
   const { data: featuredPlaylists, isLoading } = useQuery<Playlist[]>({
@@ -21,41 +24,33 @@ export default function FeaturedSection() {
   // Get the first featured playlist
   const featuredPlaylist = (featuredPlaylists as Playlist[])?.[0];
 
-  // Query to check if the first featured playlist is favorited
-  const checkFavorite = async () => {
-    if (featuredPlaylist) {
-      try {
-        const res = await fetch(`/api/favorites/check?userId=1&playlistId=${featuredPlaylist.id}`);
-        const data = await res.json();
-        setIsFavorited(data.isFavorited);
-      } catch (error) {
-        console.error('Error checking favorite status:', error);
-      }
-    }
-  };
-
-  // Check favorite status when featured playlist is loaded
-  if (featuredPlaylist && !isLoading) {
+  useEffect(() => {
+    if (!userId || !featuredPlaylist?.id) return;
+    const checkFavorite = async () => {
+      const res = await fetch(`/api/favorites/check?userId=${userId}&playlistId=${featuredPlaylist.id}`);
+      const data = await res.json();
+      setIsFavorited(data.isFavorited);
+    };
     checkFavorite();
-  }
+  }, [userId, featuredPlaylist?.id]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!featuredPlaylist) return;
+    if (!userId || !featuredPlaylist) return;
 
     try {
       if (isFavorited) {
         await apiRequest(
           'DELETE',
-          `/api/favorites?userId=1&playlistId=${featuredPlaylist.id}`
+          `/api/favorites?userId=${userId}&playlistId=${featuredPlaylist.id}`
         );
       } else {
         await apiRequest(
           'POST',
           '/api/favorites',
-          { userId: 1, playlistId: featuredPlaylist.id }
+          { userId, playlistId: featuredPlaylist.id }
         );
       }
 
@@ -69,7 +64,7 @@ export default function FeaturedSection() {
   const handlePlayFeatured = async (e: React.MouseEvent) => {
     e.preventDefault();
 
-    if (!featuredPlaylist) return;
+    if (!userId || !featuredPlaylist) return;
 
     try {
       // Fetch the affirmations for the playlist
@@ -80,7 +75,7 @@ export default function FeaturedSection() {
       await apiRequest(
         'POST',
         '/api/recent-plays',
-        { userId: 1, playlistId: featuredPlaylist.id }
+        { userId, playlistId: featuredPlaylist.id }
       );
 
       // Play the playlist

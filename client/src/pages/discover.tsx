@@ -6,11 +6,15 @@ import { formatDuration } from "@/lib/audio";
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Discover() {
   const [location] = useLocation();
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  
+  const { backendUser, loading: authLoading } = useAuth();
+  const userId = backendUser?.id;
   
   // Extract category ID from URL if present
   useEffect(() => {
@@ -31,7 +35,8 @@ export default function Discover() {
   
   // Get favorited playlist IDs
   const { data: favoritesList = [] } = useQuery({
-    queryKey: ['/api/favorites', { userId: 1 }],
+    queryKey: ['/api/favorites', { userId }],
+    enabled: !!userId && !authLoading,
   });
   
   // Set favorited playlist IDs when favorites are loaded
@@ -49,7 +54,7 @@ export default function Discover() {
       if (favoriteIds.has(playlistId)) {
         await apiRequest(
           'DELETE', 
-          `/api/favorites?userId=1&playlistId=${playlistId}`
+          `/api/favorites?userId=${userId}&playlistId=${playlistId}`
         );
         const newFavoriteIds = new Set(favoriteIds);
         newFavoriteIds.delete(playlistId);
@@ -58,7 +63,7 @@ export default function Discover() {
         await apiRequest(
           'POST', 
           '/api/favorites', 
-          { userId: 1, playlistId }
+          { userId, playlistId }
         );
         const newFavoriteIds = new Set(favoriteIds);
         newFavoriteIds.add(playlistId);
@@ -79,6 +84,12 @@ export default function Discover() {
   // Helper function to check if a category is the active one
   const isCategoryActive = (id: any) => {
     return categoryId === Number(id);
+  };
+  
+  const handleFavorite = async (playlistId: number) => {
+    if (!userId) return;
+    await apiRequest('POST', '/api/favorites', { userId, playlistId });
+    queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
   };
   
   return (

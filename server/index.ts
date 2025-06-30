@@ -3,17 +3,15 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage, DatabaseStorage } from "./storage";
-import cors from "cors"; // ✅ Added this
+import cors from "cors";
 import path from "path";
 import fs from "fs";
 
 
 
 const app = express();
-
-app.use(cors()); // ✅ Add this to enable CORS
 app.use(cors({
-  origin: ["http://localhost:3000", "http://147.93.19.165:3000", "localhost", "147.93.19.165"],
+  origin: ["http://localhost:3000/", "http://147.93.19.165:3000", "localhost", "147.93.19.165"],
   credentials: true
 }));
 app.use(express.json());

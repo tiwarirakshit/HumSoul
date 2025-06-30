@@ -29,9 +29,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export default function Profile() {
-  const { user: authUser, logout } = useAuth();
+  const { user: authUser, logout, backendUser, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  
+  const userId = backendUser?.id;
   
   // Query to get current user
   const { data: user, isLoading } = useQuery<{
@@ -45,13 +47,15 @@ export default function Profile() {
   });
 
   // Query favorites count
-  const { data: favorites = [] } = useQuery<Array<any>>({
-    queryKey: ['/api/favorites', { userId: 1 }],
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['/api/favorites', { userId }],
+    enabled: !!userId && !authLoading,
   });
   
   // Query recent plays
-  const { data: recentPlays = [] } = useQuery<Array<any>>({
-    queryKey: ['/api/recent-plays', { userId: 1 }],
+  const { data: recentPlays = [] } = useQuery({
+    queryKey: ['/api/recent-plays', { userId }],
+    enabled: !!userId && !authLoading,
   });
   
   const handleSignOut = async () => {

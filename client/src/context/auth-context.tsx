@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 // Define AuthContext type
 type AuthContextType = {
   user: User | null;
+  backendUser: any;
   loading: boolean;
   isNewUser: boolean;
   loginWithGoogle: () => Promise<void>;
@@ -19,6 +20,7 @@ type AuthContextType = {
 // Create context with default values
 export const AuthContext = createContext<AuthContextType>({
   user: null,
+  backendUser: null,
   loading: true,
   isNewUser: false,
   loginWithGoogle: async () => {},
@@ -36,6 +38,7 @@ interface AuthProviderProps {
 // Create Auth Provider component
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [backendUser, setBackendUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -191,6 +194,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Context provider value
   const value = {
     user,
+    backendUser,
     loading,
     isNewUser,
     loginWithGoogle,
