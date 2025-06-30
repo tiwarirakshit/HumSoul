@@ -12,14 +12,18 @@ export default function Library() {
   const queryClient = useQueryClient();
   
   // Query favorites
-  const { data: favorites, isLoading: favoritesLoading } = useQuery({
+  const { data: favoritesResp, isLoading: favoritesLoading } = useQuery({
     queryKey: ['/api/favorites', { userId: 1 }],
   });
+  const favorites = favoritesResp?.data;
+  const favoritesDebug = favoritesResp?.debug;
   
   // Query recent plays
-  const { data: recentPlays, isLoading: recentPlaysLoading } = useQuery({
+  const { data: recentPlaysResp, isLoading: recentPlaysLoading } = useQuery({
     queryKey: ['/api/recent-plays', { userId: 1 }],
   });
+  const recentPlays = recentPlaysResp?.data;
+  const recentPlaysDebug = recentPlaysResp?.debug;
   
   // Get category names for playlists
   const { data: categories } = useQuery({
@@ -31,9 +35,11 @@ export default function Library() {
     : new Map();
   
   // Query liked affirmations
-  const { data: likedAffirmations, isLoading: likedAffirmationsLoading } = useQuery({
+  const { data: likedAffirmationsResp, isLoading: likedAffirmationsLoading } = useQuery({
     queryKey: ['/api/liked-affirmations', { userId: 1 }],
   });
+  const likedAffirmations = likedAffirmationsResp?.data;
+  const likedAffirmationsDebug = likedAffirmationsResp?.debug;
   
   const handlePlay = async (playlistId: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -131,6 +137,11 @@ export default function Library() {
               </Link>
             </div>
           )}
+          {favoritesDebug && (
+            <pre className="text-xs bg-gray-100 dark:bg-dark-lighter p-2 rounded mb-2 overflow-x-auto">
+              Favorites Debug: {JSON.stringify(favoritesDebug, null, 2)}
+            </pre>
+          )}
         </TabsContent>
         
         <TabsContent value="recent">
@@ -193,6 +204,11 @@ export default function Library() {
               </Link>
             </div>
           )}
+          {recentPlaysDebug && (
+            <pre className="text-xs bg-gray-100 dark:bg-dark-lighter p-2 rounded mb-2 overflow-x-auto">
+              Recent Plays Debug: {JSON.stringify(recentPlaysDebug, null, 2)}
+            </pre>
+          )}
         </TabsContent>
         
         <TabsContent value="liked-affirmations">
@@ -232,6 +248,11 @@ export default function Library() {
                 Like affirmations to see them here
               </p>
             </div>
+          )}
+          {likedAffirmationsDebug && (
+            <pre className="text-xs bg-gray-100 dark:bg-dark-lighter p-2 rounded mb-2 overflow-x-auto">
+              Liked Affirmations Debug: {JSON.stringify(likedAffirmationsDebug, null, 2)}
+            </pre>
           )}
         </TabsContent>
       </Tabs>

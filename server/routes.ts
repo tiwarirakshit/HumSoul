@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
-import { storage } from "./storage";
+import { storage, DatabaseStorage, MemStorage } from "./storage";
 import {
   insertPlaylistSchema,
   insertUserFavoriteSchema,
@@ -135,6 +135,13 @@ const createReviewSchema = z.object({
   review: z.string().min(1, "Review text is required").max(1000),
   title: z.string().optional(),
 });
+
+// Add a helper to get the storage type
+function getStorageType() {
+  if (storage instanceof DatabaseStorage) return 'DatabaseStorage';
+  if (storage instanceof MemStorage) return 'MemStorage';
+  return 'UnknownStorage';
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -560,7 +567,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const favorites = await storage.getUserFavorites(userId);
-    res.json(favorites);
+    res.json({
+      debug: {
+        storageType: getStorageType(),
+        raw: favorites
+      },
+      data: favorites
+    });
   });
 
   api.post("/favorites", async (req, res) => {
@@ -636,7 +649,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const recentPlays = await storage.getRecentPlays(userId);
-    res.json(recentPlays);
+    res.json({
+      debug: {
+        storageType: getStorageType(),
+        raw: recentPlays
+      },
+      data: recentPlays
+    });
   });
 
   api.post("/recent-plays", async (req, res) => {
@@ -1020,7 +1039,13 @@ api.delete("/admin/users/:id", async (req, res) => {
     const userId = Number(req.query.userId);
     if (!userId) return res.status(400).json({ message: "Missing userId" });
     const liked = await storage.getUserLikedAffirmations(userId);
-    res.json(liked);
+    res.json({
+      debug: {
+        storageType: getStorageType(),
+        raw: liked
+      },
+      data: liked
+    });
   });
 
   api.post("/liked-affirmations", async (req, res) => {
