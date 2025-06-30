@@ -116,6 +116,28 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
   };
 
   // --- Spotify-like fixed bottom bar ---
+  if (minified) {
+    // Mini player: simple seekbar, direct seek on change
+    return (
+      <div className="w-full">
+        <div className="flex items-center w-full gap-2">
+          <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(currentTime)}</span>
+          <Slider
+            value={[progress]}
+            max={100}
+            step={1}
+            onValueChange={value => {
+              const newTime = (value[0] / 100) * duration;
+              seek(newTime);
+            }}
+            className="w-full max-w-xs"
+          />
+          <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(duration)}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Main Player Bar */}
