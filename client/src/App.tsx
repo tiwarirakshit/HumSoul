@@ -222,7 +222,7 @@ function Router() {
 // Main application content
 function AppContent() {
   const { currentTrack } = useAudio();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
   const { isPlaying, play, pause } = useBackgroundMusic();
   const [showSubscriptionPopup, setShowSubscriptionPopup] = useState(false);
@@ -258,34 +258,39 @@ function AppContent() {
     );
   }
 
-  // Hide bottom nav on /admin routes and login page
+  // Hide header and bottom nav for admin users or admin routes
   const isAdminRoute = window.location.pathname.startsWith('/admin');
   const isLoginPage = window.location.pathname === '/login';
+  const shouldHideUserUI = isAdmin || isAdminRoute || isLoginPage;
 
   // Show full app layout for authenticated users
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden relative font-sans">
-      {!isAdminRoute && !isLoginPage && <Header />}
-      <main className="flex-1 overflow-y-auto px-4 pb-24">
+      {!shouldHideUserUI && <Header />}
+      <main className={`flex-1 overflow-y-auto px-4 ${shouldHideUserUI ? '' : 'pb-24'}`}>
         <Router />
       </main>
-      {!isAdminRoute && !isLoginPage && <BottomNavigation />}
+      {!shouldHideUserUI && <BottomNavigation />}
 
-      {/* Background Music Toggle */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed bottom-4 right-4 rounded-full bg-background/80 backdrop-blur-sm"
-        onClick={() => isPlaying ? pause() : play()}
-      >
-        {isPlaying ? <Music className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-      </Button>
+      {/* Background Music Toggle - Hide for admin users */}
+      {!isAdmin && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed bottom-4 right-4 rounded-full bg-background/80 backdrop-blur-sm"
+          onClick={() => isPlaying ? pause() : play()}
+        >
+          {isPlaying ? <Music className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+        </Button>
+      )}
 
-      {/* Subscription Popup */}
-      <SubscriptionPopup
-        isOpen={showSubscriptionPopup}
-        onClose={() => setShowSubscriptionPopup(false)}
-      />
+      {/* Subscription Popup - Hide for admin users */}
+      {!isAdmin && (
+        <SubscriptionPopup
+          isOpen={showSubscriptionPopup}
+          onClose={() => setShowSubscriptionPopup(false)}
+        />
+      )}
     </div>
   );
 }

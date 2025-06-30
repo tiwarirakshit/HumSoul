@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { SimpleAudioPlayer } from './simple-audio-player';
+import { useAuth } from '@/hooks/use-auth';
 
 interface GlobalAudioPlayerContextType {
   playSong: (audioUrl: string, songTitle?: string, artistName?: string, albumName?: string) => void;
@@ -27,6 +28,7 @@ interface GlobalAudioPlayerProviderProps {
 }
 
 export function GlobalAudioPlayerProvider({ children }: GlobalAudioPlayerProviderProps) {
+  const { isAdmin } = useAuth();
   const [currentSong, setCurrentSong] = useState<{
     audioUrl: string;
     songTitle: string;
@@ -55,7 +57,7 @@ export function GlobalAudioPlayerProvider({ children }: GlobalAudioPlayerProvide
       currentSong
     }}>
       {children}
-      {currentSong && (
+      {currentSong && !isAdmin && (
         <SimpleAudioPlayer
           audioUrl={currentSong.audioUrl}
           songTitle={currentSong.songTitle}

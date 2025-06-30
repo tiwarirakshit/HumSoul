@@ -156,28 +156,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       {/* Mobile header */}
-      <div className="sticky top-20 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-card px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:hidden mx-4 rounded-lg">
+      <div className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-white dark:bg-card px-4 shadow-md sm:gap-x-6 sm:px-6 lg:hidden w-full">
         <button
           type="button"
-          className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted"
+          className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
           onClick={() => setSidebarOpen(true)}
+          aria-label="Open sidebar"
         >
           <Menu className="h-6 w-6" />
         </button>
-        <div className="flex-1 text-sm font-semibold leading-6">
-          <h1 className="text-xl font-bold">HumSoul Admin</h1>
+        <div className="flex-1 text-sm font-semibold leading-6 truncate">
+          <h1 className="text-xl font-bold truncate">HumSoul Admin</h1>
         </div>
         <button
           type="button"
-          className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted"
+          className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
           onClick={handleLogout}
+          aria-label="Logout"
         >
           <LogOut className="h-6 w-6" />
         </button>
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-72">
+      <div className="lg:pl-72 pt-16 lg:pt-0">
         <main className="py-10">
           <div className="px-4 sm:px-6 lg:px-8">
             {children}

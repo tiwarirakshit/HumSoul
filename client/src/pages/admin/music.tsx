@@ -817,7 +817,7 @@ export default function AdminMusic() {
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4">
+            <div className="flex flex-col space-y-4 overflow-y-auto max-h-[60vh]">
               {/* Category Form */}
               {activeTab === 'categories' && (
                 <>
