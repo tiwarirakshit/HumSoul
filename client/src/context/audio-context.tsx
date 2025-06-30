@@ -79,6 +79,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const backgroundSoundRef = useRef<Howl | null>(null);
   const timerRef = useRef<number | null>(null);
   const lastLoadedAffirmationIndex = useRef<number | null>(null);
+  const isTogglingRef = useRef(false);
 
   const { toast } = useToast();
 
@@ -247,6 +248,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
   // Toggle play/pause
   const togglePlay = () => {
+    if (isTogglingRef.current) return;
+    isTogglingRef.current = true;
+    setTimeout(() => { isTogglingRef.current = false; }, 300); // Prevent rapid toggles
     console.log("🎵 Toggle play clicked");
     console.log("Current track:", currentTrack);
     console.log("Affirmation sound ref:", affirmationSoundRef.current);
