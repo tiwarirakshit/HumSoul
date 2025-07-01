@@ -134,7 +134,7 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
   if (minified) {
     // Mini player: simple seekbar, direct seek on change
     return (
-      <div className="w-full">
+      <div className="w-full bg-[rgb(219,234,254)] dark:bg-[rgb(30,58,138)] !bg-blue-100 !dark:bg-blue-900" style={{ backgroundColor: '#DBEAFE' }}>
         <div className="flex items-center w-full gap-2">
           <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(currentTime)}</span>
           <Slider
@@ -154,7 +154,7 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
   return (
     <>
       {/* Main Player Bar */}
-      <div className="fixed bottom-0 left-0 w-full z-50 bg-white/90 dark:bg-dark-lighter/90 shadow-2xl border-t border-gray-200 dark:border-gray-800 backdrop-blur-lg">
+      <div className="bottom-0 top-10 left-0 w-full bg-white dark:bg-dark-lighter/90 border-t border-gray-200 dark:border-gray-800 backdrop-blur-lg">
         <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 py-2 gap-2">
           {/* Song Info (placeholder) */}
           <div className="flex items-center gap-3 min-w-[180px] w-full md:w-auto mb-2 md:mb-0">
@@ -164,10 +164,6 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
             >
               {/* Album Art Placeholder */}
               <Music className="h-7 w-7 text-gray-400" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-semibold text-base text-gray-900 dark:text-white truncate max-w-[120px]">Song Title</span>
-              <span className="text-xs text-gray-500 dark:text-gray-300 truncate max-w-[120px]">Artist Name</span>
             </div>
           </div>
 
@@ -184,19 +180,16 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
                 <SkipForward className="h-6 w-6" />
               </Button>
             </div>
-            <div className="flex items-center w-full gap-2">
+            <div className="flex items-center mt-10 w-full gap-2">
               <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(currentTime)}</span>
               <Slider
-                value={[progress]}
-                max={100}
-                step={1}
-                onValueChange={handleSeek}
-                onValueCommit={value => safeSeek((value[0] / 100) * duration)}
-                onPointerDown={handleSeekStart}
-                className="w-full max-w-xs"
-                disabled={false}
-                style={{ pointerEvents: 'auto', zIndex: 1000 }}
-              />
+            value={[progress]}
+            max={100}
+            step={1}
+            onValueChange={value => safeSeek((value[0] / 100) * duration)}
+            className="w-[40vw]"
+            disabled={audioOpLock}
+          />
               <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(duration)}</span>
             </div>
           </div>
@@ -207,9 +200,9 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
               <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => setShowVolumeControl(!showVolumeControl)}>
                 <VolumeIcon />
               </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => setIsExpanded(!isExpanded)}>
+              {/* <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => setIsExpanded(!isExpanded)}>
                 {isExpanded ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-              </Button>
+              </Button> */}
               {showVolumeControl && (
                 <div className="absolute bottom-16 right-4 p-3 bg-white dark:bg-dark-lighter rounded-lg shadow-lg z-50 min-w-[150px]">
                   <div className="mb-3">

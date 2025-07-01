@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { Home, Search, Library, Mic, User, X } from "lucide-react";
+import { Home, Search, Library, Mic, User, X, Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAudio } from "@/hooks/use-audio";
 import { AudioPlayer } from "@/components/ui/audio-player";
@@ -37,7 +37,7 @@ export default function BottomNavigation() {
     <>
       {/* Mini Player: fixed above the nav bar, outside nav for visibility */}
       {showMiniPlayer && (
-        <div className="fixed w-full left-0 bottom-20 px-4 py-2 border-b border-gray-200 dark:border-dark-lighter z-50">
+        <div className="fixed w-full left-0 bottom-14 h-28 px-4 py-2 bg-blue-100 dark:bg-blue-900 border-b border-gray-200 dark:border-dark-lighter">
           <div className="flex items-center justify-between mb-2">
             <div 
               className="flex items-center gap-3 flex-1 cursor-pointer"
@@ -62,7 +62,23 @@ export default function BottomNavigation() {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <AudioPlayer minified />
+          {/* Mini player controls and seekbar */}
+          <div className="flex items-center w-full gap-2 mt-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={useAudio().previous}>
+              <SkipBack className="h-5 w-5" />
+            </Button>
+            <Button variant="default" size="icon" className="h-10 w-10 rounded-full shadow" onClick={useAudio().togglePlay}>
+              {useAudio().isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={useAudio().next}>
+              <SkipForward className="h-5 w-5" />
+            </Button>
+            {/* <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(useAudio().currentTime)}</span> */}
+            <div className="flex-1">
+              <AudioPlayer minified />
+            </div>
+            {/* <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(useAudio().duration)}</span> */}
+          </div>
         </div>
       )}
       <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-light border-t border-gray-200 dark:border-dark-lighter z-30 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
