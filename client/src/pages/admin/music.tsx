@@ -362,7 +362,7 @@ export default function AdminMusic() {
         method: 'POST',
         body: formData,
       });
-
+      console.log(response,"Response");
       if (!response.ok) {
         throw new Error('Upload failed');
       }
@@ -528,6 +528,7 @@ export default function AdminMusic() {
         }
         const uploaded = await uploadRes.json();
         audioUrl = uploaded.audioUrl;
+        console.log("📦 Uploaded file URL:", uploaded.audioUrl); // <-- Add this
         // Also update duration for the affirmation
         editingItem.duration = duration;
       }

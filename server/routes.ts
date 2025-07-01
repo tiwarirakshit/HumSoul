@@ -443,9 +443,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await fs.unlink(req.file.path).catch(console.error);
           return res.status(404).json({ message: "Playlist not found" });
         }
-
+        const audioUrl = '/audio/' + req.file.filename;
+        console.log("🔊 Audio URL:", audioUrl); // <-- Add this log
         const affirmation = await storage.createAffirmation({
           ...affirmationData,
+          duration: affirmationData.duration ?? 1,
           audioUrl: '/audio/' + req.file.filename,
           text: req.body.text
             ? req.body.text
