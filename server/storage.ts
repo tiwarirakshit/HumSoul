@@ -168,6 +168,7 @@ export class MemStorage implements IStorage {
   private backgroundMusics: Map<number, BackgroundMusic>;
   private userFavorites: Map<number, UserFavorite>;
   private recentPlays: Map<number, RecentPlay>;
+  private userLikedAffirmations: Map<number, Set<number>> = new Map(); // userId -> Set of affirmationIds
   
   private userIdCounter: number = 1;
   private categoryIdCounter: number = 1;
@@ -847,12 +848,20 @@ export class MemStorage implements IStorage {
 
   // Liked Affirmations methods
   async getUserLikedAffirmations(userId: number): Promise<UserLikedAffirmation[]> {
-    const liked = await db
-      .select({ affirmation: affirmations })
-      .from(userLikedAffirmations)
-      .innerJoin(affirmations, eq(userLikedAffirmations.affirmationId, affirmations.id))
-      .where(eq(userLikedAffirmations.userId, userId));
-    return liked.map(item => item.affirmation);
+    const likedIds = this.userLikedAffirmations.get(userId) || new Set();
+    const result: UserLikedAffirmation[] = [];
+    for (const affirmationId of likedIds) {
+      const affirmation = this.affirmations.get(affirmationId);
+      if (affirmation) {
+        result.push({
+          id: affirmationId,
+          userId,
+          affirmationId,
+          createdAt: new Date(),
+        });
+      }
+    }
+    return result;
   }
 
   async addUserLikedAffirmation(like: InsertUserLikedAffirmation): Promise<UserLikedAffirmation> {
@@ -1469,6 +1478,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  async getUserLikedAffirmations(userId: number): Promise<UserLikedAffirmation[]> {
+    const liked = await db
+      .select()
+      .from(userLikedAffirmations)
+      .where(eq(userLikedAffirmations.userId, userId));
+    return liked;
   }
 }
 

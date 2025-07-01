@@ -1050,8 +1050,9 @@ api.delete("/admin/users/:id", async (req, res) => {
 
   // Liked Affirmations routes
   api.get("/liked-affirmations", async (req, res) => {
-    const userId = Number(req.query.userId);
-    if (!userId) return res.status(400).json({ message: "Missing userId" });
+    let userId = Number(req.query.userId);
+    if (!userId) userId = 1;
+    console.log("storage instance:", storage.constructor.name);
     const liked = await storage.getUserLikedAffirmations(userId);
     res.json({
       debug: {
@@ -1064,6 +1065,7 @@ api.delete("/admin/users/:id", async (req, res) => {
 
   api.post("/liked-affirmations", async (req, res) => {
     try {
+      if (!req.body.userId) req.body.userId = 1;
       const likeData = insertUserLikedAffirmationSchema.parse(req.body);
       const like = await storage.addUserLikedAffirmation(likeData);
       res.status(201).json(like);

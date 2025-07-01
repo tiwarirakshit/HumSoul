@@ -6,46 +6,51 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
 
 export default function Library() {
+  console.log('Library component rendered');
   const { playPlaylist } = useAudio();
   const queryClient = useQueryClient();
-  const { backendUser, loading: authLoading } = useAuth();
-  const userId = backendUser?.id;
+  const userId = 1;
   
   // Query favorites
-  const { data: favoritesResp, isLoading: favoritesLoading } = useQuery({
+  const { data: favoritesResp } = useQuery({
     queryKey: ['/api/favorites', { userId }],
-    enabled: !!userId && !authLoading,
+    enabled: !!userId,
   });
-  const favorites = favoritesResp?.data;
-  const favoritesDebug = favoritesResp?.debug;
+  const favorites = (favoritesResp as any)?.data ?? [];
+  const favoritesDebug = (favoritesResp as any)?.debug;
   
   // Query recent plays
-  const { data: recentPlaysResp, isLoading: recentPlaysLoading } = useQuery({
+  const { data: recentPlaysResp } = useQuery({
     queryKey: ['/api/recent-plays', { userId }],
-    enabled: !!userId && !authLoading,
+    enabled: !!userId,
   });
-  const recentPlays = recentPlaysResp?.data;
-  const recentPlaysDebug = recentPlaysResp?.debug;
+  const recentPlays = (recentPlaysResp as any)?.data ?? [];
+  const recentPlaysDebug = (recentPlaysResp as any)?.debug;
   
   // Get category names for playlists
   const { data: categories } = useQuery({
     queryKey: ['/api/categories'],
   });
   
-  const categoryMap = categories
+  const categoryMap = Array.isArray(categories)
     ? new Map(categories.map((c: any) => [c.id, c.name]))
     : new Map();
   
   // Query liked affirmations
-  const { data: likedAffirmationsResp, isLoading: likedAffirmationsLoading } = useQuery({
+  const { data: likedAffirmationsRespRaw } = useQuery({
     queryKey: ['/api/liked-affirmations', { userId }],
-    enabled: !!userId && !authLoading,
+    enabled: !!userId,
   });
-  const likedAffirmations = likedAffirmationsResp?.data;
-  const likedAffirmationsDebug = likedAffirmationsResp?.debug;
+  const likedAffirmationsResp: any = likedAffirmationsRespRaw;
+  const likedAffirmations = (likedAffirmationsResp as any)?.data ?? [];
+  const likedAffirmationsDebug = (likedAffirmationsResp as any)?.debug;
+  
+  console.log('Library userId:', userId);
+  console.log('favoritesResp:', favoritesResp);
+  console.log('recentPlaysResp:', recentPlaysResp);
+  console.log('likedAffirmationsResp:', likedAffirmationsResp);
   
   const handlePlay = async (playlistId: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -89,20 +94,7 @@ export default function Library() {
         </TabsList>
         
         <TabsContent value="favorites">
-          {favoritesLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">
-                  <Skeleton className="w-12 h-12 rounded-md flex-shrink-0" />
-                  <div className="ml-3 flex-1">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                  <Skeleton className="w-9 h-9 rounded-full flex-shrink-0" />
-                </div>
-              ))}
-            </div>
-          ) : favorites && favorites.length > 0 ? (
+          {favoritesResp ? (
             <div className="space-y-3">
               {favorites.map((playlist: any) => (
                 <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
@@ -151,20 +143,7 @@ export default function Library() {
         </TabsContent>
         
         <TabsContent value="recent">
-          {recentPlaysLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">
-                  <Skeleton className="w-12 h-12 rounded-md flex-shrink-0" />
-                  <div className="ml-3 flex-1">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                  <Skeleton className="w-9 h-9 rounded-full flex-shrink-0" />
-                </div>
-              ))}
-            </div>
-          ) : recentPlays && recentPlays.length > 0 ? (
+          {recentPlaysResp ? (
             <div className="space-y-3">
               {recentPlays.map((play: any) => (
                 <Link key={play.playlist.id} href={`/playlist/${play.playlist.id}`}>
@@ -218,19 +197,7 @@ export default function Library() {
         </TabsContent>
         
         <TabsContent value="liked-affirmations">
-          {likedAffirmationsLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">
-                  <Skeleton className="w-12 h-12 rounded-md flex-shrink-0" />
-                  <div className="ml-3 flex-1">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : likedAffirmations && likedAffirmations.length > 0 ? (
+          {likedAffirmationsRespRaw ? (
             <div className="space-y-3">
               {likedAffirmations.map((affirmation: any) => (
                 <div key={affirmation.id} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">

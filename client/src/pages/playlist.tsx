@@ -59,7 +59,12 @@ export default function Playlist() {
   const [, navigate] = useLocation();
   const [isFavorited, setIsFavorited] = useState(false);
   const { backendUser, loading: authLoading } = useAuth();
-  const userId = backendUser?.id;
+  const userId = backendUser?.id || 1;
+
+  // Wait for auth to load before rendering
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
 
   // Get the playlist details
   const { data: playlist, isLoading: playlistLoading } = useQuery({
@@ -92,10 +97,11 @@ export default function Playlist() {
   });
 
   // Add state to track liked affirmations
-  const { data: likedAffirmations = [] } = useQuery({
+  const { data: likedAffirmationsResp } = useQuery({
     queryKey: ['/api/liked-affirmations', { userId }],
     enabled: !!userId && !authLoading,
   });
+  const likedAffirmations = likedAffirmationsResp?.data ?? [];
   const queryClient = useQueryClient();
 
   const likeMutation = useMutation({
@@ -104,7 +110,7 @@ export default function Playlist() {
       await fetch('/api/liked-affirmations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, affirmationId }),
+        body: JSON.stringify({ user_id: userId, affirmation_id: affirmationId }),
       });
     },
     onSuccess: () => {
@@ -125,11 +131,14 @@ export default function Playlist() {
     likedAffirmations.some((a: any) => a.id === affirmationId);
 
   const handlePlayPlaylistFromIndex = async (startIndex: number) => {
-    if (!playlist || !affirmations || !userId) return;
-
+    console.log("handlePlayPlaylistFromIndex called", { startIndex });
+    if (!playlist || !affirmations || !userId) {
+      console.log("Missing data", { playlist, affirmations, userId });
+      return;
+    }
     try {
       await apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id });
-      playPlaylist(playlist, affirmations, startIndex);
+      playPlaylist(playlist, affirmations.affirmations, startIndex);
     } catch (error) {
       console.error('Error playing playlist:', error);
     }
@@ -406,6 +415,7 @@ export default function Playlist() {
               <div
                 key={affirmation.id}
                 onClick={() => {
+                  console.log("Affirmation clicked", { index, affirmation });
                   if (!affirmation.audioUrl) {
                     alert('This affirmation does not have a valid audio file.');
                     return;
