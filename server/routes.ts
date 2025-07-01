@@ -16,7 +16,7 @@ import { text } from "stream/consumers";
 // Configure multer for file uploads
 const audioStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), "uploads", "audio");
+    const uploadDir = path.resolve(__dirname, '..', 'uploads', 'audio');
     console.log("📁 Saving audio file to:", uploadDir); // Add this line
     try {
       await fs.mkdir(uploadDir, { recursive: true });
