@@ -309,7 +309,8 @@ export default function Playlist() {
     );
   }
 
-  const calculateTotalDuration = (affirmationsList: any[] = []) => {
+  const calculateTotalDuration = (affirmationsList: any[]) => {
+    console.log('calculateTotalDuration', affirmationsList);
     return affirmationsList.reduce((sum: number, affirmation: any) => sum + affirmation.duration, 0);
   };
 
@@ -369,7 +370,7 @@ export default function Playlist() {
               <span className="font-medium">{affirmations?.length}</span> affirmations
             </div>
             <div className="mr-4">
-              <span className="font-medium">{formatDuration(calculateTotalDuration(affirmations?.affirmations))}</span> total
+              <span className="font-medium">{formatDuration(calculateTotalDuration(affirmations))}</span> total
             </div>
           </div>
 

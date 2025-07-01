@@ -140,7 +140,7 @@ export default function RecentPlaysSection() {
               <div className="ml-3 flex-1 min-w-0">
                 <h3 className="font-medium text-sm line-clamp-1">{play.playlist.title}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {categoryMap.get(play.playlist.categoryId) || 'General'} • {formatDuration(play.playlist.duration)}
+                  {categoryMap.get(play.playlist.categoryId) || 'General'}
                 </p>
               </div>
               <button 

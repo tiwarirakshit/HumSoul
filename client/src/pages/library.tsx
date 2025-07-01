@@ -159,7 +159,7 @@ export default function Library() {
                     <div className="ml-3 flex-1 min-w-0">
                       <h3 className="font-medium text-sm line-clamp-1">{playlist.title}</h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {categoryMap.get(playlist.categoryId) || 'General'} • {formatDuration(playlist.duration)}
+                        {categoryMap.get(playlist.categoryId) || 'General'}
                       </p>
                     </div>
                   </div>
