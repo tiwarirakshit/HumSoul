@@ -48,7 +48,7 @@ app.use((req, res, next) => {
 });
 
 // Serve audio files
-app.use('/audio', express.static(path.resolve(__dirname, '..', 'uploads', 'audio')));
+app.use('/audio', express.static(path.join(process.cwd(), 'uploads', 'audio')));
 
 (async () => {
   // Initialize database if needed
