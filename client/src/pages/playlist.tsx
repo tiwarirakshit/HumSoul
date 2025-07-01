@@ -67,17 +67,17 @@ export default function Playlist() {
   }
 
   // Get the playlist details
-  const { data: playlist, isLoading: playlistLoading } = useQuery({
+  const { data: playlist, isLoading: playlistLoading } = useQuery<any>({
     queryKey: [`/api/playlists/${id}`],
   });
 
   // Get the affirmations for this playlist
-  const { data: affirmations, isLoading: affirmationsLoading } = useQuery<AffirmationsResponse>({
+  const { data: affirmations, isLoading: affirmationsLoading } = useQuery<AffirmationsResponse | undefined>({
     queryKey: [`/api/affirmations?playlistId=${id}`, { playlistId: id }],
   });
 
   // Get all background music options
-  const { data: backgroundMusics } = useQuery({
+  const { data: backgroundMusics } = useQuery<any[]>({
     queryKey: ['/api/background-music'],
   });
 
@@ -92,12 +92,12 @@ export default function Playlist() {
   }, [userId, playlist?.id]);
 
   // Get category name
-  const { data: categories } = useQuery({
+  const { data: categories } = useQuery<any[]>({
     queryKey: ['/api/categories'],
   });
 
   // Add state to track liked affirmations
-  const { data: likedAffirmationsResp } = useQuery({
+  const { data: likedAffirmationsResp } = useQuery<any>({
     queryKey: ['/api/liked-affirmations', { userId }],
     enabled: !!userId && !authLoading,
   });
@@ -128,24 +128,34 @@ export default function Playlist() {
   });
 
   const isAffirmationLiked = (affirmationId: number) =>
-    likedAffirmations.some((a: any) => a.id === affirmationId);
+    likedAffirmations.some((a: any) => a?.id === affirmationId);
 
-  const handlePlayPlaylistFromIndex = async (startIndex: number) => {
+  const handlePlayPlaylistFromIndex = (startIndex: number) => {
     console.log("handlePlayPlaylistFromIndex called", { startIndex });
-    if (!playlist || !affirmations || !userId) {
-      console.log("Missing data", { playlist, affirmations, userId });
+    if (!playlist || typeof playlist.id !== 'number') {
+      console.log("Missing or invalid playlist", { playlist });
       return;
     }
-    try {
-      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id });
-      playPlaylist(playlist, affirmations.affirmations, startIndex);
-    } catch (error) {
-      console.error('Error playing playlist:', error);
+    if (!Array.isArray(affirmations) || affirmations.length === 0) {
+      console.log("Missing or invalid affirmations", { affirmations });
+      return;
     }
+    if (!userId) {
+      console.log("Missing or invalid userId", { userId });
+      return;
+    }
+    // Play audio immediately (user gesture)
+    playPlaylist(playlist, affirmations, startIndex);
+
+    // Then do the API call (async, doesn't block user gesture)
+    apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id })
+      .catch(error => {
+        console.error('Error logging recent play:', error);
+      });
   };
 
-  const categoryName = playlist && categories
-    ? categories.find((c: any) => c.id === playlist.categoryId)?.name
+  const categoryName = playlist && Array.isArray(categories)
+    ? categories.find((c: any) => c?.id === (playlist as any).categoryId)?.name
     : '';
 
   const handleToggleFavorite = async () => {
@@ -173,18 +183,18 @@ export default function Playlist() {
   };
 
   const handlePlayPlaylist = async () => {
-    if (!playlist || !affirmations || !userId) return;
+    if (!playlist || !affirmations?.affirmations || !userId) return;
 
     try {
-      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id });
-      playPlaylist(playlist, affirmations);
+      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: (playlist as any).id });
+      playPlaylist(playlist as any, affirmations.affirmations);
     } catch (error) {
       console.error('Error playing playlist:', error);
     }
   };
 
   const handlePlayPause = async () => {
-    if (!playlist || !affirmations || !userId) return;
+    if (!playlist || !affirmations?.affirmations || !userId) return;
 
     if (currentTrack?.playlist.id === Number(id)) {
       togglePlay();
@@ -192,8 +202,8 @@ export default function Playlist() {
     }
 
     try {
-      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id });
-      playPlaylist(playlist, affirmations, 0);
+      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: (playlist as any).id });
+      playPlaylist(playlist as any, affirmations.affirmations, 0);
     } catch (error) {
       console.error('Error playing playlist:', error);
     }
@@ -209,6 +219,20 @@ export default function Playlist() {
   };
 
   const isLoading = playlistLoading || affirmationsLoading;
+
+  // Add test sound function
+  const playTestSound = () => {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, ctx.currentTime); // 440 Hz = A4
+    oscillator.connect(ctx.destination);
+    oscillator.start();
+    setTimeout(() => {
+      oscillator.stop();
+      ctx.close();
+    }, 500); // Play for 0.5 seconds
+  };
 
   if (isLoading) {
     return (
@@ -263,12 +287,18 @@ export default function Playlist() {
     );
   }
 
-  const calculateTotalDuration = (affirmationsList: any) => {
+  const calculateTotalDuration = (affirmationsList: any[] = []) => {
     return affirmationsList.reduce((sum: number, affirmation: any) => sum + affirmation.duration, 0);
   };
 
   return (
     <div className="py-4 pb-28">
+      {/* Test Sound Button */}
+      <div className="mb-4">
+        <button onClick={playTestSound} style={{padding: '8px 16px', background: '#eee', borderRadius: 4, fontWeight: 600}}>
+          🔊 Test Sound
+        </button>
+      </div>
       <div className="flex items-center mb-6">
         <Button
           variant="ghost"
@@ -300,7 +330,7 @@ export default function Playlist() {
               <span className="font-medium">{affirmations?.length}</span> affirmations
             </div>
             <div className="mr-4">
-              <span className="font-medium">{formatDuration(calculateTotalDuration(affirmations))}</span> total
+              <span className="font-medium">{formatDuration(calculateTotalDuration(affirmations?.affirmations))}</span> total
             </div>
           </div>
 
@@ -408,10 +438,14 @@ export default function Playlist() {
             <p className="text-gray-500 dark:text-gray-400">
               No affirmations available in this playlist
             </p>
+            {/* Debug fallback: show raw affirmations data */}
+            <pre style={{textAlign: 'left', marginTop: 16, background: '#f8f8f8', color: '#333', padding: 8, borderRadius: 4, fontSize: 12}}>
+              {JSON.stringify(affirmations, null, 2)}
+            </pre>
           </div>
         ) : (
           <div className="space-y-2">
-            {affirmations?.map((affirmation: any, index: number) => (
+            {affirmations.map((affirmation: any, index: number) => (
               <div
                 key={affirmation.id}
                 onClick={() => {

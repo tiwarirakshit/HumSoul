@@ -156,7 +156,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       {/* Mobile header */}
-      <div className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-white dark:bg-card px-4 shadow-md sm:gap-x-6 sm:px-6 lg:hidden w-full" style={{paddingTop: 'env(safe-area-inset-top, 12px)'}}>
+      <div className="mt-10 top-0 z-50 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-white dark:bg-card px-4 shadow-md sm:gap-x-6 sm:px-6 lg:hidden w-full" style={{paddingTop: 'env(safe-area-inset-top, 12px)'}}>
         <button
           type="button"
           className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-center"

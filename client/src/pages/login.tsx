@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
-  const { loginWithGoogle, logout, user, loading, loginWithEmail, isAdmin } = useAuth();
+  const { loginWithGoogle, logout, user, loading, loginWithEmail, isAdmin, isNewUser } = useAuth();
   const [, setLocation] = useLocation();
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -30,12 +30,16 @@ export default function Login() {
       return;
     }
 
-    // If regular user is logged in, redirect to onboarding
+    // If regular user is logged in, redirect to onboarding only if isNewUser
     if (user && !isAdmin) {
-      window.location.href = "/onboarding";
+      if (isNewUser) {
+        window.location.href = "/onboarding";
+      } else {
+        window.location.href = "/";
+      }
       return;
     }
-  }, [user, loading, isAdmin, setLocation]);
+  }, [user, loading, isAdmin, isNewUser, setLocation]);
 
   const handleGoogleLogin = async () => {
     // Don't allow Google login if admin is already logged in

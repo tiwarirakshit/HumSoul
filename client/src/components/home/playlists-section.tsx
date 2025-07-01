@@ -26,7 +26,9 @@ export default function PlaylistsSection() {
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   
   // Debug log
-  console.log('PlaylistsSection render', { userId, playlists, favorites, favoriteIds });
+  if (userId && playlists) {
+    console.log('PlaylistsSection render', { userId, playlists, favorites, favoriteIds });
+  }
   
   useEffect(() => {
     if (favorites && favoriteIds.size === 0) {

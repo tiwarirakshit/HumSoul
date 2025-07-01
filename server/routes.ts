@@ -12,6 +12,8 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { text } from "stream/consumers";
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 // Configure multer for file uploads
 const audioStorage = multer.diskStorage({
@@ -70,8 +72,26 @@ const audioFileFilter = (
   }
 };
 
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary storage for affirmations
+const cloudinaryAudioStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'affirmations',
+    resource_type: 'auto',
+    format: async (req, file) => 'mp3', // or keep original extension
+    public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`,
+  },
+});
+
 const uploadAffirmation = multer({
-  storage: audioStorage,
+  storage: cloudinaryAudioStorage,
   fileFilter: audioFileFilter,
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
@@ -440,29 +460,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Verify playlist exists
         const playlist = await storage.getPlaylist(affirmationData.playlistId);
         if (!playlist) {
-          // Clean up uploaded file if playlist doesn't exist
-          await fs.unlink(req.file.path).catch(console.error);
+          // No file cleanup needed for Cloudinary
           return res.status(404).json({ message: "Playlist not found" });
         }
-        const audioUrl = '/audio/' + req.file.filename;
-        console.log("🔊 Audio URL:", audioUrl); // <-- Add this log
+        const audioUrl = req.file.path; // Cloudinary URL
         const affirmation = await storage.createAffirmation({
           ...affirmationData,
           duration: affirmationData.duration ?? 1,
-          audioUrl: '/audio/' + req.file.filename,
+          audioUrl,
           text: req.body.text
             ? req.body.text
             : req.file.originalname.split(".")[0],
         });
-        console.log("✅ File saved at:", req.file?.path);
+        console.log("✅ File uploaded to Cloudinary:", req.file?.path);
 
         res.status(201).json(affirmation);
       } catch (error) {
-        // Clean up uploaded file on error
-        if (req.file) {
-          await fs.unlink(req.file.path).catch(console.error);
-        }
-
         if (error instanceof z.ZodError) {
           return res
             .status(400)
@@ -486,13 +499,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!req.file) {
           return res.status(400).json({ message: "No audio file provided" });
         }
-        // Just return the audioUrl, do not create a DB record
-        res.status(201).json({ audioUrl: '/audio/' + req.file.filename });
+        // Just return the audioUrl (Cloudinary URL), do not create a DB record
+        res.status(201).json({ audioUrl: req.file.path });
       } catch (error) {
-        // Clean up uploaded file on error
-        if (req.file) {
-          await fs.unlink(req.file.path).catch(console.error);
-        }
         console.error("Error uploading audio file:", error);
         res.status(500).json({ message: "Internal server error" });
       }

@@ -109,7 +109,7 @@ function AdminRoute({ component: Component, ...rest }: ProtectedRouteProps) {
 
 // Main router component
 function Router() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isNewUser } = useAuth();
   const [, setLocation] = useLocation();
   const pathname = window.location.pathname;
   console.log("Current pathname:", pathname);
@@ -122,8 +122,10 @@ function Router() {
     if (window.location.pathname === '/login') {
       if (isAdmin) {
         setLocation('/admin');
-      } else {
+      } else if (isNewUser) {
         setLocation('/onboarding');
+      } else {
+        setLocation('/');
       }
       return;
     }
@@ -136,10 +138,14 @@ function Router() {
     
     // Redirect regular users to onboarding if they're on admin routes
     if (!isAdmin && window.location.pathname.startsWith('/admin')) {
-      setLocation('/onboarding');
+      if (isNewUser) {
+        setLocation('/onboarding');
+      } else {
+        setLocation('/');
+      }
       return;
     }
-  }, [user, isAdmin, setLocation]);
+  }, [user, isAdmin, isNewUser, setLocation]);
 
   return (
     <>

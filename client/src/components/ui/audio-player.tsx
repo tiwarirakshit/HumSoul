@@ -194,7 +194,8 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
                 onValueCommit={value => safeSeek((value[0] / 100) * duration)}
                 onPointerDown={handleSeekStart}
                 className="w-full max-w-xs"
-                disabled={audioOpLock}
+                disabled={false}
+                style={{ pointerEvents: 'auto', zIndex: 1000 }}
               />
               <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(duration)}</span>
             </div>

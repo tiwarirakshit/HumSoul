@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -83,14 +83,6 @@ export default function Onboarding() {
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({});
   const [, setLocation] = useLocation();
   const { completeOnboarding } = useAuth();
-
-  useEffect(() => {
-    // Reload the page once when component mounts
-    if (!sessionStorage.getItem('onboardingReloaded')) {
-      sessionStorage.setItem('onboardingReloaded', 'true');
-      window.location.reload();
-    }
-  }, []);
 
   const currentQuestion = questions[currentStep];
   const progress = ((currentStep + 1) / questions.length) * 100;

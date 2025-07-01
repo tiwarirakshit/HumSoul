@@ -165,15 +165,14 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
     setCurrentTrack(newTrack);
     setIsPlaying(true); // Set playing state immediately
-    
     // Load and play the affirmation at the specified index
     if (affirmations.length > startIndex) {
-      loadAffirmation(affirmations[startIndex]);
+      loadAffirmation(affirmations[startIndex], true); // pass true to force play
     }
   };
 
   // Load an affirmation into the Howl instance
-  const loadAffirmation = (affirmation: Affirmation) => {
+  const loadAffirmation = (affirmation: Affirmation, forcePlay: boolean = false) => {
     if (audioOpLock.current) return;
     audioOpLock.current = true;
     setTimeout(() => { audioOpLock.current = false; }, 400);
@@ -187,7 +186,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
       return;
     }
   
-    const fullAudioUrl = `https://mpforestvillage.in${affirmation.audioUrl}`;
+    const fullAudioUrl = `${affirmation.audioUrl}`;
   
     console.log("🎵 Loading affirmation:", affirmation);
     console.log("🎵 Full Audio URL:", fullAudioUrl);
@@ -209,11 +208,10 @@ export function AudioProvider({ children }: AudioProviderProps) {
           setDuration(soundDuration);
           setCurrentTime(0);
           setProgress(0);
-  
-          if (isPlaying) {
+          // Always play immediately after load if forcePlay is true or isPlaying is true
+          if (forcePlay || isPlaying) {
             console.log("▶️ Starting playback after load");
             affirmationSoundRef.current.play();
-  
             if (backgroundSoundRef.current && backgroundMusic) {
               backgroundSoundRef.current.play();
             }
@@ -289,7 +287,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
     affirmationSoundRef.current.seek(time);
     setCurrentTime(time);
     setProgress((time / duration) * 100);
-    if (!isPlaying) updateTimeProgress();
+    updateTimeProgress(); // Always update progress after seeking
   };
 
   // Go to next affirmation
