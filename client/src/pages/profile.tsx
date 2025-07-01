@@ -33,7 +33,21 @@ export default function Profile() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  const userId = backendUser?.id;
+  let userId = backendUser?.id;
+  if (!userId) {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const parsed = JSON.parse(userStr);
+        if (parsed && parsed.id && parsed.id !== 1) {
+          userId = parsed.id;
+        }
+      }
+    } catch {}
+  }
+  if (!userId || userId === 1) {
+    userId = undefined;
+  }
   
   // Query to get current user
   const { data: user, isLoading } = useQuery<{

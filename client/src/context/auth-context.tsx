@@ -38,7 +38,7 @@ interface AuthProviderProps {
 // Create Auth Provider component
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [backendUser, setBackendUser] = useState<any>(null);
+  const [backendUser, setBackendUser] = useState<any>(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : null);
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -61,8 +61,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         subscriptionStatus: 'free'
       };
 
-      await apiRequest('POST', '/api/users', userData);
-      console.log('New user saved to database successfully');
+      const response = await apiRequest('POST', '/api/users', userData);
+      const respData = await response.json();
+      localStorage.setItem('user', JSON.stringify(respData));
+      setBackendUser(respData);
+      // console.log('New user saved to database successfully');
     } catch (error) {
       console.error('Error saving new user to database:', error);
       // Don't throw error here as we don't want to break the login flow

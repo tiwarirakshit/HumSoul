@@ -11,7 +11,21 @@ export default function RecentPlaysSection() {
   const { playPlaylist } = useAudio();
   
   const { backendUser, loading: authLoading } = useAuth();
-  const userId = backendUser?.id;
+  let userId = backendUser?.id;
+  if (!userId) {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const parsed = JSON.parse(userStr);
+        if (parsed && parsed.id && parsed.id !== 1) {
+          userId = parsed.id;
+        }
+      }
+    } catch {}
+  }
+  if (!userId || userId === 1) {
+    userId = undefined;
+  }
   
   // Query recent plays
   const { data: recentPlays, isLoading } = useQuery({
@@ -107,7 +121,7 @@ export default function RecentPlaysSection() {
       </div>
       
       <div className="space-y-3">
-        {recentPlays.slice(0, 3).map((play: any) => (
+        {recentPlays?.data?.slice(0, 3).map((play: any) => (
           <Link key={play.playlist.id} href={`/playlist/${play.playlist.id}`}>
             <div className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
               <div 

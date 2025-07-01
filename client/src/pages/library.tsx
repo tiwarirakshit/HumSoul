@@ -6,16 +6,36 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Library() {
   console.log('Library component rendered');
   const { playPlaylist } = useAudio();
   const queryClient = useQueryClient();
-  const userId = 1;
+  const { backendUser } = useAuth();
+  let userId = backendUser?.id;
+  if (!userId) {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const parsed = JSON.parse(userStr);
+        if (parsed && parsed.id && parsed.id !== 1) {
+          userId = parsed.id;
+        }
+      }
+    } catch {}
+  }
+  // If still not set, or is 1, set to undefined to avoid accidental queries
+  if (!userId || userId === 1) {
+    userId = undefined;
+  }
+  
+  console.log('Library userId used for API calls:', userId);
   
   // Query favorites
   const { data: favoritesResp } = useQuery({
     queryKey: ['/api/favorites', { userId }],
+    queryFn: () => userId ? apiRequest('GET', `/api/favorites?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId,
   });
   const favorites = (favoritesResp as any)?.data ?? [];
@@ -24,6 +44,7 @@ export default function Library() {
   // Query recent plays
   const { data: recentPlaysResp } = useQuery({
     queryKey: ['/api/recent-plays', { userId }],
+    queryFn: () => userId ? apiRequest('GET', `/api/recent-plays?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId,
   });
   const recentPlays = (recentPlaysResp as any)?.data ?? [];

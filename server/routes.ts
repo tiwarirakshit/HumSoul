@@ -1079,6 +1079,7 @@ api.delete("/admin/users/:id", async (req, res) => {
       const like = await storage.addUserLikedAffirmation(likeData);
       res.status(201).json(like);
     } catch (error: any) {
+      console.error("Error adding liked affirmation:", error);
       res.status(400).json({ message: "Invalid like data", errors: error.errors });
     }
   });

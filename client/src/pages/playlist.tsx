@@ -59,7 +59,22 @@ export default function Playlist() {
   const [, navigate] = useLocation();
   const [isFavorited, setIsFavorited] = useState(false);
   const { backendUser, loading: authLoading } = useAuth();
-  const userId = backendUser?.id || 1;
+  let userId = backendUser?.id;
+  if (!userId) {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const parsed = JSON.parse(userStr);
+        if (parsed && parsed.id && parsed.id !== 1) {
+          userId = parsed.id;
+        }
+      }
+    } catch {}
+  }
+  // If still not set, or is 1, set to undefined to avoid accidental queries
+  if (!userId || userId === 1) {
+    userId = undefined;
+  }
 
   // Wait for auth to load before rendering
   if (authLoading) {
@@ -104,13 +119,15 @@ export default function Playlist() {
   const likedAffirmations = likedAffirmationsResp?.data ?? [];
   const queryClient = useQueryClient();
 
+  console.log('Playlist userId used for API calls:', userId);
+
   const likeMutation = useMutation({
     mutationFn: async (affirmationId: number) => {
       if (!userId) return;
       await fetch('/api/liked-affirmations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, affirmation_id: affirmationId }),
+        body: JSON.stringify({ userId: userId, affirmationId: affirmationId }),
       });
     },
     onSuccess: () => {
@@ -120,7 +137,7 @@ export default function Playlist() {
   const unlikeMutation = useMutation({
     mutationFn: async (affirmationId: number) => {
       if (!userId) return;
-      await fetch(`/api/liked-affirmations?userId=${userId}&affirmationId=${affirmationId}`, { method: 'DELETE' });
+      await fetch(`/api/liked-affirmations?userId=${encodeURIComponent(String(userId))}&affirmationId=${encodeURIComponent(String(affirmationId))}`, { method: 'DELETE' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/liked-affirmations'] });
@@ -128,9 +145,13 @@ export default function Playlist() {
   });
 
   const isAffirmationLiked = (affirmationId: number) =>
-    likedAffirmations.some((a: any) => a?.id === affirmationId);
+    Array.isArray(likedAffirmations) && likedAffirmations.some((a: any) => a?.id === affirmationId);
 
   const handlePlayPlaylistFromIndex = (startIndex: number) => {
+    if (!userId) {
+      console.log('No userId, skipping play logging');
+      return;
+    }
     console.log("handlePlayPlaylistFromIndex called", { startIndex });
     if (!playlist || typeof playlist.id !== 'number') {
       console.log("Missing or invalid playlist", { playlist });
@@ -140,15 +161,11 @@ export default function Playlist() {
       console.log("Missing or invalid affirmations", { affirmations });
       return;
     }
-    if (!userId) {
-      console.log("Missing or invalid userId", { userId });
-      return;
-    }
     // Play audio immediately (user gesture)
     playPlaylist(playlist, affirmations, startIndex);
 
     // Then do the API call (async, doesn't block user gesture)
-    apiRequest('POST', '/api/recent-plays', { userId, playlistId: playlist.id })
+    apiRequest('POST', '/api/recent-plays', { userId: String(userId), playlistId: playlist.id })
       .catch(error => {
         console.error('Error logging recent play:', error);
       });
@@ -186,7 +203,7 @@ export default function Playlist() {
     if (!playlist || !affirmations?.affirmations || !userId) return;
 
     try {
-      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: (playlist as any).id });
+      await apiRequest('POST', '/api/recent-plays', { userId: String(userId), playlistId: (playlist as any).id });
       playPlaylist(playlist as any, affirmations.affirmations);
     } catch (error) {
       console.error('Error playing playlist:', error);
@@ -202,7 +219,7 @@ export default function Playlist() {
     }
 
     try {
-      await apiRequest('POST', '/api/recent-plays', { userId, playlistId: (playlist as any).id });
+      await apiRequest('POST', '/api/recent-plays', { userId: String(userId), playlistId: (playlist as any).id });
       playPlaylist(playlist as any, affirmations.affirmations, 0);
     } catch (error) {
       console.error('Error playing playlist:', error);

@@ -865,21 +865,30 @@ export class MemStorage implements IStorage {
   }
 
   async addUserLikedAffirmation(like: InsertUserLikedAffirmation): Promise<UserLikedAffirmation> {
-    const [newLike] = await db.insert(userLikedAffirmations).values(like).returning();
-    return newLike;
+    let set = this.userLikedAffirmations.get(like.userId);
+    if (!set) {
+      set = new Set();
+      this.userLikedAffirmations.set(like.userId, set);
+    }
+    set.add(like.affirmationId);
+    return {
+      id: Date.now(), // or increment a counter if you want unique IDs
+      userId: like.userId,
+      affirmationId: like.affirmationId,
+      createdAt: new Date(),
+    };
   }
 
   async removeUserLikedAffirmation(userId: number, affirmationId: number): Promise<void> {
-    await db.delete(userLikedAffirmations)
-      .where(and(eq(userLikedAffirmations.userId, userId), eq(userLikedAffirmations.affirmationId, affirmationId)));
+    const set = this.userLikedAffirmations.get(userId);
+    if (set) {
+      set.delete(affirmationId);
+    }
   }
 
   async isAffirmationLiked(userId: number, affirmationId: number): Promise<boolean> {
-    const result = await db
-      .select()
-      .from(userLikedAffirmations)
-      .where(and(eq(userLikedAffirmations.userId, userId), eq(userLikedAffirmations.affirmationId, affirmationId)));
-    return result.length > 0;
+    const set = this.userLikedAffirmations.get(userId);
+    return set ? set.has(affirmationId) : false;
   }
 
   async updateUser(id: number, updates: Partial<InsertUser>) {
@@ -1485,7 +1494,28 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(userLikedAffirmations)
       .where(eq(userLikedAffirmations.userId, userId));
+    console.log('[DEBUG] getUserLikedAffirmations for userId', userId, ':', liked);
     return liked;
+  }
+
+  async addUserLikedAffirmation(like: InsertUserLikedAffirmation): Promise<UserLikedAffirmation> {
+    const [newLike] = await db.insert(userLikedAffirmations).values(like).returning();
+    const all = await db.select().from(userLikedAffirmations);
+    console.log('[DEBUG] After insert, all user_liked_affirmations:', all);
+    return newLike;
+  }
+
+  async removeUserLikedAffirmation(userId: number, affirmationId: number): Promise<void> {
+    await db.delete(userLikedAffirmations)
+      .where(and(eq(userLikedAffirmations.userId, userId), eq(userLikedAffirmations.affirmationId, affirmationId)));
+  }
+
+  async isAffirmationLiked(userId: number, affirmationId: number): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(userLikedAffirmations)
+      .where(and(eq(userLikedAffirmations.userId, userId), eq(userLikedAffirmations.affirmationId, affirmationId)));
+    return result.length > 0;
   }
 }
 

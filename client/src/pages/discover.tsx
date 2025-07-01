@@ -14,7 +14,13 @@ export default function Discover() {
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   
   const { backendUser, loading: authLoading } = useAuth();
-  const userId = backendUser?.id;
+  let userId = backendUser?.id;
+  if (!userId) {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) userId = JSON.parse(userStr).id;
+    } catch {}
+  }
   
   // Extract category ID from URL if present
   useEffect(() => {
@@ -24,18 +30,20 @@ export default function Discover() {
   }, [location]);
   
   // Query categories
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<any[]>({
     queryKey: ['/api/categories'],
   });
   
   // Query playlists, filtered by category if specified
-  const { data: playlists = [], isLoading } = useQuery({
+  const { data: playlists = [], isLoading } = useQuery<any[]>({
     queryKey: categoryId ? ['/api/playlists', { categoryId }] : ['/api/playlists'],
   });
   
+  console.log('Discover userId used for API calls:', userId);
   // Get favorited playlist IDs
   const { data: favoritesList = [] } = useQuery({
     queryKey: ['/api/favorites', { userId }],
+    queryFn: () => userId ? apiRequest('GET', `/api/favorites?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId && !authLoading,
   });
   
@@ -92,6 +100,9 @@ export default function Discover() {
     queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
   };
   
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const safePlaylists = Array.isArray(playlists) ? playlists : [];
+  
   return (
     <div className="py-4">
       <h1 className="text-2xl font-semibold mb-6">Discover</h1>
@@ -106,7 +117,7 @@ export default function Discover() {
             </a>
           </Link>
           
-          {categories.map((category: any) => (
+          {safeCategories.map((category: any) => (
             <Link key={category.id} href={`/discover?category=${category.id}`}>
               <a 
                 className={`px-4 py-2 rounded-full text-sm font-medium ${
@@ -138,9 +149,13 @@ export default function Discover() {
               </div>
             ))}
           </div>
-        ) : playlists.length > 0 ? (
+        ) : !safePlaylists || safePlaylists.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-gray-500 dark:text-gray-400">No playlists found</p>
+          </div>
+        ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {playlists.map((playlist: any) => (
+            {safePlaylists.map((playlist: any) => (
               <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
                 <div className="bg-white dark:bg-dark-light rounded-lg overflow-hidden shadow-sm cursor-pointer">
                   <div 
@@ -171,10 +186,6 @@ export default function Discover() {
                 </div>
               </Link>
             ))}
-          </div>
-        ) : (
-          <div className="text-center py-10">
-            <p className="text-gray-500 dark:text-gray-400">No playlists found</p>
           </div>
         )}
       </div>

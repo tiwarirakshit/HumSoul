@@ -10,16 +10,23 @@ import { useAuth } from "@/hooks/use-auth";
 
 export default function PlaylistsSection() {
   const { backendUser, loading: authLoading } = useAuth();
-  const userId = backendUser?.id;
+  let userId = backendUser?.id;
+  if (!userId) {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) userId = JSON.parse(userStr).id;
+    } catch {}
+  }
   
   // Query all playlists
-  const { data: playlists, isLoading } = useQuery({
+  const { data: playlists = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/playlists'],
   });
   
   // Get favorited playlist IDs
-  const { data: favorites = [] } = useQuery({
+  const { data: favorites = [] } = useQuery<any[]>({
     queryKey: ['/api/favorites', { userId }],
+    queryFn: () => userId ? apiRequest('GET', `/api/favorites?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId && !authLoading,
   });
   
@@ -31,10 +38,18 @@ export default function PlaylistsSection() {
   }
   
   useEffect(() => {
-    if (favorites && favoriteIds.size === 0) {
-      setFavoriteIds(new Set(favorites.map((p: any) => p.id)));
+    if (favorites) {
+      const newSet = new Set(favorites?.data?.map((p: any) => p.id));
+      // Only update if the sets are different
+      if (
+        favoriteIds.size !== newSet.size ||
+        Array.from(favoriteIds).some(id => !newSet.has(id))
+      ) {
+        setFavoriteIds(newSet);
+      }
     }
-  }, [favorites, favoriteIds.size]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [favorites]);
   
   const toggleFavorite = async (playlistId: number, e: React.MouseEvent) => {
     e.preventDefault();
@@ -87,7 +102,7 @@ export default function PlaylistsSection() {
     );
   }
   
-  if (!playlists || playlists.length === 0) {
+  if (!playlists || (Array.isArray(playlists) && playlists.length === 0)) {
     return (
       <section className="py-4">
         <div className="flex items-center justify-between mb-4">
@@ -110,7 +125,7 @@ export default function PlaylistsSection() {
       </div>
       
       <div className="grid grid-cols-2 gap-4">
-        {playlists.slice(0, 4).map(playlist => (
+        {Array.isArray(playlists) && playlists.slice(0, 4).map((playlist: any) => (
           <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
             <div className="bg-white dark:bg-dark-light rounded-lg overflow-hidden shadow-sm cursor-pointer">
               <div 
