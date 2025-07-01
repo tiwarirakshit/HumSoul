@@ -1499,6 +1499,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addUserLikedAffirmation(like: InsertUserLikedAffirmation): Promise<UserLikedAffirmation> {
+    // Check if already liked
+    const existing = await db.select().from(userLikedAffirmations)
+      .where(and(eq(userLikedAffirmations.userId, like.userId), eq(userLikedAffirmations.affirmationId, like.affirmationId)));
+    if (existing.length > 0) {
+      return existing[0];
+    }
     const [newLike] = await db.insert(userLikedAffirmations).values(like).returning();
     const all = await db.select().from(userLikedAffirmations);
     console.log('[DEBUG] After insert, all user_liked_affirmations:', all);

@@ -68,7 +68,7 @@ export default function AudioPage() {
 
   useEffect(() => {
     if (userId && currentTrack?.playlist?.id) {
-      apiRequest('POST', '/api/recent-plays', { userId, playlistId: currentTrack.playlist.id });
+      apiRequest('POST', '/api/recent-plays', { userId: parseInt(userId), playlistId: currentTrack.playlist.id });
     }
   }, [userId, currentTrack?.playlist?.id]);
 

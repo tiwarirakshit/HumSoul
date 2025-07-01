@@ -113,7 +113,7 @@ export default function Playlist() {
 
   // Add state to track liked affirmations
   const { data: likedAffirmationsResp } = useQuery<any>({
-    queryKey: ['/api/liked-affirmations', { userId }],
+    queryKey: [`/api/liked-affirmations?userId=${userId}`, { userId }],
     enabled: !!userId && !authLoading,
   });
   const likedAffirmations = likedAffirmationsResp?.data ?? [];
@@ -131,7 +131,7 @@ export default function Playlist() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/liked-affirmations'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/liked-affirmations?userId=${userId}`] });
     },
   });
   const unlikeMutation = useMutation({
@@ -140,12 +140,17 @@ export default function Playlist() {
       await fetch(`/api/liked-affirmations?userId=${encodeURIComponent(String(userId))}&affirmationId=${encodeURIComponent(String(affirmationId))}`, { method: 'DELETE' });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/liked-affirmations'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/liked-affirmations?userId=${userId}`] });
     },
   });
 
-  const isAffirmationLiked = (affirmationId: number) =>
-    Array.isArray(likedAffirmations) && likedAffirmations.some((a: any) => a?.id === affirmationId);
+  const isAffirmationLiked = (affirmationId: number) => {
+    const liked = Array.isArray(likedAffirmations) && likedAffirmations.some((a: any) =>
+      (typeof a.affirmationId !== "undefined" && a.affirmationId === affirmationId) ||
+      (typeof a.id !== "undefined" && a.id === affirmationId)
+    );
+    return liked;
+  };
 
   const handlePlayPlaylistFromIndex = (startIndex: number) => {
     if (!userId) {
@@ -310,6 +315,23 @@ export default function Playlist() {
 
   return (
     <div className="py-4 pb-28">
+      {/* Loader overlay when like/unlike is loading */}
+      {(likeMutation.isPending || unlikeMutation.isPending) && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(255,255,255,0.5)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+        </div>
+      )}
       {/* Test Sound Button */}
       <div className="mb-4">
         <button onClick={playTestSound} style={{padding: '8px 16px', background: '#eee', borderRadius: 4, fontWeight: 600}}>
@@ -523,7 +545,12 @@ export default function Playlist() {
                     }}
                     disabled={!userId}
                   >
-                    <Heart className={`h-5 w-5 ${isAffirmationLiked(affirmation.id) ? 'fill-primary text-primary' : ''}`} />
+                    {console.log('affirmation.id', affirmation.id, 'liked:', isAffirmationLiked(affirmation.id))}
+                    <Heart
+                      className={`h-5 w-5 ${isAffirmationLiked(affirmation.id) ? 'text-red-500' : 'text-gray-400'}`}
+                      fill={isAffirmationLiked(affirmation.id) ? 'currentColor' : 'none'}
+                      style={{ border: '1px solid #eee', background: 'transparent' }}
+                    />
                   </Button>
                 </div>
               </div>

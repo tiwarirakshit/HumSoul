@@ -7,13 +7,14 @@ import { formatDuration } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
 
 export default function Library() {
   console.log('Library component rendered');
   const { playPlaylist } = useAudio();
   const queryClient = useQueryClient();
   const { backendUser } = useAuth();
-  let userId = backendUser?.id;
+  let userId = backendUser?.id || localStorage.getItem('user')?.id;
   if (!userId) {
     try {
       const userStr = localStorage.getItem('user');
@@ -32,23 +33,24 @@ export default function Library() {
   
   console.log('Library userId used for API calls:', userId);
   
+  // Track active tab
+  const [activeTab, setActiveTab] = useState('favorites');
+  
   // Query favorites
-  const { data: favoritesResp } = useQuery({
+  const { data: favoritesResp, refetch: refetchFavorites } = useQuery({
     queryKey: ['/api/favorites', { userId }],
     queryFn: () => userId ? apiRequest('GET', `/api/favorites?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId,
   });
   const favorites = (favoritesResp as any)?.data ?? [];
-  const favoritesDebug = (favoritesResp as any)?.debug;
   
   // Query recent plays
-  const { data: recentPlaysResp } = useQuery({
+  const { data: recentPlaysResp, refetch: refetchRecent } = useQuery({
     queryKey: ['/api/recent-plays', { userId }],
     queryFn: () => userId ? apiRequest('GET', `/api/recent-plays?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId,
   });
   const recentPlays = (recentPlaysResp as any)?.data ?? [];
-  const recentPlaysDebug = (recentPlaysResp as any)?.debug;
   
   // Get category names for playlists
   const { data: categories } = useQuery({
@@ -60,13 +62,41 @@ export default function Library() {
     : new Map();
   
   // Query liked affirmations
-  const { data: likedAffirmationsRespRaw } = useQuery({
-    queryKey: ['/api/liked-affirmations', { userId }],
+  const { data: likedAffirmationsRespRaw, refetch: refetchLikedAffirmations } = useQuery({
+    queryKey: [`/api/liked-affirmations?userId=${userId}`, { userId }],
     enabled: !!userId,
   });
   const likedAffirmationsResp: any = likedAffirmationsRespRaw;
   const likedAffirmations = (likedAffirmationsResp as any)?.data ?? [];
-  const likedAffirmationsDebug = (likedAffirmationsResp as any)?.debug;
+  
+  // Fetch full details for each liked affirmation
+  const [likedAffirmationDetails, setLikedAffirmationDetails] = useState<any[]>([]);
+  const [loadingAffirmations, setLoadingAffirmations] = useState(false);
+
+  useEffect(() => {
+    if (!likedAffirmations || likedAffirmations.length === 0) {
+      setLikedAffirmationDetails([]);
+      return;
+    }
+    setLoadingAffirmations(true);
+    Promise.all(
+      likedAffirmations.map((a: any) =>
+        fetch(`/api/affirmations/${a.affirmationId || a.id}`)
+          .then(res => res.ok ? res.json() : null)
+          .catch(() => null)
+      )
+    ).then(results => {
+      setLikedAffirmationDetails(results.filter(Boolean));
+      setLoadingAffirmations(false);
+    });
+  }, [likedAffirmations]);
+  
+  // Refetch queries when tab is selected
+  useEffect(() => {
+    if (activeTab === 'favorites') refetchFavorites();
+    if (activeTab === 'recent') refetchRecent();
+    if (activeTab === 'liked-affirmations') refetchLikedAffirmations();
+  }, [activeTab]);
   
   console.log('Library userId:', userId);
   console.log('favoritesResp:', favoritesResp);
@@ -107,7 +137,7 @@ export default function Library() {
     <div className="py-4">
       <h1 className="text-2xl font-semibold mb-6">Your Library</h1>
       
-      <Tabs defaultValue="favorites">
+      <Tabs defaultValue="favorites" onValueChange={setActiveTab}>
         <TabsList className="w-full mb-6">
           <TabsTrigger value="favorites" className="flex-1">Favorites</TabsTrigger>
           <TabsTrigger value="recent" className="flex-1">Recent</TabsTrigger>
@@ -132,12 +162,6 @@ export default function Library() {
                         {categoryMap.get(playlist.categoryId) || 'General'} • {formatDuration(playlist.duration)}
                       </p>
                     </div>
-                    <button 
-                      className="ml-2 w-9 h-9 rounded-full bg-light dark:bg-dark-lighter flex items-center justify-center flex-shrink-0"
-                      onClick={(e) => handlePlay(playlist.id, e)}
-                    >
-                      <PlayCircle className="h-5 w-5 text-primary dark:text-primary-light" />
-                    </button>
                   </div>
                 </Link>
               ))}
@@ -155,11 +179,6 @@ export default function Library() {
                 </a>
               </Link>
             </div>
-          )}
-          {favoritesDebug && (
-            <pre className="text-xs bg-gray-100 dark:bg-dark-lighter p-2 rounded mb-2 overflow-x-auto">
-              Favorites Debug: {JSON.stringify(favoritesDebug, null, 2)}
-            </pre>
           )}
         </TabsContent>
         
@@ -186,12 +205,6 @@ export default function Library() {
                         </span>
                       </div>
                     </div>
-                    <button 
-                      className="ml-2 w-9 h-9 rounded-full bg-light dark:bg-dark-lighter flex items-center justify-center flex-shrink-0"
-                      onClick={(e) => handlePlay(play.playlist.id, e)}
-                    >
-                      <PlayCircle className="h-5 w-5 text-primary dark:text-primary-light" />
-                    </button>
                   </div>
                 </Link>
               ))}
@@ -210,17 +223,14 @@ export default function Library() {
               </Link>
             </div>
           )}
-          {recentPlaysDebug && (
-            <pre className="text-xs bg-gray-100 dark:bg-dark-lighter p-2 rounded mb-2 overflow-x-auto">
-              Recent Plays Debug: {JSON.stringify(recentPlaysDebug, null, 2)}
-            </pre>
-          )}
         </TabsContent>
         
         <TabsContent value="liked-affirmations">
-          {likedAffirmationsRespRaw ? (
+          {loadingAffirmations ? (
+            <div>Loading liked affirmations...</div>
+          ) : likedAffirmationDetails.length > 0 ? (
             <div className="space-y-3">
-              {likedAffirmations.map((affirmation: any) => (
+              {likedAffirmationDetails.map((affirmation: any) => (
                 <div key={affirmation.id} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">
                   <div className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0 bg-primary">
                     <Heart className="h-5 w-5 fill-white" />
@@ -242,11 +252,6 @@ export default function Library() {
                 Like affirmations to see them here
               </p>
             </div>
-          )}
-          {likedAffirmationsDebug && (
-            <pre className="text-xs bg-gray-100 dark:bg-dark-lighter p-2 rounded mb-2 overflow-x-auto">
-              Liked Affirmations Debug: {JSON.stringify(likedAffirmationsDebug, null, 2)}
-            </pre>
           )}
         </TabsContent>
       </Tabs>

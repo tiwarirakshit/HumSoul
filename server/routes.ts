@@ -673,7 +673,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   api.post("/recent-plays", async (req, res) => {
     try {
-      const recentPlayData = insertRecentPlaySchema.parse(req.body);
+      let { userId, playlistId } = req.body;
+      if (typeof userId !== 'number') {
+        userId = parseInt(userId);
+      }
+      const recentPlayData = insertRecentPlaySchema.parse({userId, playlistId});
       const recentPlay = await storage.addRecentPlay(recentPlayData);
       res.status(201).json(recentPlay);
     } catch (error) {
@@ -1098,6 +1102,19 @@ api.delete("/admin/users/:id", async (req, res) => {
     if (!userId || !affirmationId) return res.status(400).json({ message: "Missing userId or affirmationId" });
     const liked = await storage.isAffirmationLiked(userId, affirmationId);
     res.json({ liked });
+  });
+
+  // Get a single affirmation by ID
+  api.get("/affirmations/:id", async (req, res) => {
+    const affirmationId = parseInt(req.params.id);
+    if (isNaN(affirmationId)) {
+      return res.status(400).json({ message: "Invalid affirmation ID" });
+    }
+    const affirmation = await storage.getAffirmation(affirmationId);
+    if (!affirmation) {
+      return res.status(404).json({ message: "Affirmation not found" });
+    }
+    res.json(affirmation);
   });
 
   // Mount the API routes
