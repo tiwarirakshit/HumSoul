@@ -723,31 +723,31 @@ export class MemStorage implements IStorage {
     const affirmations: InsertAffirmation[] = [
       {
         text: "I am confident and capable in everything I do",
-        audioUrl: "/api/audio/affirmations/confidence-1.mp3",
+        audioUrl: "/audio/affirmations/confidence-1.mp3",
         duration: 5,
         playlistId: 1
       },
       {
         text: "I believe in myself and my abilities",
-        audioUrl: "/api/audio/affirmations/confidence-2.mp3",
+        audioUrl: "/audio/affirmations/confidence-2.mp3",
         duration: 4,
         playlistId: 1
       },
       {
         text: "I am worthy of success and happiness",
-        audioUrl: "/api/audio/affirmations/confidence-3.mp3",
+        audioUrl: "/audio/affirmations/confidence-3.mp3",
         duration: 5,
         playlistId: 1
       },
       {
         text: "I am becoming stronger every day",
-        audioUrl: "/api/audio/affirmations/confidence-4.mp3",
+        audioUrl: "/audio/affirmations/confidence-4.mp3",
         duration: 4,
         playlistId: 1
       },
       {
         text: "I am in control of my thoughts and emotions",
-        audioUrl: "/api/audio/affirmations/confidence-5.mp3",
+        audioUrl: "/audio/affirmations/confidence-5.mp3",
         duration: 6,
         playlistId: 1
       }
@@ -759,27 +759,27 @@ export class MemStorage implements IStorage {
     const backgroundMusics: InsertBackgroundMusic[] = [
       {
         name: "Gentle Piano",
-        audioUrl: "/api/audio/background/gentle-piano.mp3",
+        audioUrl: "/audio/background/gentle-piano.mp3",
         category: "Relax"
       },
       {
         name: "Ocean Waves",
-        audioUrl: "/api/audio/background/ocean-waves.mp3",
+        audioUrl: "/audio/background/ocean-waves.mp3",
         category: "Nature"
       },
       {
         name: "Meditation Flute",
-        audioUrl: "/api/audio/background/meditation-flute.mp3",
+        audioUrl: "/audio/background/meditation-flute.mp3",
         category: "Focus"
       },
       {
         name: "Night Ambience",
-        audioUrl: "/api/audio/background/night-ambience.mp3",
+        audioUrl: "/audio/background/night-ambience.mp3",
         category: "Sleep"
       },
       {
         name: "Binaural Focus",
-        audioUrl: "/api/audio/background/binaural-focus.mp3",
+        audioUrl: "/audio/background/binaural-focus.mp3",
         category: "Binaural Beats"
       }
     ];
@@ -1314,13 +1314,13 @@ export class DatabaseStorage implements IStorage {
     const affirmationData: InsertAffirmation[] = [
       {
         text: "I am confident and capable in everything I do",
-        audioUrl: "/api/audio/affirmations/confidence-1.mp3",
+        audioUrl: "/audio/affirmations/confidence-1.mp3",
         duration: 5,
         playlistId: 1
       },
       {
         text: "I believe in myself and my abilities",
-        audioUrl: "/api/audio/affirmations/confidence-2.mp3",
+        audioUrl: "/audio/affirmations/confidence-2.mp3",
         duration: 4,
         playlistId: 1
       },
@@ -1333,12 +1333,12 @@ export class DatabaseStorage implements IStorage {
     const musicData: InsertBackgroundMusic[] = [
       {
         name: "Gentle Piano",
-        audioUrl: "/api/audio/background/gentle-piano.mp3",
+        audioUrl: "/audio/background/gentle-piano.mp3",
         category: "Relax"
       },
       {
         name: "Ocean Waves",
-        audioUrl: "/api/audio/background/ocean-waves.mp3",
+        audioUrl: "/audio/background/ocean-waves.mp3",
         category: "Nature"
       },
       // Add more background music as needed...
