@@ -453,6 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? req.body.text
             : req.file.originalname.split(".")[0],
         });
+        console.log("✅ File saved at:", req.file?.path);
 
         res.status(201).json(affirmation);
       } catch (error) {
