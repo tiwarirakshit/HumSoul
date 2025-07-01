@@ -17,6 +17,7 @@ import { text } from "stream/consumers";
 const audioStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
     const uploadDir = path.join(process.cwd(), "uploads", "audio");
+    console.log("📁 Saving audio file to:", uploadDir); // Add this line
     try {
       await fs.mkdir(uploadDir, { recursive: true });
       cb(null, uploadDir);
@@ -25,12 +26,12 @@ const audioStorage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    // Generate unique filename with timestamp
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const extension = path.extname(file.originalname);
     cb(null, `${file.fieldname}-${uniqueSuffix}${extension}`);
   },
 });
+
 
 const backgroundMusicStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
