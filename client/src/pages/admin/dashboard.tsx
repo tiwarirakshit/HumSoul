@@ -35,6 +35,43 @@ interface DashboardStats {
   playsGrowthPercent?: number;
 }
 
+interface PieLabelProps {
+  name: string;
+  percent: number;
+  cx: number;
+  cy: number;
+  midAngle: number;
+  outerRadius: number;
+  index: number;
+}
+
+// Responsive Pie label for better mobile visibility
+const renderPieLabel = ({ name, percent, cx, cy, midAngle, outerRadius, index }: PieLabelProps) => {
+  const RADIAN = Math.PI / 180;
+  const isXs = window.innerWidth < 400;
+  const isSm = window.innerWidth < 640;
+  // Position label outside the pie
+  const radius = outerRadius + (isXs ? 10 : isSm ? 16 : 24);
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  let labelText = `${name}: ${(percent * 100).toFixed(0)}%`;
+  if (isXs) labelText = `${name}`;
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#222"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={isXs ? 10 : isSm ? 12 : 16}
+      fontWeight={isXs ? "normal" : "bold"}
+      style={{ pointerEvents: 'none' }}
+    >
+      {labelText}
+    </text>
+  );
+};
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
@@ -188,7 +225,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Listening Time (Minutes)</CardTitle>
             </CardHeader>
@@ -205,7 +242,7 @@ export default function AdminDashboard() {
                 </ResponsiveContainer>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
           
           <Card>
             <CardHeader>
@@ -220,8 +257,8 @@ export default function AdminDashboard() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
+                      label={renderPieLabel}
+                      outerRadius={window.innerWidth < 400 ? 36 : window.innerWidth < 640 ? 48 : 100}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -249,8 +286,8 @@ export default function AdminDashboard() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
+                      label={renderPieLabel}
+                      outerRadius={window.innerWidth < 400 ? 36 : window.innerWidth < 640 ? 48 : 100}
                       fill="#8884d8"
                       dataKey="value"
                     >
