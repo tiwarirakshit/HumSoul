@@ -28,10 +28,21 @@ export default function RecentPlaysSection() {
   }
   
   // Query recent plays
-  const { data: recentPlays, isLoading } = useQuery({
-    queryKey: ['/api/recent-plays', { userId }],
+  const { data: recentPlaysRaw, isLoading } = useQuery({
+    queryKey: [`/api/recent-plays?userId=${userId}`, { userId }],
     enabled: !!userId && !authLoading,
   });
+  const recentPlays = Array.isArray((recentPlaysRaw as any)?.data)
+    ? (recentPlaysRaw as any).data
+    : Array.isArray(recentPlaysRaw)
+      ? recentPlaysRaw as any[]
+      : [];
+  
+  // Move this hook to the top level
+  const { data: categoriesRaw } = useQuery({
+    queryKey: ['/api/categories'],
+  });
+  const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
   
   const queryClient = useQueryClient();
   
@@ -105,11 +116,7 @@ export default function RecentPlaysSection() {
   }
   
   // Get category names for playlists
-  const { data: categories } = useQuery({
-    queryKey: ['/api/categories'],
-  });
-  
-  const categoryMap = categories
+  const categoryMap = categories.length
     ? new Map(categories.map((c: any) => [c.id, c.name]))
     : new Map();
   
@@ -121,7 +128,7 @@ export default function RecentPlaysSection() {
       </div>
       
       <div className="space-y-3">
-        {recentPlays?.data?.slice(0, 3).map((play: any) => (
+        {recentPlays?.slice(0, 3).map((play: any) => (
           <Link key={play.playlist.id} href={`/playlist/${play.playlist.id}`}>
             <div className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
               <div 
