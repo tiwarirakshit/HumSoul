@@ -177,20 +177,28 @@ export function AudioProvider({ children }: AudioProviderProps) {
     if (audioOpLock.current) return;
     audioOpLock.current = true;
     setTimeout(() => { audioOpLock.current = false; }, 400);
+  
     if (!affirmation.audioUrl) {
-      toast({ title: "Audio not available", description: "This affirmation does not have a valid audio file.", variant: "destructive" });
+      toast({
+        title: "Audio not available",
+        description: "This affirmation does not have a valid audio file.",
+        variant: "destructive"
+      });
       return;
     }
+  
+    const fullAudioUrl = `https://mpforestvillage.in${affirmation.audioUrl}`;
+  
     console.log("🎵 Loading affirmation:", affirmation);
-    console.log("🎵 Audio URL:", affirmation.audioUrl);
-
+    console.log("🎵 Full Audio URL:", fullAudioUrl);
+  
     if (affirmationSoundRef.current) {
       affirmationSoundRef.current.stop();
       affirmationSoundRef.current.unload();
     }
-
+  
     affirmationSoundRef.current = new Howl({
-      src: [affirmation.audioUrl],
+      src: [fullAudioUrl],
       html5: true,
       volume: volume,
       onend: handleAffirmationEnd,
@@ -201,12 +209,11 @@ export function AudioProvider({ children }: AudioProviderProps) {
           setDuration(soundDuration);
           setCurrentTime(0);
           setProgress(0);
-          
-          // Only start playing if isPlaying is true
+  
           if (isPlaying) {
             console.log("▶️ Starting playback after load");
             affirmationSoundRef.current.play();
-            // Start background music if available
+  
             if (backgroundSoundRef.current && backgroundMusic) {
               backgroundSoundRef.current.play();
             }
@@ -215,19 +222,26 @@ export function AudioProvider({ children }: AudioProviderProps) {
       },
       onloaderror: (id, error) => {
         console.error('❌ Failed to load audio:', error);
-        console.error('❌ Audio URL:', affirmation.audioUrl);
-        toast({ title: "Failed to load audio", description: `Could not load audio for this affirmation.`, variant: "destructive" });
+        toast({
+          title: "Failed to load audio",
+          description: `Could not load audio for this affirmation.`,
+          variant: "destructive"
+        });
       },
       onplayerror: (id, error) => {
         console.error('❌ Failed to play audio:', error);
-        toast({ title: "Failed to play audio", description: `Could not play audio for this affirmation.`, variant: "destructive" });
+        toast({
+          title: "Failed to play audio",
+          description: `Could not play audio for this affirmation.`,
+          variant: "destructive"
+        });
       }
     });
-
-    // Load the sound
+  
     console.log("🔄 Loading sound...");
     affirmationSoundRef.current.load();
   };
+  
 
   // Handle affirmation end
   const handleAffirmationEnd = () => {
