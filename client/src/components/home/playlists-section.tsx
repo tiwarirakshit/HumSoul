@@ -89,7 +89,7 @@ export default function PlaylistsSection() {
         
         <div className="grid grid-cols-2 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-white dark:bg-dark-light rounded-lg overflow-hidden shadow-sm">
+            <div key={i} className="bg-card rounded-lg overflow-hidden shadow-sm">
               <Skeleton className="h-36 w-full" />
               <div className="p-3">
                 <Skeleton className="h-5 w-3/4 mb-2" />
@@ -110,7 +110,7 @@ export default function PlaylistsSection() {
           <span className="text-primary dark:text-primary-light text-sm font-medium">View All</span>
         </div>
         
-        <p className="text-center text-gray-500 dark:text-gray-400">No playlists available</p>
+        <p className="text-center text-muted-foreground">No playlists available</p>
       </section>
     );
   }
@@ -127,7 +127,7 @@ export default function PlaylistsSection() {
       <div className="grid grid-cols-2 gap-4">
         {Array.isArray(playlists) && playlists.slice(0, 4).map((playlist: any) => (
           <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
-            <div className="bg-white dark:bg-dark-light rounded-lg overflow-hidden shadow-sm cursor-pointer">
+            <div className="bg-card rounded-lg overflow-hidden shadow-sm cursor-pointer">
               <div 
                 className="h-36 relative overflow-hidden"
                 style={{
@@ -135,7 +135,7 @@ export default function PlaylistsSection() {
                 }}
               >
                 <div className="absolute inset-0 flex items-center justify-center opacity-25">
-                  <i className={`bx bx-${playlist.icon} text-7xl text-white`}></i>
+                  <i className={`bx bx-${playlist.icon} text-7xl text-primary-foreground`}></i>
                 </div>
               </div>
               <div className="p-3">
