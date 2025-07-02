@@ -86,7 +86,7 @@ export default function RecentPlaysSection() {
         
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">
+            <div key={i} className="bg-card rounded-lg p-3 flex items-center shadow-sm">
               <Skeleton className="w-12 h-12 rounded-md flex-shrink-0" />
               <div className="ml-3 flex-1">
                 <Skeleton className="h-4 w-3/4 mb-2" />
@@ -108,7 +108,7 @@ export default function RecentPlaysSection() {
           <span className="text-primary dark:text-primary-light text-sm font-medium">See All</span>
         </div>
         
-        <p className="text-center text-gray-500 dark:text-gray-400 my-8">
+        <p className="text-center text-muted-foreground my-8">
           No recent plays yet. Start listening to affirmations!
         </p>
       </section>
@@ -130,16 +130,15 @@ export default function RecentPlaysSection() {
       <div className="space-y-3">
         {recentPlays?.slice(0, 3).map((play: any) => (
           <Link key={play.playlist.id} href={`/playlist/${play.playlist.id}`}>
-            <div className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
+            <div className="bg-card rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
               <div 
-                className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0"
-                style={{ backgroundColor: play.playlist.coverGradientStart }}
+                className="w-12 h-12 rounded-md flex items-center justify-center text-primary-foreground flex-shrink-0 bg-primary"
               >
                 <Headphones className="h-5 w-5" />
               </div>
               <div className="ml-3 flex-1 min-w-0">
                 <h3 className="font-medium text-sm line-clamp-1">{play.playlist.title}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {categoryMap.get(play.playlist.categoryId) || 'General'}
                 </p>
               </div>
