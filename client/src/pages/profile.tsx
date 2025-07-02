@@ -127,7 +127,7 @@ export default function Profile() {
           ) : user?.avatarUrl ? (
             <AvatarImage src={user.avatarUrl} alt={user.name || user.username} />
           ) : (
-            <AvatarFallback className="bg-primary text-white text-2xl">
+            <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
               {authUser?.displayName?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
             </AvatarFallback>
           )}
@@ -135,7 +135,7 @@ export default function Profile() {
         
         <div className="ml-4">
           <h1 className="text-2xl font-semibold">{authUser?.displayName || user?.name || user?.username}</h1>
-          <p className="text-gray-500">{authUser?.email || user?.email || "@" + user?.username}</p>
+          <p className="text-muted-foreground">{authUser?.email || user?.email || "@" + user?.username}</p>
           {authUser?.emailVerified && (
             <Badge variant="outline" className="mt-1 bg-green-50 text-green-700 border-green-200">
               <span className="mr-1">✓</span> Verified
@@ -146,33 +146,33 @@ export default function Profile() {
       
       {/* Stats Cards */}
       {/* <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-3 shadow-sm text-center">
+        <div className="bg-card rounded-xl p-3 shadow-sm text-center">
           <div className="flex justify-center mb-1">
             <Headphones className="text-primary h-6 w-6" />
           </div>
           <p className="text-xl font-semibold">{recentPlays?.length || 0}</p>
-          <p className="text-xs text-gray-500">Listened</p>
+          <p className="text-xs text-muted-foreground">Listened</p>
         </div>
         
-        <div className="bg-white rounded-xl p-3 shadow-sm text-center">
+        <div className="bg-card rounded-xl p-3 shadow-sm text-center">
           <div className="flex justify-center mb-1">
             <Heart className="text-primary h-6 w-6" />
           </div>
           <p className="text-xl font-semibold">{favorites?.length || 0}</p>
-          <p className="text-xs text-gray-500">Favorites</p>
+          <p className="text-xs text-muted-foreground">Favorites</p>
         </div>
         
-        <div className="bg-white rounded-xl p-3 shadow-sm text-center">
+        <div className="bg-card rounded-xl p-3 shadow-sm text-center">
           <div className="flex justify-center mb-1">
             <Clock className="text-primary h-6 w-6" />
           </div>
           <p className="text-xl font-semibold">0</p>
-          <p className="text-xs text-gray-500">Hours</p>
+          <p className="text-xs text-muted-foreground">Hours</p>
         </div>
       </div> */}
       
       {/* Settings */}
-      <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
+      <div className="bg-card rounded-xl p-4 shadow-sm mb-6">
         <h2 className="text-lg font-medium mb-4 flex items-center">
           <Settings className="h-5 w-5 mr-2" />
           Settings
@@ -204,7 +204,7 @@ export default function Profile() {
               <Download className="h-5 w-5 mr-3 text-primary" />
               <div>
                 <Label>Offline Mode</Label>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Download affirmations for offline listening
                 </p>
               </div>
@@ -215,7 +215,7 @@ export default function Profile() {
       </div>
       
       {/* Subscription */}
-      <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
+      <div className="bg-card rounded-xl p-4 shadow-sm mb-6">
         <h2 className="text-lg font-medium mb-4 flex items-center">
           <Crown className="h-5 w-5 mr-2" />
           Subscription
@@ -225,57 +225,57 @@ export default function Profile() {
           <div className="flex justify-between items-center">
             <div>
               <h3 className="font-semibold">
-                {authUser?.isSubscribed ? "Premium" : "Free Plan"}
+                {authUser && (authUser as any)?.isSubscribed ? "Premium" : "Free Plan"}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {authUser?.isSubscribed 
-                  ? "You have access to all premium features" 
+                {authUser && (authUser as any)?.isSubscribed
+                  ? "You have access to all premium features"
                   : "Upgrade to unlock all premium features"}
               </p>
             </div>
-            {authUser?.isSubscribed && (
-              <Badge className="bg-primary text-white">Active</Badge>
+            {authUser && (authUser as any)?.isSubscribed && (
+              <Badge className="bg-primary text-primary-foreground">Active</Badge>
             )}
           </div>
-
-          {authUser?.isSubscribed && (
-            <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <CreditCard className="h-4 w-4" />
-                <span>Plan:</span>
-              </div>
-              <span className="font-medium">
-                {authUser?.subscriptionPlan === "monthly" ? "Monthly" : "Yearly"}
-              </span>
-              
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>Renews:</span>
-              </div>
-              <span className="font-medium">
-                {authUser?.subscriptionEndDate 
-                  ? new Date(authUser.subscriptionEndDate).toLocaleDateString() 
-                  : "N/A"}
-              </span>
-            </div>
-          )}
         </div>
         
+        {authUser && (authUser as any)?.isSubscribed && (
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <CreditCard className="h-4 w-4" />
+              <span>Plan:</span>
+            </div>
+            <span className="font-medium">
+              {(authUser as any)?.subscriptionPlan === "monthly" ? "Monthly" : "Yearly"}
+            </span>
+            
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span>Renews:</span>
+            </div>
+            <span className="font-medium">
+              {(authUser as any)?.subscriptionEndDate 
+                ? new Date((authUser as any).subscriptionEndDate).toLocaleDateString() 
+                : "N/A"}
+            </span>
+          </div>
+        )}
+        
         <Button 
-          variant={authUser?.isSubscribed ? "outline" : "default"} 
+          variant={authUser && (authUser as any)?.isSubscribed ? "outline" : "default"} 
           className="w-full justify-between"
           onClick={goToSubscription}
         >
           <div className="flex items-center">
             <CreditCard className="h-5 w-5 mr-3 text-primary" />
-            {authUser?.isSubscribed ? "Manage Subscription" : "Upgrade to Premium"}
+            {authUser && (authUser as any)?.isSubscribed ? "Manage Subscription" : "Upgrade to Premium"}
           </div>
           <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
       
       {/* Account */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
+      <div className="bg-card rounded-xl p-4 shadow-sm">
         <h2 className="text-lg font-medium mb-4 flex items-center">
           <User className="h-5 w-5 mr-2" />
           Account
