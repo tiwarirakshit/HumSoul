@@ -112,7 +112,7 @@ export default function Discover() {
         <h2 className="text-lg font-medium mb-3">Categories</h2>
         <div className="flex flex-wrap gap-2">
           <Link href="/discover">
-            <a className={`px-4 py-2 rounded-full text-sm font-medium ${!categoryId ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-lighter'}`}>
+            <a className={`px-4 py-2 rounded-full text-sm font-medium ${!categoryId ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
               All
             </a>
           </Link>
@@ -121,7 +121,7 @@ export default function Discover() {
             <Link key={category.id} href={`/discover?category=${category.id}`}>
               <a 
                 className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  isCategoryActive(category.id) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-lighter'
+                  isCategoryActive(category.id) ? 'bg-primary text-primary-foreground' : 'bg-muted'
                 }`}
               >
                 {category.name}
@@ -140,7 +140,7 @@ export default function Discover() {
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="bg-white dark:bg-dark-light rounded-lg overflow-hidden shadow-sm">
+              <div key={i} className="bg-card rounded-lg overflow-hidden shadow-sm">
                 <Skeleton className="h-36 w-full" />
                 <div className="p-3">
                   <Skeleton className="h-5 w-3/4 mb-2" />
@@ -151,13 +151,13 @@ export default function Discover() {
           </div>
         ) : !safePlaylists || safePlaylists.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-gray-500 dark:text-gray-400">No playlists found</p>
+            <p className="text-muted-foreground">No playlists found</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {safePlaylists.map((playlist: any) => (
               <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
-                <div className="bg-white dark:bg-dark-light rounded-lg overflow-hidden shadow-sm cursor-pointer">
+                <div className="bg-card rounded-lg overflow-hidden shadow-sm cursor-pointer">
                   <div 
                     className="h-36 relative overflow-hidden"
                     style={{
@@ -165,7 +165,7 @@ export default function Discover() {
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center opacity-25">
-                      <i className={`bx bx-${playlist.icon} text-7xl text-white`}></i>
+                      <i className={`bx bx-${playlist.icon} text-7xl text-primary-foreground`}></i>
                     </div>
                   </div>
                   <div className="p-3">
