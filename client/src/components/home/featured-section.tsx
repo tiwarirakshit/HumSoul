@@ -106,7 +106,7 @@ export default function FeaturedSection() {
           <span className="text-primary dark:text-primary-light text-sm font-medium">See All</span>
         </div>
 
-        <div className="rounded-xl bg-gray-100 dark:bg-dark-light p-6 text-center">
+        <div className="rounded-xl bg-muted p-6 text-center">
           <p>No featured playlist available</p>
         </div>
       </section>
@@ -124,24 +124,24 @@ export default function FeaturedSection() {
 
       <Link href={`/playlist/${featuredPlaylist.id}`}>
         <div
-          className="relative overflow-hidden rounded-xl p-6 text-white shadow-lg cursor-pointer"
+          className="relative overflow-hidden rounded-xl p-6 text-foreground shadow-lg cursor-pointer"
           style={{
             background: `linear-gradient(to right, ${featuredPlaylist.coverGradientStart}, ${featuredPlaylist.coverGradientEnd})`
           }}
         >
           <div className="relative z-10">
-            <span className="bg-white bg-opacity-25 text-white text-xs px-3 py-1 rounded-full font-medium">
+            <span className="bg-card bg-opacity-25 text-foreground text-xs px-3 py-1 rounded-full font-medium">
               Featured
             </span>
             <h3 className="text-2xl font-semibold mt-3">{featuredPlaylist.title}</h3>
-            <p className="text-white text-opacity-90 mt-1">{featuredPlaylist.description}</p>
+            <p className="text-foreground/90 mt-1">{featuredPlaylist.description}</p>
 
             <div className="flex items-center mt-4 space-x-3">
               <Button
                 variant="default"
                 className={`font-medium transition-all duration-200 ${isPlaying
-                  ? "bg-primary text-white hover:bg-primary/90"
-                  : "bg-white text-primary hover:bg-primary hover:text-white"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-card text-primary hover:bg-primary hover:text-primary-foreground"
                   }`}
                 disabled={isPlaying}
                 onClick={handlePlayFeatured}
@@ -162,17 +162,17 @@ export default function FeaturedSection() {
               <Button
                 variant="outline"
                 size="icon"
-                className="bg-white bg-opacity-25 border-none text-white hover:bg-white hover:bg-opacity-40"
+                className="bg-card bg-opacity-25 border-none text-foreground hover:bg-card hover:bg-opacity-40"
                 onClick={toggleFavorite}
               >
-                <Heart className={`h-5 w-5 ${isFavorited ? 'fill-white' : ''}`} />
+                <Heart className={`h-5 w-5 ${isFavorited ? 'fill-foreground' : ''}`} />
               </Button>
             </div>
           </div>
 
           {/* Decorative elements */}
-          <div className="absolute top-1/2 right-4 w-32 h-32 rounded-full bg-white opacity-10"></div>
-          <div className="absolute bottom-0 right-24 w-20 h-20 rounded-full bg-white opacity-10"></div>
+          <div className="absolute top-1/2 right-4 w-32 h-32 rounded-full bg-card opacity-10"></div>
+          <div className="absolute bottom-0 right-24 w-20 h-20 rounded-full bg-card opacity-10"></div>
         </div>
       </Link>
     </section>
