@@ -65,7 +65,7 @@ export default function Login() {
     setShowEmailForm(true);
   };
 
-  const handleEmailSubmit = async (e) => {
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // Don't allow email login if admin is already logged in
@@ -82,13 +82,13 @@ export default function Login() {
       // The redirect will be handled by the useEffect above
     } catch (error) {
       console.error("Email login failed:", error);
-      setLoginError(error.message || 'Login failed. Please check your credentials.');
+      setLoginError((error as any).message || 'Login failed. Please check your credentials.');
     } finally {
       setLoginLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -96,12 +96,12 @@ export default function Login() {
   };
 
   // Show loading state while checking auth
-  if (loading) {
+  if (loginLoading || loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4"></div>
-          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -110,9 +110,9 @@ export default function Login() {
   // Don't render login page if already authenticated
   if (user) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <div className="text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-muted-foreground mb-4">
             {isAdmin ? "Redirecting to admin panel..." : "Redirecting..."}
           </p>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto"></div>
@@ -122,7 +122,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-8">
         {/* Logo Animation */}
         <motion.div
@@ -177,7 +177,7 @@ export default function Login() {
             <h1 className="text-3xl font-bold tracking-wide bg-gradient-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent mb-2">
               Welcome to HumSoul
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-muted-foreground">
               Your journey to inner peace begins here
             </p>
           </motion.div>
@@ -195,13 +195,13 @@ export default function Login() {
               <Button
                 onClick={handleGoogleLogin}
                 variant="outline"
-                className="w-full h-14 relative overflow-hidden group bg-white dark:bg-black"
-                disabled={user && isAdmin}
+                className="w-full h-14 relative overflow-hidden group bg-background"
+                disabled={!!user && !!isAdmin}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative flex items-center justify-center gap-3">
                   <FcGoogle className="w-6 h-6" />
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                  <span className="text-foreground font-medium">
                     Continue with Google
                   </span>
                 </div>
@@ -211,13 +211,13 @@ export default function Login() {
               <Button
                 onClick={handleEmailLogin}
                 variant="outline"
-                className="w-full h-14 relative overflow-hidden group bg-white dark:bg-black"
-                disabled={user && isAdmin}
+                className="w-full h-14 relative overflow-hidden group bg-background"
+                disabled={!!user && !!isAdmin}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative flex items-center justify-center gap-3">
                   <FcVoicemail className="w-6 h-6" />
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                  <span className="text-foreground font-medium">
                     Login with Admin Email and Password
                   </span>
                 </div>
@@ -233,24 +233,24 @@ export default function Login() {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
+                <Label htmlFor="email">
                   Admin Email
                 </Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
+                  required
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Enter your admin email"
-                  className="h-12 bg-white dark:bg-black border-gray-300 dark:border-gray-600"
-                  required
-                  disabled={user && isAdmin}
+                  className="h-12 bg-background border-gray-300 dark:border-gray-600"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
+                <Label htmlFor="password">
                   Password
                 </Label>
                 <div className="relative">
@@ -261,15 +261,15 @@ export default function Login() {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Enter your password"
-                    className="h-12 bg-white dark:bg-black border-gray-300 dark:border-gray-600 pr-12"
+                    className="h-12 bg-background border-gray-300 dark:border-gray-600 pr-12"
                     required
-                    disabled={user && isAdmin}
+                    disabled={!!user && !!isAdmin}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    disabled={user && isAdmin}
+                    disabled={!!user && !!isAdmin}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -289,7 +289,7 @@ export default function Login() {
               <div className="space-y-3">
                 <Button
                   type="submit"
-                  disabled={loginLoading || (user && isAdmin)}
+                  disabled={loginLoading || (!!user && !!isAdmin)}
                   className="w-full h-12 bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600 text-white"
                 >
                   {loginLoading ? "Signing in..." : "Sign In"}
@@ -300,7 +300,7 @@ export default function Login() {
                   variant="ghost"
                   onClick={() => setShowEmailForm(false)}
                   className="w-full text-gray-600 dark:text-gray-400"
-                  disabled={user && isAdmin}
+                  disabled={!!user && !!isAdmin}
                 >
                   Back to other options
                 </Button>
