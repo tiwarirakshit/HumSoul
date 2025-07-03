@@ -540,7 +540,7 @@ export default function Playlist() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm line-clamp-2">
+                  <p className="font-medium dark:text-black text-sm line-clamp-2">
                     {affirmation.text ?? affirmation.title}
                     {!affirmation.audioUrl && (
                       <span className="ml-2 text-xs text-red-500">(No audio)</span>
