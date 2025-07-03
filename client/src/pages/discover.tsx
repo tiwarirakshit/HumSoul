@@ -12,6 +12,7 @@ export default function Discover() {
   const [location] = useLocation();
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [searchQuery, setSearchQuery] = useState<string>("");
   
   const { backendUser, loading: authLoading } = useAuth();
   let userId = backendUser?.id;
@@ -22,11 +23,13 @@ export default function Discover() {
     } catch {}
   }
   
-  // Extract category ID from URL if present
+  // Extract category ID and search query from URL if present
   useEffect(() => {
     const params = new URLSearchParams(location.split('?')[1] || '');
     const catId = params.get('category');
     setCategoryId(catId ? parseInt(catId) : null);
+    const search = params.get('search') || '';
+    setSearchQuery(search);
   }, [location]);
   
   // Query categories
@@ -103,16 +106,24 @@ export default function Discover() {
   const safeCategories = Array.isArray(categories) ? categories : [];
   const safePlaylists = Array.isArray(playlists) ? playlists : [];
   
+  // Filter playlists by search query if present
+  const filteredPlaylists = searchQuery
+    ? safePlaylists.filter((playlist: any) =>
+        playlist.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        playlist.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : safePlaylists;
+  
   return (
-    <div className="py-4">
+    <div className="min-h-screen bg-background text-foreground py-4">
       <h1 className="text-2xl font-semibold mb-6">Discover</h1>
       
       {/* Category filter */}
       <div className="mb-6">
         <h2 className="text-lg font-medium mb-3">Categories</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3 md:gap-2">
           <Link href="/discover">
-            <a className={`px-4 py-2 rounded-full text-sm font-medium ${!categoryId ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-lighter'}`}>
+            <a className={`px-4 py-2 rounded-full text-sm font-medium ${!categoryId ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground dark:bg-muted dark:text-foreground'}`}>
               All
             </a>
           </Link>
@@ -121,7 +132,7 @@ export default function Discover() {
             <Link key={category.id} href={`/discover?category=${category.id}`}>
               <a 
                 className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  isCategoryActive(category.id) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-lighter'
+                  isCategoryActive(category.id) ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground dark:bg-muted dark:text-foreground'
                 }`}
               >
                 {category.name}
@@ -140,7 +151,7 @@ export default function Discover() {
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="bg-white dark:bg-dark-light rounded-lg overflow-hidden shadow-sm">
+              <div key={i} className="bg-card text-card-foreground rounded-lg overflow-hidden shadow-sm">
                 <Skeleton className="h-36 w-full" />
                 <div className="p-3">
                   <Skeleton className="h-5 w-3/4 mb-2" />
@@ -149,15 +160,15 @@ export default function Discover() {
               </div>
             ))}
           </div>
-        ) : !safePlaylists || safePlaylists.length === 0 ? (
+        ) : !filteredPlaylists || filteredPlaylists.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-gray-500 dark:text-gray-400">No playlists found</p>
+            <p className="text-muted-foreground">No playlists found{searchQuery ? ` for "${searchQuery}"` : ''}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {safePlaylists.map((playlist: any) => (
+            {filteredPlaylists.map((playlist: any) => (
               <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
-                <div className="bg-white dark:bg-dark-light rounded-lg overflow-hidden shadow-sm cursor-pointer">
+                <div className="bg-card text-card-foreground rounded-lg overflow-hidden shadow-sm cursor-pointer">
                   <div 
                     className="h-36 relative overflow-hidden"
                     style={{

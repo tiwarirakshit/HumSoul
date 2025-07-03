@@ -12,10 +12,11 @@ import { Moon, Sun, Search, LogOut } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useRef, useEffect } from "react";
 
 export default function Header() {
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { user: authUser, logout } = useAuth();
+  const { user: authUser, logout, backendUser } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
@@ -30,6 +31,35 @@ export default function Header() {
     queryKey: ['/api/users/1'],
   });
   
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Focus input when search opens
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      setLocation(`/discover?search=${encodeURIComponent(searchValue.trim())}`);
+      setSearchOpen(false);
+      setSearchValue("");
+    }
+  };
+
+  // Close search on Escape
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchOpen(false);
+    };
+    if (searchOpen) window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [searchOpen]);
+
   const handleSignOut = async () => {
     try {
       await logout();
@@ -52,10 +82,13 @@ export default function Header() {
   return (
     <header className="px-4 pt-6 pb-2 flex items-center justify-between">
       <div className="flex items-center">
-        <Link href="/">
-          <h1 className="text-2xl font-semibold text-primary dark:text-primary-light cursor-pointer">
-            HumSoul
-          </h1>
+        <Link href="/" className="flex items-center gap-3">
+          <img
+            src="/images/Logo.jpg"
+            alt="HumSoul Logo"
+            className="h-8 w-8 rounded-full object-cover"
+          />
+
         </Link>
       </div>
       <div className="flex items-center space-x-3">
@@ -76,6 +109,7 @@ export default function Header() {
           variant="outline" 
           size="icon" 
           className="rounded-full bg-light dark:bg-dark-light"
+          onClick={() => setSearchOpen(true)}
         >
           <Search className="h-[1.2rem] w-[1.2rem]" />
         </Button>
@@ -85,11 +119,13 @@ export default function Header() {
             <Avatar className="h-9 w-9 cursor-pointer">
               {authUser?.photoURL ? (
                 <AvatarImage src={authUser.photoURL} alt={authUser.displayName || 'User'} />
+              ) : backendUser?.avatarUrl ? (
+                <AvatarImage src={backendUser.avatarUrl} alt={backendUser.name || backendUser.username || 'User'} />
               ) : user?.avatarUrl ? (
                 <AvatarImage src={user.avatarUrl} alt={user?.name || user?.username || 'User'} />
               ) : (
                 <AvatarFallback className="bg-primary text-white">
-                  {authUser?.displayName?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
+                  {authUser?.displayName?.[0] || backendUser?.name?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
                 </AvatarFallback>
               )}
             </Avatar>
@@ -107,6 +143,27 @@ export default function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {/* Search Overlay */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/30" onClick={() => setSearchOpen(false)}>
+          <form
+            className="mt-24 bg-white dark:bg-dark-light rounded-xl shadow-lg p-4 flex items-center gap-2 w-full max-w-md mx-auto"
+            style={{ zIndex: 100 }}
+            onClick={e => e.stopPropagation()}
+            onSubmit={handleSearchSubmit}
+          >
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchValue}
+              onChange={e => setSearchValue(e.target.value)}
+              placeholder="Search playlists, categories..."
+              className="flex-1 px-4 py-2 rounded border border-gray-300 dark:border-gray-700 bg-background dark:bg-dark-light text-sm focus:outline-none"
+            />
+            <Button type="submit" variant="default">Search</Button>
+          </form>
+        </div>
+      )}
     </header>
   );
 }

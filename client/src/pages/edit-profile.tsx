@@ -2,26 +2,58 @@ import { useLocation } from "wouter";
 import { ChevronLeft, User, Mail, Phone, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import axios from "axios";
 
 export default function EditProfile() {
   const [, setLocation] = useLocation();
+  const { backendUser, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 234 567 8900",
-    dob: "1990-01-01",
-    location: "New York, USA",
-    bio: "Meditation enthusiast and mindfulness practitioner"
+    name: '',
+    email: '',
+    phone: '',
+    dob: '',
+    location: '',
+    bio: '',
+    avatarUrl: ''
   });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Populate form with real user data when loaded
+  useEffect(() => {
+    if (backendUser) {
+      setFormData({
+        name: backendUser.name || '',
+        email: backendUser.email || '',
+        phone: backendUser.phone || '',
+        dob: backendUser.dob || '',
+        location: backendUser.location || '',
+        bio: backendUser.bio || '',
+        avatarUrl: backendUser.avatarUrl || ''
+      });
+    }
+  }, [backendUser]);
+
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await apiRequest('PUT', '/api/users/profile', formData);
+      await apiRequest('PUT', '/api/users/profile', { id: backendUser.id, ...formData });
       queryClient.invalidateQueries({ queryKey: ['/api/users/profile'] });
+      // Fetch the latest user data from the backend
+      const updatedUserRes = await apiRequest('GET', `/api/users/${backendUser.id}`);
+      const updatedUser = await updatedUserRes.json();
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event('user-profile-updated'));
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${backendUser.id}`] });
+      // Optionally, trigger a context update if needed (e.g., window.location.reload() or context setter)
       setLocation('/profile');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -36,13 +68,32 @@ export default function EditProfile() {
     }));
   };
 
+  // Handle file upload
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formDataObj = new FormData();
+    formDataObj.append("image", file);
+    try {
+      const response = await axios.post("/api/upload-profile-image", formDataObj, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const url = response.data.url;
+      setFormData(prev => ({ ...prev, avatarUrl: url }));
+      localStorage.setItem('user', JSON.stringify({ ...backendUser, ...formData, avatarUrl: url }));
+    } catch (err) {
+      alert("Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-b">
-        <div className="flex items-center gap-4 px-4 py-4" style={{
-          background:"white"
-        }}>
+        <div className="flex items-center gap-4 px-4 py-4">
           <Button
             variant="ghost"
             size="icon"
@@ -61,16 +112,25 @@ export default function EditProfile() {
           {/* Profile Picture */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-12 w-12 text-primary" />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute -bottom-2 -right-2 rounded-full"
-              >
-                Change
-              </Button>
+              {formData.avatarUrl ? (
+                <img
+                  src={formData.avatarUrl}
+                  alt="Avatar"
+                  className="w-24 h-24 rounded-full object-cover border-2 border-primary"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-12 w-12 text-primary" />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="mt-2 w-60 px-3 py-1 rounded border border-gray-300 text-sm"
+              />
+              {uploading && <div className="text-xs text-primary mt-2">Uploading...</div>}
             </div>
           </div>
 

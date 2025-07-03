@@ -96,9 +96,11 @@ export function SplashScreen() {
       <div className="w-full max-w-md flex flex-col items-center gap-8 text-center">
         {/* Logo and App Name */}
         <div className="flex flex-col items-center gap-2">
-          <div className="h-20 w-20 rounded-full bg-primary/30 flex items-center justify-center">
-            <span className="text-4xl">🎵</span>
-          </div>
+          <img
+            src="/images/Logo.jpg"
+            alt="HumSoul Logo"
+            className="h-20 w-20 rounded-full object-cover shadow-lg"
+          />
           <h1 className="text-4xl font-bold tracking-tight">HumSoul</h1>
           <p className="text-lg text-muted-foreground">
             Transform your mindset with affirmation audio

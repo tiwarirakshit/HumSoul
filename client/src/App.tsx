@@ -61,7 +61,11 @@ function ProtectedRoute({ component: Component, ...rest }: ProtectedRouteProps) 
       <div className="h-screen w-full flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
-            <span className="text-3xl">🎵</span>
+            <img
+              src="/images/Logo.jpg"
+              alt="HumSoul Logo"
+              className="w-full h-full object-cover rounded-full"
+            />
           </div>
           <p className="text-muted-foreground">Loading...</p>
         </div>
@@ -92,7 +96,11 @@ function AdminRoute({ component: Component, ...rest }: ProtectedRouteProps) {
       <div className="h-screen w-full flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
-            <span className="text-3xl">🎵</span>
+            <img
+              src="/images/Logo.jpg"
+              alt="HumSoul Logo"
+              className="w-full h-full object-cover rounded-full"
+            />
           </div>
           <p className="text-muted-foreground">Loading...</p>
         </div>

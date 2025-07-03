@@ -134,7 +134,7 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
   if (minified) {
     // Mini player: simple seekbar, direct seek on change
     return (
-      <div className="w-full bg-[rgb(219,234,254)] dark:bg-[rgb(30,58,138)] !bg-blue-100 !dark:bg-blue-900" style={{ backgroundColor: '#DBEAFE' }}>
+      <div className="w-full bg-blue-100 dark:bg-blue-900">
         <div className="flex items-center w-full gap-2">
           <span className="text-xs text-gray-500 dark:text-gray-300 min-w-[40px]">{formatTime(currentTime)}</span>
           <Slider

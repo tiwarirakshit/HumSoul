@@ -124,33 +124,30 @@ export default function FeaturedSection() {
 
       <Link href={`/playlist/${featuredPlaylist.id}`}>
         <div
-          className="relative overflow-hidden rounded-xl p-6 text-white shadow-lg cursor-pointer"
+          className="relative overflow-hidden rounded-xl p-6 shadow-lg cursor-pointer bg-card text-card-foreground"
           style={{
             background: `linear-gradient(to right, ${featuredPlaylist.coverGradientStart}, ${featuredPlaylist.coverGradientEnd})`
           }}
         >
           <div className="relative z-10">
-            <span className="bg-white bg-opacity-25 text-white text-xs px-3 py-1 rounded-full font-medium">
+            <span className="bg-white bg-opacity-25 text-card-foreground text-xs px-3 py-1 rounded-full font-medium">
               Featured
             </span>
-            <h3 className="text-2xl font-semibold mt-3">{featuredPlaylist.title}</h3>
-            <p className="text-white text-opacity-90 mt-1">{featuredPlaylist.description}</p>
+            <h3 className="text-2xl font-semibold mt-3 text-card-foreground">{featuredPlaylist.title}</h3>
+            <p className="text-card-foreground text-opacity-90 mt-1">{featuredPlaylist.description}</p>
 
             <div className="flex items-center mt-4 space-x-3">
               <Button
                 variant="default"
                 className={`font-medium transition-all duration-200 ${isPlaying
-                  ? "bg-primary text-white hover:bg-primary/90"
-                  : "bg-white text-primary hover:bg-primary hover:text-white"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-card text-primary hover:bg-primary hover:text-primary-foreground"
                   }`}
                 disabled={isPlaying}
                 onClick={handlePlayFeatured}
               >
                 {isPlaying ? (
-                  <>
-                    {/* <Pause className="h-4 w-4 mr-2" /> */}
-                    <span>Playing</span>
-                  </>
+                  <span>Playing</span>
                 ) : (
                   <>
                     <Play className="h-4 w-4 mr-2" />
@@ -162,10 +159,10 @@ export default function FeaturedSection() {
               <Button
                 variant="outline"
                 size="icon"
-                className="bg-white bg-opacity-25 border-none text-white hover:bg-white hover:bg-opacity-40"
+                className="bg-card bg-opacity-25 border-none text-card-foreground hover:bg-card hover:bg-opacity-40"
                 onClick={toggleFavorite}
               >
-                <Heart className={`h-5 w-5 ${isFavorited ? 'fill-white' : ''}`} />
+                <Heart className={`h-5 w-5 ${isFavorited ? 'fill-primary' : ''}`} />
               </Button>
             </div>
           </div>

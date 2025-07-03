@@ -164,6 +164,18 @@ function getStorageType() {
   return 'UnknownStorage';
 }
 
+// Set up multer storage for profile images
+const profileImageStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(process.cwd(), "client/public/user/profile/images"));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const uploadProfileImage = multer({ storage: profileImageStorage });
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
   const api = express.Router();
@@ -1063,29 +1075,17 @@ api.delete("/admin/users/:id", async (req, res) => {
 
   // Liked Affirmations routes
   api.get("/liked-affirmations", async (req, res) => {
-    let userId = Number(req.query.userId);
-    if (!userId) userId = 1;
-    console.log("storage instance:", storage.constructor.name);
+    const userId = Number(req.query.userId);
+    if (!userId) return res.status(400).json({ message: "Missing userId" });
     const liked = await storage.getUserLikedAffirmations(userId);
-    res.json({
-      debug: {
-        storageType: getStorageType(),
-        raw: liked
-      },
-      data: liked
-    });
+    res.json({ data: liked });
   });
 
   api.post("/liked-affirmations", async (req, res) => {
-    try {
-      if (!req.body.userId) req.body.userId = 1;
-      const likeData = insertUserLikedAffirmationSchema.parse(req.body);
-      const like = await storage.addUserLikedAffirmation(likeData);
-      res.status(201).json(like);
-    } catch (error: any) {
-      console.error("Error adding liked affirmation:", error);
-      res.status(400).json({ message: "Invalid like data", errors: error.errors });
-    }
+    if (!req.body.userId) return res.status(400).json({ message: "Missing userId" });
+    const likeData = insertUserLikedAffirmationSchema.parse(req.body);
+    const like = await storage.addUserLikedAffirmation(likeData);
+    res.status(201).json(like);
   });
 
   api.delete("/liked-affirmations", async (req, res) => {
@@ -1115,6 +1115,29 @@ api.delete("/admin/users/:id", async (req, res) => {
       return res.status(404).json({ message: "Affirmation not found" });
     }
     res.json(affirmation);
+  });
+
+  // Upload profile image endpoint
+  api.post("/upload-profile-image", uploadProfileImage.single("image"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    // Return the public URL
+    const publicUrl = `/user/profile/images/${req.file.filename}`;
+    res.json({ url: publicUrl });
+  });
+
+  // Update current user profile
+  api.put("/users/profile", async (req, res) => {
+    const { id, ...updates } = req.body;
+    if (!id) return res.status(400).json({ message: "Missing user id" });
+    try {
+      const updatedUser = await storage.updateUser(id, updates);
+      if (!updatedUser) return res.status(404).json({ message: "User not found" });
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
   });
 
   // Mount the API routes

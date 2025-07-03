@@ -8,6 +8,7 @@ import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export default function Library() {
   console.log('Library component rendered');
@@ -65,6 +66,10 @@ export default function Library() {
   const { data: likedAffirmationsRespRaw, refetch: refetchLikedAffirmations } = useQuery({
     queryKey: [`/api/liked-affirmations?userId=${userId}`, { userId }],
     enabled: !!userId,
+    onError: (error) => {
+      toast({ title: 'Error', description: 'Failed to fetch liked affirmations.', variant: 'destructive' });
+      console.warn('Failed to fetch liked affirmations:', error);
+    },
   });
   const likedAffirmationsResp: any = likedAffirmationsRespRaw;
   const likedAffirmations = (likedAffirmationsResp as any)?.data ?? [];
@@ -134,7 +139,7 @@ export default function Library() {
   };
   
   return (
-    <div className="py-4">
+    <div className="min-h-screen bg-background text-foreground py-4">
       <h1 className="text-2xl font-semibold mb-6">Your Library</h1>
       
       <Tabs defaultValue="favorites" onValueChange={setActiveTab}>
@@ -149,7 +154,7 @@ export default function Library() {
             <div className="space-y-3">
               {favorites.map((playlist: any) => (
                 <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
-                  <div className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
+                  <div className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
                     <div 
                       className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0"
                       style={{ backgroundColor: playlist.coverGradientStart }}
@@ -158,7 +163,7 @@ export default function Library() {
                     </div>
                     <div className="ml-3 flex-1 min-w-0">
                       <h3 className="font-medium text-sm line-clamp-1">{playlist.title}</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {categoryMap.get(playlist.categoryId) || 'General'}
                       </p>
                     </div>
@@ -168,13 +173,13 @@ export default function Library() {
             </div>
           ) : (
             <div className="text-center py-10">
-              <Heart className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-medium mb-2">No favorites yet</h3>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 Add playlists to your favorites by tapping the heart icon
               </p>
               <Link href="/discover">
-                <a className="mt-6 inline-block px-6 py-2 bg-primary text-white rounded-full font-medium">
+                <a className="mt-6 inline-block px-6 py-2 bg-primary text-primary-foreground rounded-full font-medium">
                   Discover Playlists
                 </a>
               </Link>
@@ -187,7 +192,7 @@ export default function Library() {
             <div className="space-y-3">
               {recentPlays.map((play: any) => (
                 <Link key={play.playlist.id} href={`/playlist/${play.playlist.id}`}>
-                  <div className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
+                  <div className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
                     <div 
                       className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0"
                       style={{ backgroundColor: play.playlist.coverGradientStart }}
@@ -196,7 +201,7 @@ export default function Library() {
                     </div>
                     <div className="ml-3 flex-1 min-w-0">
                       <h3 className="font-medium text-sm line-clamp-1">{play.playlist.title}</h3>
-                      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      <div className="flex items-center text-xs text-muted-foreground mt-0.5">
                         <span>{categoryMap.get(play.playlist.categoryId) || 'General'}</span>
                         <span className="mx-1">•</span>
                         <span className="flex items-center">
@@ -211,13 +216,13 @@ export default function Library() {
             </div>
           ) : (
             <div className="text-center py-10">
-              <Clock className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <Clock className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-medium mb-2">No recent plays</h3>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 Start listening to affirmations to see your history
               </p>
               <Link href="/">
-                <a className="mt-6 inline-block px-6 py-2 bg-primary text-white rounded-full font-medium">
+                <a className="mt-6 inline-block px-6 py-2 bg-primary text-primary-foreground rounded-full font-medium">
                   Explore Affirmations
                 </a>
               </Link>
@@ -231,13 +236,13 @@ export default function Library() {
           ) : likedAffirmationDetails.length > 0 ? (
             <div className="space-y-3">
               {likedAffirmationDetails.map((affirmation: any) => (
-                <div key={affirmation.id} className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm">
+                <div key={affirmation.id} className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm">
                   <div className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0 bg-primary">
                     <Heart className="h-5 w-5 fill-white" />
                   </div>
                   <div className="ml-3 flex-1 min-w-0">
                     <h3 className="font-medium text-sm line-clamp-1">{affirmation.text || affirmation.title}</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {affirmation.duration ? formatDuration(affirmation.duration) : ''}
                     </p>
                   </div>
@@ -246,9 +251,9 @@ export default function Library() {
             </div>
           ) : (
             <div className="text-center py-10">
-              <Heart className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-medium mb-2">No liked affirmations yet</h3>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 Like affirmations to see them here
               </p>
             </div>

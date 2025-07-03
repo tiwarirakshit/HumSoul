@@ -101,7 +101,7 @@ export default function Login() {
       <div className="min-h-screen bg-white dark:bg-black flex flex-col items-center justify-center p-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4"></div>
-          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+          <p className="text-gray-500 dark:text-gray-300">Loading...</p>
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export default function Login() {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex flex-col items-center justify-center p-6">
         <div className="text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-gray-500 dark:text-gray-300 mb-4">
             {isAdmin ? "Redirecting to admin panel..." : "Redirecting..."}
           </p>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto"></div>
@@ -133,39 +133,10 @@ export default function Login() {
         >
           <div className="relative w-24 h-24 mx-auto mb-6">
             {/* Logo Container */}
-            <div className="absolute inset-0">
-              {/* Individual feathers */}
-              {[...Array(8)].map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute left-1/2 top-1/2"
-                  style={{
-                    transform: `rotate(${i * 45}deg) translateY(-30px)`,
-                    transformOrigin: "center center"
-                  }}
-                >
-                  <div
-                    className="w-6 h-10 rounded-full"
-                    style={{
-                      background: `linear-gradient(135deg, ${i % 2 === 0
-                          ? '#8B5CF6 0%, #6366F1 100%'
-                          : '#60A5FA 0%, #3B82F6 100%'
-                        })`,
-                      opacity: 0.9,
-                      transform: 'rotate(45deg)',
-                      boxShadow: '0 4px 12px rgba(79, 70, 229, 0.15)'
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            {/* Center Glow Effect */}
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, rgba(139,92,246,0) 70%)',
-                filter: 'blur(8px)'
-              }}
+            <img
+              src="/images/Logo.jpg"
+              alt="HumSoul Logo"
+              className="w-full h-full object-cover rounded-full shadow-lg"
             />
           </div>
 
@@ -177,7 +148,7 @@ export default function Login() {
             <h1 className="text-3xl font-bold tracking-wide bg-gradient-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent mb-2">
               Welcome to HumSoul
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500 dark:text-gray-300">
               Your journey to inner peace begins here
             </p>
           </motion.div>
@@ -201,7 +172,7 @@ export default function Login() {
                 <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative flex items-center justify-center gap-3">
                   <FcGoogle className="w-6 h-6" />
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                  <span className="text-gray-700 dark:text-gray-200 font-medium">
                     Continue with Google
                   </span>
                 </div>
@@ -217,7 +188,7 @@ export default function Login() {
                 <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative flex items-center justify-center gap-3">
                   <FcVoicemail className="w-6 h-6" />
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                  <span className="text-gray-700 dark:text-gray-200 font-medium">
                     Login with Admin Email and Password
                   </span>
                 </div>
@@ -233,7 +204,7 @@ export default function Login() {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
+                <Label htmlFor="email" className="text-gray-700 dark:text-gray-200">
                   Admin Email
                 </Label>
                 <Input
@@ -250,7 +221,7 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
+                <Label htmlFor="password" className="text-gray-700 dark:text-gray-200">
                   Password
                 </Label>
                 <div className="relative">
@@ -299,7 +270,7 @@ export default function Login() {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowEmailForm(false)}
-                  className="w-full text-gray-600 dark:text-gray-400"
+                  className="w-full text-gray-600 dark:text-gray-300"
                   disabled={user && isAdmin}
                 >
                   Back to other options
@@ -309,7 +280,7 @@ export default function Login() {
           )}
 
           {/* Terms Text */}
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 px-6">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-300 px-6">
             By continuing, you agree to our{" "}
             <a href="#" className="text-violet-500 hover:text-violet-600 dark:hover:text-violet-400">
               Terms of Service

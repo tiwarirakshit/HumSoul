@@ -40,7 +40,7 @@ export default function Subscription() {
       currency: "INR",
       name: "Humsoul",
       description: `${plan.name} Subscription`,
-      image: "/your-logo.png", // Optional: replace with your logo path
+      image: "/images/Logo.jpg", // HumSoul logo
       handler: function (response: any) {
         // Handle payment success here (e.g., call backend to confirm subscription)
         alert("Payment successful! Payment ID: " + response.razorpay_payment_id);

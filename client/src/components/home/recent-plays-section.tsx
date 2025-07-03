@@ -130,7 +130,7 @@ export default function RecentPlaysSection() {
       <div className="space-y-3">
         {recentPlays?.slice(0, 3).map((play: any) => (
           <Link key={play.playlist.id} href={`/playlist/${play.playlist.id}`}>
-            <div className="bg-white dark:bg-dark-light rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
+            <div className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
               <div 
                 className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0"
                 style={{ backgroundColor: play.playlist.coverGradientStart }}
@@ -139,15 +139,15 @@ export default function RecentPlaysSection() {
               </div>
               <div className="ml-3 flex-1 min-w-0">
                 <h3 className="font-medium text-sm line-clamp-1">{play.playlist.title}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {categoryMap.get(play.playlist.categoryId) || 'General'}
                 </p>
               </div>
               <button 
-                className="ml-2 w-9 h-9 rounded-full bg-light dark:bg-dark-lighter flex items-center justify-center flex-shrink-0"
+                className="ml-2 w-9 h-9 rounded-full bg-background flex items-center justify-center flex-shrink-0"
                 onClick={(e) => handlePlay(play.playlist.id, e)}
               >
-                <Play className="h-5 w-5 text-primary dark:text-primary-light" />
+                <Play className="h-5 w-5 text-primary" />
               </button>
             </div>
           </Link>

@@ -9,8 +9,7 @@ import { useState, useEffect } from "react";
 
 export default function BottomNavigation() {
   const [location, setLocation] = useLocation();
-  const { currentTrack, currentAffirmation, duration } = useAudio();
-  const [isMiniPlayerVisible, setIsMiniPlayerVisible] = useState(true);
+  const { currentTrack, currentAffirmation, duration, isPlaying, isMiniPlayerVisible, setMiniPlayerVisible } = useAudio();
   
   const isActive = (path: string) => {
     return location === path;
@@ -19,18 +18,11 @@ export default function BottomNavigation() {
   const itemClasses = "flex flex-col items-center text-xs";
   const iconClasses = "h-6 w-6 mb-1";
   
-  // Reset mini player visibility when track changes or playback starts
-  useEffect(() => {
-    if (currentTrack) {
-      setIsMiniPlayerVisible(true);
-    }
-  }, [currentTrack]);
-  
   // Don't show mini player on audio page or if explicitly hidden
   const showMiniPlayer = currentTrack && location !== '/audio' && isMiniPlayerVisible;
 
   const handleClose = () => {
-    setIsMiniPlayerVisible(false);
+    setMiniPlayerVisible(false);
   };
   
   return (
