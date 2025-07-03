@@ -84,12 +84,12 @@ export default function Playlist() {
 
   // Get the playlist details
   const { data: playlist, isLoading: playlistLoading } = useQuery<any>({
-    queryKey: [`/api/playlists/${id}`],
+    queryKey: [`https://mpforestvillage.in/api/playlists/${id}`],
   });
 
   // Get the affirmations for this playlist
   const { data: affirmations, isLoading: affirmationsLoading } = useQuery<AffirmationsResponse | undefined>({
-    queryKey: [`/api/affirmations?playlistId=${id}`, { playlistId: id }],
+    queryKey: [`https://mpforestvillage.in/api/affirmations?playlistId=${id}`, { playlistId: id }],
   });
 
   // Get all background music options
@@ -100,7 +100,7 @@ export default function Playlist() {
   // Check if this playlist is favorited
   useEffect(() => {
     if (!userId || !playlist?.id) return;
-    fetch(`/api/favorites/check?userId=${userId}&playlistId=${playlist.id}`)
+    fetch(`https://mpforestvillage.in/api/favorites/check?userId=${userId}&playlistId=${playlist.id}`)
       .then(res => res.json())
       .then(data => {
         setIsFavorited(data.isFavorited);
@@ -114,7 +114,7 @@ export default function Playlist() {
 
   // Add state to track liked affirmations
   const { data: likedAffirmationsResp } = useQuery<any>({
-    queryKey: [`/api/liked-affirmations?userId=${userId}`, { userId }],
+    queryKey: [`https://mpforestvillage.in/api/liked-affirmations?userId=${userId}`, { userId }],
     enabled: !!userId && !authLoading,
   });
   const likedAffirmations = likedAffirmationsResp?.data ?? [];
@@ -129,7 +129,7 @@ export default function Playlist() {
         console.warn('No userId found! User must be logged in to like affirmations.');
         return;
       }
-      const res = await fetch('/api/liked-affirmations', {
+      const res = await fetch('https://mpforestvillage.in/api/liked-affirmations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userId, affirmationId: affirmationId }),
@@ -140,7 +140,7 @@ export default function Playlist() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/liked-affirmations?userId=${userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`https://mpforestvillage.in/api/liked-affirmations?userId=${userId}`] });
     },
   });
   const unlikeMutation = useMutation({
@@ -150,14 +150,14 @@ export default function Playlist() {
         console.warn('No userId found! User must be logged in to unlike affirmations.');
         return;
       }
-      const res = await fetch(`/api/liked-affirmations?userId=${encodeURIComponent(String(userId))}&affirmationId=${encodeURIComponent(String(affirmationId))}`, { method: 'DELETE' });
+      const res = await fetch(`https://mpforestvillage.in/api/liked-affirmations?userId=${encodeURIComponent(String(userId))}&affirmationId=${encodeURIComponent(String(affirmationId))}`, { method: 'DELETE' });
       if (!res.ok) {
         toast({ title: 'Error', description: 'Failed to unlike affirmation.', variant: 'destructive' });
         throw new Error('Failed to unlike affirmation');
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/liked-affirmations?userId=${userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`https://mpforestvillage.in/api/liked-affirmations?userId=${userId}`] });
     },
   });
 
@@ -352,11 +352,11 @@ export default function Playlist() {
         </div>
       )}
       {/* Test Sound Button */}
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <button onClick={playTestSound} style={{padding: '8px 16px', background: '#eee', borderRadius: 4, fontWeight: 600}}>
           🔊 Test Sound
         </button>
-      </div>
+      </div> */}
       <div className="flex items-center mb-6">
         <Button
           variant="ghost"
