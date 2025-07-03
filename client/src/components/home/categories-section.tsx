@@ -59,7 +59,7 @@ export default function CategoriesSection() {
     return (
       <section className="py-4">
         <h2 className="text-xl font-medium mb-4">Categories</h2>
-        <p className="text-center text-gray-500 dark:text-gray-400">No categories available</p>
+        <p className="text-center text-muted-foreground">No categories available</p>
       </section>
     );
   }

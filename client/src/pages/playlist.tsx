@@ -333,7 +333,7 @@ export default function Playlist() {
   };
 
   return (
-    <div className="py-4 pb-28">
+    <div className="py-4 pb-28 text-foreground">
       {/* Loader overlay when like/unlike is loading */}
       {(likeMutation.isPending || unlikeMutation.isPending) && (
         <div style={{
@@ -371,19 +371,19 @@ export default function Playlist() {
 
       {/* Playlist Header */}
       <div
-        className="rounded-xl p-6 text-white mb-6 relative overflow-hidden"
+        className="rounded-xl p-6 text-foreground mb-6 relative overflow-hidden"
         style={{
           background: `linear-gradient(to right, ${playlist.coverGradientStart}, ${playlist.coverGradientEnd})`
         }}
       >
         <div className="relative z-10">
-          <span className="bg-white bg-opacity-25 text-white text-xs px-3 py-1 rounded-full font-medium">
+          <span className="bg-card bg-opacity-25 text-foreground text-xs px-3 py-1 rounded-full font-medium">
             {categoryName}
           </span>
           <h2 className="text-2xl font-semibold mt-3">{playlist.title}</h2>
-          <p className="text-white text-opacity-90 mt-1">{playlist.description}</p>
+          <p className="text-foreground/90 mt-1">{playlist.description}</p>
 
-          <div className="flex flex-wrap mt-3 text-sm text-white text-opacity-80">
+          <div className="flex flex-wrap mt-3 text-sm text-foreground/80">
             <div className="mr-4">
               <span className="font-medium">{affirmations?.length}</span> affirmations
             </div>
@@ -396,8 +396,8 @@ export default function Playlist() {
             <Button
               variant="default"
               className={`font-medium transition-all duration-200 ${currentTrack?.playlist.id === Number(id) && isPlaying
-                  ? "bg-primary text-white hover:bg-primary/90"
-                  : "bg-white text-primary hover:bg-primary hover:text-white"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-card text-primary hover:bg-primary hover:text-primary-foreground"
                 }`}
               onClick={handlePlayPause}
             >
@@ -417,10 +417,10 @@ export default function Playlist() {
             <Button
               variant="outline"
               size="icon"
-              className="bg-white bg-opacity-25 border-none text-white hover:bg-white hover:bg-opacity-40"
+              className="bg-card bg-opacity-25 border-none text-foreground hover:bg-card hover:bg-opacity-40"
               onClick={handleToggleFavorite}
             >
-              <Heart className={`h-5 w-5 ${isFavorited ? 'fill-white' : ''}`} />
+              <Heart className={`h-5 w-5 ${isFavorited ? 'fill-foreground' : ''}`} />
             </Button>
 
             <Dialog>
@@ -428,7 +428,7 @@ export default function Playlist() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="bg-white bg-opacity-25 border-none text-white hover:bg-white hover:bg-opacity-40"
+                  className="bg-card bg-opacity-25 border-none text-foreground hover:bg-card hover:bg-opacity-40"
                 >
                   <Music className="h-5 w-5" />
                 </Button>
@@ -439,7 +439,7 @@ export default function Playlist() {
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-300">
+                  <p className="text-sm text-muted-foreground">
                     Select background music to enhance your affirmation experience
                   </p>
 
@@ -460,8 +460,8 @@ export default function Playlist() {
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Volume Mix</div>
                     <div className="flex items-center">
-                      <Volume2 className="h-4 w-4 text-gray-500 mr-2" />
-                      <div className="text-xs text-gray-500">
+                      <Volume2 className="h-4 w-4 text-muted-foreground mr-2" />
+                      <div className="text-xs text-muted-foreground">
                         Adjust volume in the player controls
                       </div>
                     </div>
@@ -473,12 +473,12 @@ export default function Playlist() {
         </div>
 
         {/* Decorative elements */}
-        <div className="absolute top-1/2 right-4 w-32 h-32 rounded-full bg-white opacity-10"></div>
-        <div className="absolute bottom-0 right-24 w-20 h-20 rounded-full bg-white opacity-10"></div>
+        <div className="absolute top-1/2 right-4 w-32 h-32 rounded-full bg-card opacity-10"></div>
+        <div className="absolute bottom-0 right-24 w-20 h-20 rounded-full bg-card opacity-10"></div>
       </div>
 
       {/* Affirmations List */}
-      <div className="bg-white dark:bg-dark-light rounded-xl p-4 shadow-sm">
+      <div className="bg-card dark:bg-dark-light rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-medium flex items-center">
             <ListMusic className="h-5 w-5 mr-2" />

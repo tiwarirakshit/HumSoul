@@ -156,10 +156,10 @@ export default function Library() {
                 <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
                   <div className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
                     <div 
-                      className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0"
+                      className="w-12 h-12 rounded-md flex items-center justify-center text-primary-foreground flex-shrink-0"
                       style={{ backgroundColor: playlist.coverGradientStart }}
                     >
-                      <Heart className="h-5 w-5 fill-white" />
+                      <Heart className="h-5 w-5 fill-primary-foreground" />
                     </div>
                     <div className="ml-3 flex-1 min-w-0">
                       <h3 className="font-medium text-sm line-clamp-1">{playlist.title}</h3>
@@ -194,7 +194,7 @@ export default function Library() {
                 <Link key={play.playlist.id} href={`/playlist/${play.playlist.id}`}>
                   <div className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
                     <div 
-                      className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0"
+                      className="w-12 h-12 rounded-md flex items-center justify-center text-primary-foreground flex-shrink-0"
                       style={{ backgroundColor: play.playlist.coverGradientStart }}
                     >
                       <Headphones className="h-5 w-5" />

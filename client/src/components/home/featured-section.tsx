@@ -106,7 +106,7 @@ export default function FeaturedSection() {
           <span className="text-primary dark:text-primary-light text-sm font-medium">See All</span>
         </div>
 
-        <div className="rounded-xl bg-gray-100 dark:bg-dark-light p-6 text-center">
+        <div className="rounded-xl bg-muted p-6 text-center">
           <p>No featured playlist available</p>
         </div>
       </section>
@@ -124,17 +124,18 @@ export default function FeaturedSection() {
 
       <Link href={`/playlist/${featuredPlaylist.id}`}>
         <div
-          className="relative overflow-hidden rounded-xl p-6 shadow-lg cursor-pointer bg-card text-card-foreground"
+          className="relative overflow-hidden rounded-xl p-6 text-foreground shadow-lg cursor-pointer"
           style={{
             background: `linear-gradient(to right, ${featuredPlaylist.coverGradientStart}, ${featuredPlaylist.coverGradientEnd})`
           }}
         >
           <div className="relative z-10">
-            <span className="bg-white bg-opacity-25 text-card-foreground text-xs px-3 py-1 rounded-full font-medium">
+            <span className="bg-card bg-opacity-25 text-foreground text-xs px-3 py-1 rounded-full font-medium">
               Featured
             </span>
-            <h3 className="text-2xl font-semibold mt-3 text-card-foreground">{featuredPlaylist.title}</h3>
-            <p className="text-card-foreground text-opacity-90 mt-1">{featuredPlaylist.description}</p>
+            <h3 className="text-2xl font-semibold mt-3">{featuredPlaylist.title}</h3>
+            <p className="text-foreground/90 mt-1">{featuredPlaylist.description}</p>
+
 
             <div className="flex items-center mt-4 space-x-3">
               <Button
@@ -159,17 +160,17 @@ export default function FeaturedSection() {
               <Button
                 variant="outline"
                 size="icon"
-                className="bg-card bg-opacity-25 border-none text-card-foreground hover:bg-card hover:bg-opacity-40"
+                className="bg-card bg-opacity-25 border-none text-foreground hover:bg-card hover:bg-opacity-40"
                 onClick={toggleFavorite}
               >
-                <Heart className={`h-5 w-5 ${isFavorited ? 'fill-primary' : ''}`} />
+                <Heart className={`h-5 w-5 ${isFavorited ? 'fill-foreground' : ''}`} />
               </Button>
             </div>
           </div>
 
           {/* Decorative elements */}
-          <div className="absolute top-1/2 right-4 w-32 h-32 rounded-full bg-white opacity-10"></div>
-          <div className="absolute bottom-0 right-24 w-20 h-20 rounded-full bg-white opacity-10"></div>
+          <div className="absolute top-1/2 right-4 w-32 h-32 rounded-full bg-card opacity-10"></div>
+          <div className="absolute bottom-0 right-24 w-20 h-20 rounded-full bg-card opacity-10"></div>
         </div>
       </Link>
     </section>

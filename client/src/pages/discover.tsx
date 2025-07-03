@@ -123,7 +123,7 @@ export default function Discover() {
         <h2 className="text-lg font-medium mb-3">Categories</h2>
         <div className="flex flex-wrap gap-3 md:gap-2">
           <Link href="/discover">
-            <a className={`px-4 py-2 rounded-full text-sm font-medium ${!categoryId ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground dark:bg-muted dark:text-foreground'}`}>
+            <a className={`px-4 py-2 rounded-full text-sm font-medium ${!categoryId ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
               All
             </a>
           </Link>
@@ -176,7 +176,7 @@ export default function Discover() {
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center opacity-25">
-                      <i className={`bx bx-${playlist.icon} text-7xl text-white`}></i>
+                      <i className={`bx bx-${playlist.icon} text-7xl text-primary-foreground`}></i>
                     </div>
                   </div>
                   <div className="p-3">
