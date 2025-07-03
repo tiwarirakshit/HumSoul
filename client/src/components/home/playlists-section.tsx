@@ -139,7 +139,7 @@ export default function PlaylistsSection() {
                 </div>
               </div>
               <div className="p-3">
-                <h3 className="font-medium dark:text-black text-sm line-clamp-1">{playlist.title}</h3>
+                <h3 className="font-medium dark:text-white text-sm line-clamp-1">{playlist.title}</h3>
                 
                 <div className="flex items-center justify-between mt-2">
                   <button 
