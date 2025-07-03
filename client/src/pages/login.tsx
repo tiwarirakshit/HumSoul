@@ -133,39 +133,10 @@ export default function Login() {
         >
           <div className="relative w-24 h-24 mx-auto mb-6">
             {/* Logo Container */}
-            <div className="absolute inset-0">
-              {/* Individual feathers */}
-              {[...Array(8)].map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute left-1/2 top-1/2"
-                  style={{
-                    transform: `rotate(${i * 45}deg) translateY(-30px)`,
-                    transformOrigin: "center center"
-                  }}
-                >
-                  <div
-                    className="w-6 h-10 rounded-full"
-                    style={{
-                      background: `linear-gradient(135deg, ${i % 2 === 0
-                          ? '#8B5CF6 0%, #6366F1 100%'
-                          : '#60A5FA 0%, #3B82F6 100%'
-                        })`,
-                      opacity: 0.9,
-                      transform: 'rotate(45deg)',
-                      boxShadow: '0 4px 12px rgba(79, 70, 229, 0.15)'
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            {/* Center Glow Effect */}
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, rgba(139,92,246,0) 70%)',
-                filter: 'blur(8px)'
-              }}
+            <img
+              src="/images/Logo.jpg"
+              alt="HumSoul Logo"
+              className="w-full h-full object-cover rounded-full shadow-lg"
             />
           </div>
 
@@ -299,8 +270,8 @@ export default function Login() {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowEmailForm(false)}
-                  className="w-full text-gray-600 dark:text-gray-400"
-                  disabled={!!user && !!isAdmin}
+                  className="w-full text-gray-600 dark:text-gray-300"
+                  disabled={user && isAdmin}
                 >
                   Back to other options
                 </Button>
@@ -309,7 +280,7 @@ export default function Login() {
           )}
 
           {/* Terms Text */}
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 px-6">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-300 px-6">
             By continuing, you agree to our{" "}
             <a href="#" className="text-violet-500 hover:text-violet-600 dark:hover:text-violet-400">
               Terms of Service

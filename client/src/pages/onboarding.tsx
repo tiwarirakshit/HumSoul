@@ -124,14 +124,16 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Logo */}
       <div className="fixed top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm">
         <div className="flex items-center justify-between px-6 h-20">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-2xl">🎵</span>
-            </div>
+            <img
+              src="/images/Logo.jpg"
+              alt="HumSoul Logo"
+              className="h-10 w-10 rounded-full object-cover"
+            />
             <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent">
               HumSoul
             </h1>
@@ -255,7 +257,7 @@ export default function Onboarding() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-card rounded-xl p-8 space-y-6"
+                  className="bg-card text-card-foreground rounded-xl p-8 space-y-6"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-5">

@@ -136,6 +136,7 @@ export default function FeaturedSection() {
             <h3 className="text-2xl font-semibold mt-3">{featuredPlaylist.title}</h3>
             <p className="text-foreground/90 mt-1">{featuredPlaylist.description}</p>
 
+
             <div className="flex items-center mt-4 space-x-3">
               <Button
                 variant="default"
@@ -147,10 +148,7 @@ export default function FeaturedSection() {
                 onClick={handlePlayFeatured}
               >
                 {isPlaying ? (
-                  <>
-                    {/* <Pause className="h-4 w-4 mr-2" /> */}
-                    <span>Playing</span>
-                  </>
+                  <span>Playing</span>
                 ) : (
                   <>
                     <Play className="h-4 w-4 mr-2" />

@@ -66,13 +66,13 @@ export default function CategoriesSection() {
   
   return (
     <section className="py-4">
-      <h2 className="text-xl font-medium mb-4">Categories</h2>
+      <h2 className="text-xl font-medium mb-4 text-foreground">Categories</h2>
       <div className="flex space-x-3 overflow-x-auto pb-2 no-scrollbar">
         {categories.map((category: any) => (
           <Link key={category.id} href={`/discover?category=${category.id}`}>
             <div className="flex-shrink-0 text-center cursor-pointer">
               <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center mb-2"
+                className="w-16 h-16 rounded-full flex items-center justify-center mb-2 bg-card text-card-foreground"
                 style={{ 
                   backgroundColor: `${category.color}20`,
                   color: category.color 
@@ -80,7 +80,7 @@ export default function CategoriesSection() {
               >
                 {iconMap[category.icon] || <Star className="h-6 w-6" />}
               </div>
-              <span className="text-xs font-medium">{category.name}</span>
+              <span className="text-xs font-medium text-muted-foreground">{category.name}</span>
             </div>
           </Link>
         ))}

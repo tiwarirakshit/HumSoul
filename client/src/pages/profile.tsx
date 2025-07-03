@@ -118,17 +118,19 @@ export default function Profile() {
   }
 
   return (
-    <div className="py-4 pb-28">
+    <div className="min-h-screen bg-background text-foreground py-4 pb-28">
       {/* Profile Header */}
       <div className="flex items-center mb-6">
         <Avatar className="h-20 w-20">
           {authUser?.photoURL ? (
             <AvatarImage src={authUser.photoURL} alt={authUser.displayName || 'User'} />
+          ) : backendUser?.avatarUrl ? (
+            <AvatarImage src={backendUser.avatarUrl} alt={backendUser.name || backendUser.username || 'User'} />
           ) : user?.avatarUrl ? (
             <AvatarImage src={user.avatarUrl} alt={user.name || user.username} />
           ) : (
             <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-              {authUser?.displayName?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
+              {authUser?.displayName?.[0] || backendUser?.name?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
             </AvatarFallback>
           )}
         </Avatar>
@@ -172,7 +174,7 @@ export default function Profile() {
       </div> */}
       
       {/* Settings */}
-      <div className="bg-card rounded-xl p-4 shadow-sm mb-6">
+      <div className="bg-card text-card-foreground rounded-xl p-4 shadow-sm mb-6">
         <h2 className="text-lg font-medium mb-4 flex items-center">
           <Settings className="h-5 w-5 mr-2" />
           Settings
@@ -214,8 +216,26 @@ export default function Profile() {
         </div>
       </div>
       
+      {/* Helpdesk Section */}
+      <div className="bg-card text-card-foreground rounded-xl p-4 shadow-sm mb-6">
+        <h2 className="text-lg font-medium mb-4 flex items-center">
+          <Mail className="h-5 w-5 mr-2 text-primary" />
+          Helpdesk
+        </h2>
+        <p className="text-muted-foreground mb-2">
+          Need help or have questions? Our support team is here for you!
+        </p>
+        <ul className="text-sm text-muted-foreground space-y-1 mb-2">
+          <li>Email: <a href="mailto:support@humsoul.com" className="text-primary underline">support@humsoul.com</a></li>
+          <li>Phone: <a href="tel:+1234567890" className="text-primary underline">+1 234 567 890</a></li>
+        </ul>
+        <p className="text-xs text-muted-foreground">
+          We typically respond within 24 hours. Thank you for being part of the HumSoul community!
+        </p>
+      </div>
+      
       {/* Subscription */}
-      <div className="bg-card rounded-xl p-4 shadow-sm mb-6">
+      <div className="bg-card text-card-foreground rounded-xl p-4 shadow-sm mb-6">
         <h2 className="text-lg font-medium mb-4 flex items-center">
           <Crown className="h-5 w-5 mr-2" />
           Subscription
@@ -275,7 +295,7 @@ export default function Profile() {
       </div>
       
       {/* Account */}
-      <div className="bg-card rounded-xl p-4 shadow-sm">
+      <div className="bg-card text-card-foreground rounded-xl p-4 shadow-sm">
         <h2 className="text-lg font-medium mb-4 flex items-center">
           <User className="h-5 w-5 mr-2" />
           Account

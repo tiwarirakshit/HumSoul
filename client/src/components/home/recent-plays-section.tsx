@@ -143,10 +143,10 @@ export default function RecentPlaysSection() {
                 </p>
               </div>
               <button 
-                className="ml-2 w-9 h-9 rounded-full bg-light dark:bg-dark-lighter flex items-center justify-center flex-shrink-0"
+                className="ml-2 w-9 h-9 rounded-full bg-background flex items-center justify-center flex-shrink-0"
                 onClick={(e) => handlePlay(play.playlist.id, e)}
               >
-                <Play className="h-5 w-5 text-primary dark:text-primary-light" />
+                <Play className="h-5 w-5 text-primary" />
               </button>
             </div>
           </Link>

@@ -32,6 +32,7 @@ import { formatDuration, formatTime } from "@/lib/audio";
 import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 
 interface Affirmation {
   id: number;
@@ -55,7 +56,7 @@ interface AffirmationsResponse {
 
 export default function Playlist() {
   const { id } = useParams();
-  const { playPlaylist, isPlaying, togglePlay, currentTrack, setBackgroundMusic, skipToAffirmation } = useAudio();
+  const { playPlaylist, isPlaying, togglePlay, currentTrack, setBackgroundMusic, skipToAffirmation, setMiniPlayerVisible } = useAudio();
   const [, navigate] = useLocation();
   const [isFavorited, setIsFavorited] = useState(false);
   const { backendUser, loading: authLoading } = useAuth();
@@ -83,12 +84,12 @@ export default function Playlist() {
 
   // Get the playlist details
   const { data: playlist, isLoading: playlistLoading } = useQuery<any>({
-    queryKey: [`/api/playlists/${id}`],
+    queryKey: [`https://mpforestvillage.in/api/playlists/${id}`],
   });
 
   // Get the affirmations for this playlist
   const { data: affirmations, isLoading: affirmationsLoading } = useQuery<AffirmationsResponse | undefined>({
-    queryKey: [`/api/affirmations?playlistId=${id}`, { playlistId: id }],
+    queryKey: [`https://mpforestvillage.in/api/affirmations?playlistId=${id}`, { playlistId: id }],
   });
 
   // Get all background music options
@@ -99,7 +100,7 @@ export default function Playlist() {
   // Check if this playlist is favorited
   useEffect(() => {
     if (!userId || !playlist?.id) return;
-    fetch(`/api/favorites/check?userId=${userId}&playlistId=${playlist.id}`)
+    fetch(`https://mpforestvillage.in/api/favorites/check?userId=${userId}&playlistId=${playlist.id}`)
       .then(res => res.json())
       .then(data => {
         setIsFavorited(data.isFavorited);
@@ -113,7 +114,7 @@ export default function Playlist() {
 
   // Add state to track liked affirmations
   const { data: likedAffirmationsResp } = useQuery<any>({
-    queryKey: [`/api/liked-affirmations?userId=${userId}`, { userId }],
+    queryKey: [`https://mpforestvillage.in/api/liked-affirmations?userId=${userId}`, { userId }],
     enabled: !!userId && !authLoading,
   });
   const likedAffirmations = likedAffirmationsResp?.data ?? [];
@@ -123,24 +124,40 @@ export default function Playlist() {
 
   const likeMutation = useMutation({
     mutationFn: async (affirmationId: number) => {
-      if (!userId) return;
-      await fetch('/api/liked-affirmations', {
+      if (!userId) {
+        toast({ title: 'Error', description: 'You must be logged in to like affirmations.', variant: 'destructive' });
+        console.warn('No userId found! User must be logged in to like affirmations.');
+        return;
+      }
+      const res = await fetch('https://mpforestvillage.in/api/liked-affirmations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userId, affirmationId: affirmationId }),
       });
+      if (!res.ok) {
+        toast({ title: 'Error', description: 'Failed to like affirmation.', variant: 'destructive' });
+        throw new Error('Failed to like affirmation');
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/liked-affirmations?userId=${userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`https://mpforestvillage.in/api/liked-affirmations?userId=${userId}`] });
     },
   });
   const unlikeMutation = useMutation({
     mutationFn: async (affirmationId: number) => {
-      if (!userId) return;
-      await fetch(`/api/liked-affirmations?userId=${encodeURIComponent(String(userId))}&affirmationId=${encodeURIComponent(String(affirmationId))}`, { method: 'DELETE' });
+      if (!userId) {
+        toast({ title: 'Error', description: 'You must be logged in to unlike affirmations.', variant: 'destructive' });
+        console.warn('No userId found! User must be logged in to unlike affirmations.');
+        return;
+      }
+      const res = await fetch(`https://mpforestvillage.in/api/liked-affirmations?userId=${encodeURIComponent(String(userId))}&affirmationId=${encodeURIComponent(String(affirmationId))}`, { method: 'DELETE' });
+      if (!res.ok) {
+        toast({ title: 'Error', description: 'Failed to unlike affirmation.', variant: 'destructive' });
+        throw new Error('Failed to unlike affirmation');
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/liked-affirmations?userId=${userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`https://mpforestvillage.in/api/liked-affirmations?userId=${userId}`] });
     },
   });
 
@@ -216,6 +233,7 @@ export default function Playlist() {
   };
 
   const handlePlayPause = async () => {
+    setMiniPlayerVisible(true);
     if (!playlist || !affirmations?.affirmations || !userId) return;
 
     if (currentTrack?.playlist.id === Number(id)) {
@@ -298,7 +316,7 @@ export default function Playlist() {
         </div>
 
         <div className="text-center py-10">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-gray-500 dark:text-gray-300 mb-4">
             The playlist you're looking for doesn't exist or has been removed.
           </p>
           <Button onClick={() => navigate("/discover")}>
@@ -334,11 +352,11 @@ export default function Playlist() {
         </div>
       )}
       {/* Test Sound Button */}
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <button onClick={playTestSound} style={{padding: '8px 16px', background: '#eee', borderRadius: 4, fontWeight: 600}}>
           🔊 Test Sound
         </button>
-      </div>
+      </div> */}
       <div className="flex items-center mb-6">
         <Button
           variant="ghost"
@@ -466,7 +484,7 @@ export default function Playlist() {
             <ListMusic className="h-5 w-5 mr-2" />
             Affirmations
           </h2>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-gray-500 dark:text-gray-300">
             {affirmations?.length} affirmations
           </span>
         </div>
@@ -475,7 +493,7 @@ export default function Playlist() {
 
         {!affirmations || affirmations.length === 0 ? (
           <div className="text-center py-6">
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500 dark:text-gray-300">
               No affirmations available in this playlist
             </p>
             {/* Debug fallback: show raw affirmations data */}
@@ -489,6 +507,7 @@ export default function Playlist() {
               <div
                 key={affirmation.id}
                 onClick={() => {
+                  setMiniPlayerVisible(true);
                   console.log("Affirmation clicked", { index, affirmation });
                   if (!affirmation.audioUrl) {
                     alert('This affirmation does not have a valid audio file.');
@@ -515,19 +534,19 @@ export default function Playlist() {
                     currentTrack.currentAffirmationIndex === index && isPlaying ? (
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
                   ) : (
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                       {index + 1}
                     </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm line-clamp-2">
+                  <p className="font-medium dark:text-black text-sm line-clamp-2">
                     {affirmation.text ?? affirmation.title}
                     {!affirmation.audioUrl && (
                       <span className="ml-2 text-xs text-red-500">(No audio)</span>
                     )}
                   </p>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-500 dark:text-gray-300">
                     {formatTime(affirmation.duration)}
                   </span>
                 </div>

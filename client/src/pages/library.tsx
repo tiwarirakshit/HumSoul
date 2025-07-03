@@ -8,6 +8,7 @@ import { useAudio } from "@/hooks/use-audio";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export default function Library() {
   console.log('Library component rendered');
@@ -38,23 +39,23 @@ export default function Library() {
   
   // Query favorites
   const { data: favoritesResp, refetch: refetchFavorites } = useQuery({
-    queryKey: ['/api/favorites', { userId }],
-    queryFn: () => userId ? apiRequest('GET', `/api/favorites?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
+    queryKey: ['https://mpforestvillage.in/api/favorites', { userId }],
+    queryFn: () => userId ? apiRequest('GET', `https://mpforestvillage.in/api/favorites?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId,
   });
   const favorites = (favoritesResp as any)?.data ?? [];
   
   // Query recent plays
   const { data: recentPlaysResp, refetch: refetchRecent } = useQuery({
-    queryKey: ['/api/recent-plays', { userId }],
-    queryFn: () => userId ? apiRequest('GET', `/api/recent-plays?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
+    queryKey: ['https://mpforestvillage.in/api/recent-plays', { userId }],
+    queryFn: () => userId ? apiRequest('GET', `https://mpforestvillage.in/api/recent-plays?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId,
   });
   const recentPlays = (recentPlaysResp as any)?.data ?? [];
   
   // Get category names for playlists
   const { data: categories } = useQuery({
-    queryKey: ['/api/categories'],
+    queryKey: ['https://mpforestvillage.in/api/categories'],
   });
   
   const categoryMap = Array.isArray(categories)
@@ -63,8 +64,12 @@ export default function Library() {
   
   // Query liked affirmations
   const { data: likedAffirmationsRespRaw, refetch: refetchLikedAffirmations } = useQuery({
-    queryKey: [`/api/liked-affirmations?userId=${userId}`, { userId }],
+    queryKey: [`https://mpforestvillage.in/api/liked-affirmations?userId=${userId}`, { userId }],
     enabled: !!userId,
+    onError: (error) => {
+      toast({ title: 'Error', description: 'Failed to fetch liked affirmations.', variant: 'destructive' });
+      console.warn('Failed to fetch liked affirmations:', error);
+    },
   });
   const likedAffirmationsResp: any = likedAffirmationsRespRaw;
   const likedAffirmations = (likedAffirmationsResp as any)?.data ?? [];
@@ -81,7 +86,7 @@ export default function Library() {
     setLoadingAffirmations(true);
     Promise.all(
       likedAffirmations.map((a: any) =>
-        fetch(`/api/affirmations/${a.affirmationId || a.id}`)
+        fetch(`https://mpforestvillage.in/api/affirmations/${a.affirmationId || a.id}`)
           .then(res => res.ok ? res.json() : null)
           .catch(() => null)
       )
@@ -109,22 +114,22 @@ export default function Library() {
     if (!userId) return;
     try {
       // Fetch the playlist
-      const playlistRes = await fetch(`/api/playlists/${playlistId}`);
+      const playlistRes = await fetch(`https://mpforestvillage.in/api/playlists/${playlistId}`);
       const playlist = await playlistRes.json();
       
       // Fetch the affirmations
-      const affirmationsRes = await fetch(`/api/affirmations?playlistId=${playlistId}`);
+      const affirmationsRes = await fetch(`https://mpforestvillage.in/api/affirmations?playlistId=${playlistId}`);
       const affirmations = await affirmationsRes.json();
       
       // Add to recent plays
       await apiRequest(
         'POST',
-        '/api/recent-plays',
+        'https://mpforestvillage.in/api/recent-plays',
         { userId, playlistId }
       );
       
       // Refetch recent plays
-      queryClient.invalidateQueries({ queryKey: ['/api/recent-plays'] });
+      queryClient.invalidateQueries({ queryKey: ['https://mpforestvillage.in/api/recent-plays'] });
       
       // Play the playlist
       playPlaylist(playlist, affirmations);
@@ -134,7 +139,7 @@ export default function Library() {
   };
   
   return (
-    <div className="py-4">
+    <div className="min-h-screen bg-background text-foreground py-4">
       <h1 className="text-2xl font-semibold mb-6">Your Library</h1>
       
       <Tabs defaultValue="favorites" onValueChange={setActiveTab}>
@@ -149,7 +154,7 @@ export default function Library() {
             <div className="space-y-3">
               {favorites.map((playlist: any) => (
                 <Link key={playlist.id} href={`/playlist/${playlist.id}`}>
-                  <div className="bg-card rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
+                  <div className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
                     <div 
                       className="w-12 h-12 rounded-md flex items-center justify-center text-primary-foreground flex-shrink-0"
                       style={{ backgroundColor: playlist.coverGradientStart }}
@@ -187,7 +192,7 @@ export default function Library() {
             <div className="space-y-3">
               {recentPlays.map((play: any) => (
                 <Link key={play.playlist.id} href={`/playlist/${play.playlist.id}`}>
-                  <div className="bg-card rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
+                  <div className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm cursor-pointer">
                     <div 
                       className="w-12 h-12 rounded-md flex items-center justify-center text-primary-foreground flex-shrink-0"
                       style={{ backgroundColor: play.playlist.coverGradientStart }}
@@ -231,9 +236,9 @@ export default function Library() {
           ) : likedAffirmationDetails.length > 0 ? (
             <div className="space-y-3">
               {likedAffirmationDetails.map((affirmation: any) => (
-                <div key={affirmation.id} className="bg-card rounded-lg p-3 flex items-center shadow-sm">
-                  <div className="w-12 h-12 rounded-md flex items-center justify-center text-primary-foreground flex-shrink-0 bg-primary">
-                    <Heart className="h-5 w-5 fill-primary-foreground" />
+                <div key={affirmation.id} className="bg-card text-card-foreground rounded-lg p-3 flex items-center shadow-sm">
+                  <div className="w-12 h-12 rounded-md flex items-center justify-center text-white flex-shrink-0 bg-primary">
+                    <Heart className="h-5 w-5 fill-white" />
                   </div>
                   <div className="ml-3 flex-1 min-w-0">
                     <h3 className="font-medium text-sm line-clamp-1">{affirmation.text || affirmation.title}</h3>

@@ -56,6 +56,8 @@ export interface AudioContextType {
   setBackgroundMusicVolume: (volume: number) => void;
   setBackgroundMusic: (music: BackgroundMusic | null) => void;
   skipToAffirmation: (index: number) => void;
+  isMiniPlayerVisible: boolean;
+  setMiniPlayerVisible: (visible: boolean) => void;
 }
 
 // Create the audio context with an initial undefined value that will be set by the provider
@@ -74,6 +76,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const [volume, setVolume] = useState(0.7);
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.3);
   const [backgroundMusic, setBackgroundMusic] = useState<BackgroundMusic | null>(null);
+  const [isMiniPlayerVisible, setMiniPlayerVisible] = useState(true);
 
   const affirmationSoundRef = useRef<Howl | null>(null);
   const backgroundSoundRef = useRef<Howl | null>(null);
@@ -395,7 +398,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
     previous,
     setVolume: (v: number) => setVolume(v),
     setBackgroundMusicVolume: (v: number) => setBackgroundMusicVolume(v),
-    setBackgroundMusic: (music: BackgroundMusic | null) => setBackgroundMusic(music)
+    setBackgroundMusic: (music: BackgroundMusic | null) => setBackgroundMusic(music),
+    isMiniPlayerVisible,
+    setMiniPlayerVisible,
   };
 
   return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;

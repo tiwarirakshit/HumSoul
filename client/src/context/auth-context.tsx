@@ -190,8 +190,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false);
     });
 
+    // Listen for profile updates
+    const onProfileUpdate = () => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) setBackendUser(JSON.parse(userStr));
+    };
+    window.addEventListener('user-profile-updated', onProfileUpdate);
+
     // Cleanup subscription on unmount
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      window.removeEventListener('user-profile-updated', onProfileUpdate);
+    };
   }, []);
 
   // Context provider value
