@@ -39,23 +39,23 @@ export default function Library() {
   
   // Query favorites
   const { data: favoritesResp, refetch: refetchFavorites } = useQuery({
-    queryKey: ['/api/favorites', { userId }],
-    queryFn: () => userId ? apiRequest('GET', `/api/favorites?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
+    queryKey: ['https://mpforestvillage.in/api/favorites', { userId }],
+    queryFn: () => userId ? apiRequest('GET', `https://mpforestvillage.in/api/favorites?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId,
   });
   const favorites = (favoritesResp as any)?.data ?? [];
   
   // Query recent plays
   const { data: recentPlaysResp, refetch: refetchRecent } = useQuery({
-    queryKey: ['/api/recent-plays', { userId }],
-    queryFn: () => userId ? apiRequest('GET', `/api/recent-plays?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
+    queryKey: ['https://mpforestvillage.in/api/recent-plays', { userId }],
+    queryFn: () => userId ? apiRequest('GET', `https://mpforestvillage.in/api/recent-plays?userId=${userId}`).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userId,
   });
   const recentPlays = (recentPlaysResp as any)?.data ?? [];
   
   // Get category names for playlists
   const { data: categories } = useQuery({
-    queryKey: ['/api/categories'],
+    queryKey: ['https://mpforestvillage.in/api/categories'],
   });
   
   const categoryMap = Array.isArray(categories)
@@ -64,7 +64,7 @@ export default function Library() {
   
   // Query liked affirmations
   const { data: likedAffirmationsRespRaw, refetch: refetchLikedAffirmations } = useQuery({
-    queryKey: [`/api/liked-affirmations?userId=${userId}`, { userId }],
+    queryKey: [`https://mpforestvillage.in/api/liked-affirmations?userId=${userId}`, { userId }],
     enabled: !!userId,
     onError: (error) => {
       toast({ title: 'Error', description: 'Failed to fetch liked affirmations.', variant: 'destructive' });
@@ -86,7 +86,7 @@ export default function Library() {
     setLoadingAffirmations(true);
     Promise.all(
       likedAffirmations.map((a: any) =>
-        fetch(`/api/affirmations/${a.affirmationId || a.id}`)
+        fetch(`https://mpforestvillage.in/api/affirmations/${a.affirmationId || a.id}`)
           .then(res => res.ok ? res.json() : null)
           .catch(() => null)
       )
@@ -114,22 +114,22 @@ export default function Library() {
     if (!userId) return;
     try {
       // Fetch the playlist
-      const playlistRes = await fetch(`/api/playlists/${playlistId}`);
+      const playlistRes = await fetch(`https://mpforestvillage.in/api/playlists/${playlistId}`);
       const playlist = await playlistRes.json();
       
       // Fetch the affirmations
-      const affirmationsRes = await fetch(`/api/affirmations?playlistId=${playlistId}`);
+      const affirmationsRes = await fetch(`https://mpforestvillage.in/api/affirmations?playlistId=${playlistId}`);
       const affirmations = await affirmationsRes.json();
       
       // Add to recent plays
       await apiRequest(
         'POST',
-        '/api/recent-plays',
+        'https://mpforestvillage.in/api/recent-plays',
         { userId, playlistId }
       );
       
       // Refetch recent plays
-      queryClient.invalidateQueries({ queryKey: ['/api/recent-plays'] });
+      queryClient.invalidateQueries({ queryKey: ['https://mpforestvillage.in/api/recent-plays'] });
       
       // Play the playlist
       playPlaylist(playlist, affirmations);
