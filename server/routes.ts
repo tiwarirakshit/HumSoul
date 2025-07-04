@@ -167,14 +167,16 @@ function getStorageType() {
 // Set up multer storage for profile images
 const profileImageStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(process.cwd(), "client/public/user/profile/images"));
+    cb(null, path.join(process.cwd(), "uploads/user/profile/image")); // <-- changed here
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
+
 const uploadProfileImage = multer({ storage: profileImageStorage });
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -1122,10 +1124,11 @@ api.delete("/admin/users/:id", async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-    // Return the public URL
-    const publicUrl = `/user/profile/images/${req.file.filename}`;
+  
+    // Adjust the public-facing URL according to your static serving path
+    const publicUrl = `/uploads/user/profile/image/${req.file.filename}`;
     res.json({ url: publicUrl });
-  });
+  });  
 
   // Update current user profile
   api.put("/users/profile", async (req, res) => {
