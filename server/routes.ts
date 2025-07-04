@@ -106,6 +106,21 @@ const uploadBackgroundMusic = multer({
   },
 });
 
+// Multer storage for avatar uploads (memory storage, since we'll upload to Cloudinary directly)
+const avatarFileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]; // add more if needed
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed (JPEG, PNG, WEBP, GIF)"));
+  }
+};
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: avatarFileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
+
 // Validation schemas
 const createPlaylistSchema = z.object({
   title: z.string().min(1, "Title is required").max(255),
@@ -163,20 +178,6 @@ function getStorageType() {
   if (storage instanceof MemStorage) return 'MemStorage';
   return 'UnknownStorage';
 }
-
-// Set up multer storage for profile images
-const profileImageStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(process.cwd(), "uploads/user/profile/image")); // <-- changed here
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const uploadProfileImage = multer({ storage: profileImageStorage });
-
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -1077,17 +1078,29 @@ api.delete("/admin/users/:id", async (req, res) => {
 
   // Liked Affirmations routes
   api.get("/liked-affirmations", async (req, res) => {
-    const userId = Number(req.query.userId);
-    if (!userId) return res.status(400).json({ message: "Missing userId" });
+    let userId = Number(req.query.userId);
+    if (!userId) userId = 1;
+    console.log("storage instance:", storage.constructor.name);
     const liked = await storage.getUserLikedAffirmations(userId);
-    res.json({ data: liked });
+    res.json({
+      debug: {
+        storageType: getStorageType(),
+        raw: liked
+      },
+      data: liked
+    });
   });
 
   api.post("/liked-affirmations", async (req, res) => {
-    if (!req.body.userId) return res.status(400).json({ message: "Missing userId" });
-    const likeData = insertUserLikedAffirmationSchema.parse(req.body);
-    const like = await storage.addUserLikedAffirmation(likeData);
-    res.status(201).json(like);
+    try {
+      if (!req.body.userId) req.body.userId = 1;
+      const likeData = insertUserLikedAffirmationSchema.parse(req.body);
+      const like = await storage.addUserLikedAffirmation(likeData);
+      res.status(201).json(like);
+    } catch (error: any) {
+      console.error("Error adding liked affirmation:", error);
+      res.status(400).json({ message: "Invalid like data", errors: error.errors });
+    }
   });
 
   api.delete("/liked-affirmations", async (req, res) => {
@@ -1119,27 +1132,30 @@ api.delete("/admin/users/:id", async (req, res) => {
     res.json(affirmation);
   });
 
-  // Upload profile image endpoint
-  api.post("/upload-profile-image", uploadProfileImage.single("image"), (req, res) => {
+  // Avatar upload endpoint
+  api.post("/users/upload-avatar", avatarUpload.single("avatar"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-  
-    // Adjust the public-facing URL according to your static serving path
-    const publicUrl = `/uploads/user/profile/image/${req.file.filename}`;
-    res.json({ url: publicUrl });
-  });  
-
-  // Update current user profile
-  api.put("/users/profile", async (req, res) => {
-    const { id, ...updates } = req.body;
-    if (!id) return res.status(400).json({ message: "Missing user id" });
     try {
-      const updatedUser = await storage.updateUser(id, updates);
-      if (!updatedUser) return res.status(404).json({ message: "User not found" });
-      res.json(updatedUser);
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload_stream(
+        {
+          folder: "avatars",
+          resource_type: "image",
+          public_id: `${Date.now()}-${req.file.originalname.split('.')[0]}`,
+        },
+        (error, result) => {
+          if (error || !result) {
+            return res.status(500).json({ message: "Cloudinary upload failed", error });
+          }
+          return res.json({ url: result.secure_url });
+        }
+      );
+      // Write the file buffer to the stream
+      result.end(req.file.buffer);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update user profile" });
+      return res.status(500).json({ message: "Error uploading avatar", error });
     }
   });
 

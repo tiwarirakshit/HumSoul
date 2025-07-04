@@ -122,15 +122,15 @@ export default function Profile() {
       {/* Profile Header */}
       <div className="flex items-center mb-6">
         <Avatar className="h-20 w-20">
-          {authUser?.photoURL ? (
-            <AvatarImage src={authUser.photoURL} alt={authUser.displayName || 'User'} />
-          ) : backendUser?.avatarUrl ? (
+          {backendUser?.avatarUrl ? (
             <AvatarImage src={backendUser.avatarUrl} alt={backendUser.name || backendUser.username || 'User'} />
+          ) : authUser?.photoURL ? (
+            <AvatarImage src={authUser.photoURL} alt={authUser.displayName || 'User'} />
           ) : user?.avatarUrl ? (
             <AvatarImage src={user.avatarUrl} alt={user.name || user.username} />
           ) : (
             <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-              {authUser?.displayName?.[0] || backendUser?.name?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
+              {backendUser?.name?.[0] || backendUser?.username?.[0] || authUser?.displayName?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
             </AvatarFallback>
           )}
         </Avatar>

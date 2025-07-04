@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import axios from "axios";
 
 export default function EditProfile() {
   const [, setLocation] = useLocation();
@@ -74,14 +73,31 @@ export default function EditProfile() {
     if (!file) return;
     setUploading(true);
     const formDataObj = new FormData();
-    formDataObj.append("image", file);
+    formDataObj.append("avatar", file);
     try {
-      const response = await axios.post("/api/upload-profile-image", formDataObj, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const response = await fetch("/api/users/upload-avatar", {
+        method: "POST",
+        body: formDataObj,
       });
-      const url = response.data.url;
-      setFormData(prev => ({ ...prev, avatarUrl: url }));
-      localStorage.setItem('user', JSON.stringify({ ...backendUser, ...formData, avatarUrl: url }));
+      const data = await response.json();
+      if (data.url) {
+        setFormData(prev => ({ ...prev, avatarUrl: data.url }));
+        // Update localStorage user object with new avatarUrl
+        const userFromStorage = localStorage.getItem('user');
+        let userObj = null;
+        try {
+          userObj = userFromStorage ? JSON.parse(userFromStorage) : null;
+        } catch (e) {
+          userObj = null;
+        }
+        if (userObj) {
+          userObj.avatarUrl = data.url;
+          localStorage.setItem('user', JSON.stringify(userObj));
+          window.dispatchEvent(new Event('user-profile-updated'));
+        }
+      } else {
+        alert("Failed to upload image");
+      }
     } catch (err) {
       alert("Failed to upload image");
     } finally {
@@ -129,6 +145,7 @@ export default function EditProfile() {
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 className="mt-2 w-60 px-3 py-1 rounded border border-gray-300 text-sm"
+                disabled={uploading}
               />
               {uploading && <div className="text-xs text-primary mt-2">Uploading...</div>}
             </div>

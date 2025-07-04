@@ -117,15 +117,15 @@ export default function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="h-9 w-9 cursor-pointer">
-              {authUser?.photoURL ? (
-                <AvatarImage src={authUser.photoURL} alt={authUser.displayName || 'User'} />
-              ) : backendUser?.avatarUrl ? (
+              {backendUser?.avatarUrl ? (
                 <AvatarImage src={backendUser.avatarUrl} alt={backendUser.name || backendUser.username || 'User'} />
+              ) : authUser?.photoURL ? (
+                <AvatarImage src={authUser.photoURL} alt={authUser.displayName || 'User'} />
               ) : user?.avatarUrl ? (
                 <AvatarImage src={user.avatarUrl} alt={user?.name || user?.username || 'User'} />
               ) : (
                 <AvatarFallback className="bg-primary text-white">
-                  {authUser?.displayName?.[0] || backendUser?.name?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
+                  {backendUser?.name?.[0] || backendUser?.username?.[0] || authUser?.displayName?.[0] || user?.name?.[0] || user?.username?.[0] || 'U'}
                 </AvatarFallback>
               )}
             </Avatar>
