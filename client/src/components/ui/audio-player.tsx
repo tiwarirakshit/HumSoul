@@ -39,7 +39,8 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
     next,
     previous,
     setVolume,
-    setBackgroundMusicVolume
+    setBackgroundMusicVolume,
+    currentTrack
   } = useAudio();
 
   const [showVolumeControl, setShowVolumeControl] = useState(false);
@@ -247,9 +248,9 @@ export function AudioPlayer({ showWaveform = false, minified = false }: AudioPla
                   <Music className="h-12 w-12 text-muted-foreground" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-foreground">Song Title</h2>
-                  <p className="text-muted-foreground">Artist Name</p>
-                  <p className="text-sm text-muted-foreground">Album Name</p>
+                  <h2 className="text-xl font-bold text-foreground">{currentTrack?.playlist?.title || 'Unknown Title'}</h2>
+                  <p className="text-muted-foreground">{currentTrack?.playlist?.artist || ''}</p>
+                  <p className="text-sm text-muted-foreground">{currentTrack?.playlist?.album || ''}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

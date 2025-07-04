@@ -11,7 +11,7 @@ import fs from "fs";
 
 const app = express();
 app.use(cors({
-  origin: ["http://localhost:3000/", "http://147.93.19.165:3000", "localhost", "147.93.19.165"],
+  origin: ["https://mpforestvillage.in/", "http://147.93.19.165:3000", "localhost", "147.93.19.165"],
   credentials: true
 }));
 app.use(express.json());

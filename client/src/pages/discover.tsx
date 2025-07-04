@@ -3,16 +3,19 @@ import { Link, useLocation } from "wouter";
 import { Heart, PlayCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/audio";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useQueryParams } from "@/hooks/use-query";
 
 export default function Discover() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const { backendUser, loading: authLoading } = useAuth();
   let userId = backendUser?.id;
@@ -23,14 +26,19 @@ export default function Discover() {
     } catch {}
   }
   
-  // Extract category ID and search query from URL if present
+  const params = useQueryParams();
+
   useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1] || '');
     const catId = params.get('category');
-    setCategoryId(catId ? parseInt(catId) : null);
+    setCategoryId(catId ? Number(catId) : null);
     const search = params.get('search') || '';
     setSearchQuery(search);
-  }, [location]);
+    if (searchInputRef.current) {
+      searchInputRef.current.value = search;
+      console.log('searchInputRef.current.value', searchInputRef.current.value);
+    }
+
+  }, [categoryId]);
   
   // Query categories
   const { data: categories = [] } = useQuery<any[]>({
@@ -89,7 +97,7 @@ export default function Discover() {
 
   // Find the selected category name
   const selectedCategory = categoryId !== null 
-    ? categories.find((c: any) => Number(c.id) === categoryId) 
+    ? categories.find((c: any) => Number(c.id) === Number(categoryId)) 
     : null;
   
   // Helper function to check if a category is the active one
@@ -114,29 +122,62 @@ export default function Discover() {
       )
     : safePlaylists;
   
+  // Helper to build discover URL with both params
+  const buildDiscoverUrl = (catId: number | null, search: string) => {
+    const params = new URLSearchParams();
+    if (catId !== null) params.set('category', String(catId));
+    if (search) params.set('search', search);
+    const paramStr = params.toString();
+    return paramStr ? `/discover?${paramStr}` : '/discover';
+  };
+
+  console.log('activeCategoryId', activeCategoryId);
+  
+  const categoriesWithAll = [{ id: null, name: 'All' }, ...safeCategories];
+  
   return (
     <div className="min-h-screen bg-background text-foreground py-4">
       <h1 className="text-2xl font-semibold mb-6">Discover</h1>
       
+      {/* Search bar */}
+      <form
+        className="mb-6 flex items-center gap-2"
+        onSubmit={e => {
+          e.preventDefault();
+          const value = searchInputRef.current?.value || '';
+          setLocation(buildDiscoverUrl(categoryId, value));
+        }}
+      >
+        <input
+          ref={searchInputRef}
+          type="text"
+          placeholder="Search playlists..."
+          defaultValue={searchQuery}
+          className="px-4 py-2 rounded-lg border border-muted bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full max-w-xs transition"
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition"
+        >
+          Search
+        </button>
+      </form>
       {/* Category filter */}
       <div className="mb-6">
         <h2 className="text-lg font-medium mb-3">Categories</h2>
         <div className="flex flex-wrap gap-3 md:gap-2">
-          <Link href="/discover">
-            <a className={`px-4 py-2 rounded-full text-sm font-medium ${!categoryId ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-              All
-            </a>
-          </Link>
-          
-          {safeCategories.map((category: any) => (
-            <Link key={category.id} href={`/discover?category=${category.id}`}>
-              <a 
-                className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  isCategoryActive(category.id) ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground dark:bg-muted dark:text-foreground'
-                }`}
-              >
+          {categoriesWithAll.map((category: any, index: number) => (
+            <Link
+              key={category.id}
+              href={buildDiscoverUrl(category.id, searchQuery)}
+            >
+              <button onClick={() => setActiveCategoryId(index)} className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 ${
+                activeCategoryId === index
+                  ? 'bg-primary text-primary-foreground shadow-lg scale-105'
+                  : 'bg-muted text-foreground dark:bg-muted dark:text-foreground'
+              } hover:scale-105`}>
                 {category.name}
-              </a>
+              </button>
             </Link>
           ))}
         </div>

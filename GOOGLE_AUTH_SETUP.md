@@ -36,10 +36,10 @@ The following issues have been resolved in your Google Auth setup:
 #### Web Client ID
 - **Application type**: Web application
 - **Authorized JavaScript origins**:
-  - `http://localhost:3000` (for development)
+  - `https://mpforestvillage.in` (for development)
   - `https://your-domain.com` (for production)
 - **Authorized redirect URIs**:
-  - `http://localhost:3000` (for development)
+  - `https://mpforestvillage.in` (for development)
   - `https://your-domain.com` (for production)
 
 ### 3. Get SHA-1 Certificate Fingerprint
