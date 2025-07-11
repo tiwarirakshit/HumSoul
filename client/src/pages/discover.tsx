@@ -136,7 +136,7 @@ export default function Discover() {
   const categoriesWithAll = [{ id: null, name: 'All' }, ...safeCategories];
   
   return (
-    <div className="min-h-screen bg-background text-foreground py-4">
+    <div className="min-h-screen text-foreground py-4">
       <h1 className="text-2xl font-semibold mb-6">Discover</h1>
       
       {/* Search bar */}

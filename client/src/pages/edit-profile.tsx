@@ -75,7 +75,7 @@ export default function EditProfile() {
     const formDataObj = new FormData();
     formDataObj.append("avatar", file);
     try {
-      const response = await fetch("/api/users/upload-avatar", {
+      const response = await fetch("https://mpforestvillage.in/api/users/upload-avatar", {
         method: "POST",
         body: formDataObj,
       });

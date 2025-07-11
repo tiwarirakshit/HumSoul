@@ -39,6 +39,7 @@ import { initializeCapacitorPlugins } from '@/lib/capacitor';
 import { Capacitor } from '@capacitor/core';
 import { NetworkDebug } from "@/components/ui/network-debug";
 import { GlobalAudioPlayerProvider } from "@/components/ui/global-audio-player";
+import { App as CapacitorApp } from '@capacitor/app';
 
 interface ProtectedRouteProps {
   component: React.ComponentType<any>;
@@ -257,6 +258,24 @@ function AppContent() {
       clearTimeout(timer);
       clearTimeout(subscriptionTimer);
     };
+  }, []);
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const handler = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        if (window.location.pathname !== '/') {
+          window.history.back();
+        } else {
+          // Show a confirmation dialog before exiting
+          if (window.confirm('Do you want to exit the app?')) {
+            CapacitorApp.exitApp();
+          }
+        }
+      });
+      return () => {
+        handler.remove();
+      };
+    }
   }, []);
 
   if (showSplash) {

@@ -21,25 +21,25 @@
 }
 
 .dark {
-  --background: 222 47% 11%;
-  --foreground: 0 0% 100%;
-  --card: 222 47% 15%;
-  --card-foreground: 0 0% 100%;
-  --popover: 222 47% 15%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 252 70% 63%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 217 32% 17%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 217 32% 17%;
-  --muted-foreground: 215 20% 78%;
-  --accent: 252 70% 30%;
-  --accent-foreground: 252 70% 90%;
+  --background: 220 26% 18%; /* deep blue-gray for dark mode */
+  --foreground: 220 10% 15%; /* dark grey text for contrast */
+  --card: 220 26% 22%;
+  --card-foreground: 220 10% 15%;
+  --popover: 220 26% 22%;
+  --popover-foreground: 220 10% 15%;
+  --primary: 191 100% 45%; /* teal blue accent */
+  --primary-foreground: 220 10% 15%;
+  --secondary: 217 32% 24%;
+  --secondary-foreground: 220 10% 15%;
+  --muted: 217 32% 24%;
+  --muted-foreground: 220 10% 40%; /* medium grey for muted text */
+  --accent: 191 100% 30%;
+  --accent-foreground: 220 10% 15%;
   --destructive: 0 62% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 217 32% 24%;
-  --input: 217 32% 24%;
-  --ring: 252 70% 63%;
+  --destructive-foreground: 220 10% 15%;
+  --border: 217 32% 28%;
+  --input: 217 32% 28%;
+  --ring: 191 100% 45%;
 }
 
 @tailwind base;
@@ -53,5 +53,23 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    /* Custom background for Hum Soul app */
+    background-color: #eaf6fa;
+    background-image: url('/images/Logo.jpg');
+    background-repeat: repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    position: relative;
   }
+}
+
+/* Overlay for extra subtlety of the texture */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: inherit;
+  opacity: 0.25; /* Adjust for more/less texture */
+  pointer-events: none;
 }

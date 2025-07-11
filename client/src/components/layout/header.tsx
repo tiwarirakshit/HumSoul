@@ -18,7 +18,7 @@ export default function Header() {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { user: authUser, logout, backendUser } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const [location] = useLocation();
   
   // Query to get current user
   const { data: user } = useQuery<{
@@ -82,7 +82,7 @@ export default function Header() {
   return (
     <header className="px-4 pt-6 pb-2 flex items-center justify-between">
       <div className="flex items-center">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href={location === "/" ? "/profile" : "/"} className="flex items-center gap-3">
           <img
             src="/images/Logo.jpg"
             alt="HumSoul Logo"

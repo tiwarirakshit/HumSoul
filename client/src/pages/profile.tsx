@@ -118,7 +118,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-4 pb-28">
+    <div className="min-h-screen text-foreground py-4 pb-28">
       {/* Profile Header */}
       <div className="flex items-center mb-6">
         <Avatar className="h-20 w-20">
