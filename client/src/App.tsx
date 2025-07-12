@@ -33,6 +33,7 @@ import AdminUsers from "@/pages/admin/users";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminSettings from "@/pages/admin/settings";
 import AdminSubscriptions from "@/pages/admin/subscriptions";
+import AdminNotifications from "@/pages/admin/notifications";
 import NotificationPreferences from "@/pages/notification-preferences";
 import EditProfile from "@/pages/edit-profile";
 import { initializeCapacitorPlugins } from '@/lib/capacitor';
@@ -182,6 +183,9 @@ function Router() {
         </Route>
         <Route path="/admin/settings">
           {() => <AdminRoute component={AdminSettings} />}
+        </Route>
+        <Route path="/admin/notifications">
+          {() => <AdminRoute component={AdminNotifications} />}
         </Route>
 
         {/* Auth required routes */}

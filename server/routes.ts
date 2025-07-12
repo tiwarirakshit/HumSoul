@@ -1159,6 +1159,10 @@ api.delete("/admin/users/:id", async (req, res) => {
     }
   });
 
+  // Push notifications routes
+  const pushNotificationsRouter = (await import('./routes/push-notifications')).default;
+  api.use('/push-notifications', pushNotificationsRouter);
+
   // Mount the API routes
   app.use("/api", api);
 

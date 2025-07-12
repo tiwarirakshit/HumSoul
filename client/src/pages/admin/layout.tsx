@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Users, Music2, LayoutDashboard, Settings, Crown, Menu, X, LogOut } from "lucide-react";
+import { Users, Music2, LayoutDashboard, Settings, Crown, Menu, X, LogOut, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,6 +13,7 @@ const navigation = [
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Music', href: '/admin/music', icon: Music2 },
   { name: 'Subscriptions', href: '/admin/subscriptions', icon: Crown },
+  { name: 'Notifications', href: '/admin/notifications', icon: Bell },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

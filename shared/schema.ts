@@ -92,6 +92,17 @@ export const userLikedAffirmations = pgTable("user_liked_affirmations", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// NEW: FCM Tokens table for push notifications
+export const fcmTokens = pgTable("fcm_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  deviceType: text("device_type").notNull(), // 'ios', 'android', 'web'
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas for each table
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -146,6 +157,14 @@ export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions
 
 export const insertUserLikedAffirmationSchema = createInsertSchema(userLikedAffirmations);
 
+// NEW: Insert schema for FCM tokens
+export const insertFcmTokenSchema = createInsertSchema(fcmTokens).pick({
+  userId: true,
+  token: true,
+  deviceType: true,
+  isActive: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -178,11 +197,16 @@ export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema
 export type UserLikedAffirmation = typeof userLikedAffirmations.$inferSelect;
 export type InsertUserLikedAffirmation = z.infer<typeof insertUserLikedAffirmationSchema>;
 
+// NEW: Types for FCM tokens
+export type FcmToken = typeof fcmTokens.$inferSelect;
+export type InsertFcmToken = z.infer<typeof insertFcmTokenSchema>;
+
 // Define relations between tables
 export const usersRelations = relations(users, ({ many }) => ({
   userFavorites: many(userFavorites),
   recentPlays: many(recentPlays),
-  userSubscriptions: many(userSubscriptions)
+  userSubscriptions: many(userSubscriptions),
+  fcmTokens: many(fcmTokens)
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({

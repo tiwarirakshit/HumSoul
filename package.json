@@ -21,7 +21,8 @@
     "cap:add:android": "npx cap add android",
     "cap:sync": "npx cap sync",
     "cap:open:ios": "npx cap open ios",
-    "cap:open:android": "npx cap open android"
+    "cap:open:android": "npx cap open android",
+    "setup:firebase": "tsx scripts/setup-firebase-admin.ts"
   },
   "dependencies": {
     "@capacitor/android": "^7.2.0",
@@ -29,6 +30,7 @@
     "@capacitor/cli": "^7.2.0",
     "@capacitor/core": "^7.2.0",
     "@capacitor/ios": "^7.2.0",
+    "@capacitor/push-notifications": "^7.0.1",
     "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -79,6 +81,7 @@
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "firebase": "^11.6.0",
+    "firebase-admin": "^13.4.0",
     "framer-motion": "^11.13.1",
     "howler": "^2.2.4",
     "input-otp": "^1.2.4",
